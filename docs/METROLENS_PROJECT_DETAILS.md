@@ -1,22 +1,22 @@
-# MetroSetu — Project Details & End-to-End Guide
+# MetroLens AI™ — Project Details & End-to-End Platform Guide
 ### Automated Legal Metrology Inspection & Compliance Platform (SIH26034)
 **Target Audience:** Evaluators, Legal Metrology Officers, Engineering Teams, Industry & General Public  
-**Tagline:** *Bridging Packaging Reality with Statutory Consumer Law*
+**Tagline:** *Bridging Packaging Reality with Statutory Consumer Law (MetroSetu)*
 
 ---
 
-## 1. What is MetroSetu?
+## 1. What is MetroLens AI™?
 
-**MetroSetu** (meaning *"The Metrology Bridge"*) is an automated, web-based regulatory compliance and verification platform designed to enforce the **Legal Metrology (Packaged Commodities) Rules, 2011** and the **Legal Metrology Act, 2009** (incorporating the **Jan Vishwas Act, 2026** amendments).
+**MetroLens AI™** (also designated as **MetroSetu**, meaning *"The Metrology Bridge"*) is an automated, web-based regulatory compliance and verification platform engineered to enforce the **Legal Metrology (Packaged Commodities) Rules, 2011** and the **Legal Metrology Act, 2009** (incorporating the **Jan Vishwas (Amendment of Provisions) Act, 2026** statutory revisions).
 
-It acts as a digital bridge between:
-1. **The Law:** The complex statutory requirements set by the Department of Consumer Affairs (Ministry of Consumer Affairs, Food & Public Distribution, Government of India).
-2. **The Field Officers & Consumers:** Providing them with an instant, smartphone-accessible tool to audit retail products.
-3. **The Manufacturers & E-Commerce Platforms:** Providing clear, transparent pre-market compliance checks before packaging is printed or listed.
+It serves as an authoritative digital bridge between:
+1. **The Statutory Law:** Complex rules, amendments, and notification gazettes published by the Department of Consumer Affairs (Ministry of Consumer Affairs, Food & Public Distribution, Government of India).
+2. **Field Inspectors & Consumers:** Instant, browser-based inspection capability accessible from commodity smartphones, tablets, or desktop laptops without specialized hardware.
+3. **Brands, Manufacturers & E-Commerce Platforms:** Transparent, repeatable pre-market verification checks before packaging cartons are printed or catalogs listed online.
 
 ```text
 ┌────────────────────────┐      ┌────────────────────────┐      ┌────────────────────────┐
-│  STATUTORY LAW         │      │       METROSETU        │      │   FIELD INSPECTORS     │
+│  STATUTORY LAW         │      │      METROLENS AI      │      │   FIELD INSPECTORS     │
 │  • PCR Rules 2011      │ ───► │   The Digital Bridge   │ ───► │   • Legal Officers     │
 │  • Jan Vishwas 2026    │      │  (Vision + Math + Law) │      │   • Consumers & Brands │
 └────────────────────────┘      └────────────────────────┘      └────────────────────────┘
@@ -24,21 +24,21 @@ It acts as a digital bridge between:
 
 ---
 
-## 2. The Real-World Problem: Why MetroSetu is Needed
+## 2. The Real-World Problem: Why MetroLens AI is Needed
 
 In India, packaged retail goods represent over **₹12 Lakh Crore ($150 Billion)** in annual consumer spending across 780+ districts. However:
 
-1. **The Severe Inspection Shortage:** There are only around **2,500 District Legal Metrology Officers (LMOs)** in the entire country. Less than **0.01%** of physical retail packages are ever inspected before reaching consumers.
-2. **Manual, Error-Prone Audits:** Today, an officer must carry handheld vernier calipers, magnifying glasses, and a calculator. Inspecting a single product's font sizes, area calculations, and price math takes **15 to 20 minutes**.
-3. **Deceptive Packaging & Shrinkflation:** Brands frequently downsize package contents (e.g., from 100g down to 82g) while keeping the package carton size and price the same. Under **Rule 6(11)**, packages must declare **Unit Sale Price (USP)** (e.g., *"₹0.61 per g"*) so consumers can spot this trick. Yet brands frequently omit USP or print it in non-standard units.
+1. **The Severe Inspection Shortage:** There are only around **2,500 District Legal Metrology Officers (LMOs)** nationwide. Consequently, less than **0.01%** of retail packages are ever physically audited before reaching consumer hands.
+2. **Manual, Error-Prone Audits:** Currently, an officer must carry handheld vernier calipers, magnifying glasses, and a calculator. Inspecting a single product's font sizes, display area calculations, and price math takes **15 to 20 minutes**.
+3. **Deceptive Packaging & Shrinkflation:** Brands frequently downsize package contents (e.g., from 100g down to 82g) while keeping the outer package carton dimensions and retail price identical. Under **Rule 6(11)**, packages must declare **Unit Sale Price (USP)** (e.g., *"₹0.61 per g"*) so consumers can spot this trick. Yet brands frequently omit USP or print it in non-standard units.
 4. **Microscopic Font Deficits:** Under **Rule 7**, statutory numeral heights must be between **1.0mm and 6.0mm** depending on the package display area. No human eye can tell if a printed "50g" numeral is 1.15mm or the mandatory 1.50mm without precision instruments.
 5. **Decriminalization & Administrative Burden:** Under the **Jan Vishwas Act, 2023 & 2026**, first-time labeling infractions under Section 36(1) are decriminalized and transitioned to an administrative **Improvement Notice** regime. Officers must present objective, indisputable visual evidence and calculation records before issuing statutory notices.
 
 ---
 
-## 3. The MetroSetu Solution: How It Works
+## 3. The MetroLens AI Solution: How It Works
 
-MetroSetu converts that tedious 20-minute manual inspection into a **sub-2.5-second, mathematically verified, tamper-evident regulatory audit**.
+MetroLens AI converts that tedious 20-minute manual inspection into a **sub-2.5-second, mathematically verified, tamper-evident regulatory audit**.
 
 ### The 5-Step End-to-End User Journey
 
@@ -54,35 +54,35 @@ flowchart TD
 ```
 
 ### Step 1: Upload (Zero Friction)
-The inspector opens the website on any smartphone, tablet, or laptop. They drag and drop a photo of the packaging panel. If they wish to verify physical font heights, they place an ordinary **10-Rupee coin** or standard **ATM/ID card** flat on the same surface.
+The inspector opens the web application on any smartphone, tablet, or laptop. They drag and drop a photo of the packaging panel into the upload dropzone. If physical font heights require statutory verification, they place an ordinary **10-Rupee coin** or standard **ATM/ID card** flat on the same surface.
 
 ### Step 2: Quality & Security Gate
-Before processing, MetroSetu protects the system and warns the user:
-- **Decompression Bomb Defense:** Prevents oversized or malicious image attacks (capped at 64 Megapixels).
-- **Blur Filter:** Rejects shaky camera shots (Laplacian variance $<100$) with helpful advice: *"Image too blurry. Please hold camera steady."*
-- **Glare Filter:** Detects shiny metallic foil reflections ($>15\%$ area) with advice: *"Specular glare detected. Tilt camera 10° to eliminate reflections."*
+Before processing, MetroLens AI protects server infrastructure and alerts the user:
+- **Decompression Bomb Defense:** Prevents oversized or malicious image attacks (capped at 64 Megapixels via Pillow protections).
+- **Blur Filter:** Rejects shaky camera shots (Laplacian variance $<100$) with actionable advice: *"Image too blurry. Please hold camera steady."*
+- **Glare Filter:** Detects shiny metallic foil specular reflections ($>15\%$ area) with advice: *"Specular glare detected. Tilt camera 10° to eliminate reflections."*
 
 ### Step 3: Perception (Local Vision & OCR)
-- **Scale Calibration:** OpenCV contour detection spots the 10-Rupee coin. Because every official RBI 10-Rupee coin has an outer diameter of exactly **27.0 mm**, the system calculates the real-world scale factor:
+- **Scale Calibration:** OpenCV contour detection identifies the 10-Rupee coin. Because every official RBI 10-Rupee coin has an outer diameter of exactly **27.0 mm**, the system calculates the real-world scale factor:
   $$\text{Scale } S = \frac{27.0\text{ mm}}{\text{Coin Diameter in Pixels}}$$
-- **Perspective Rectification:** Automatically unwarps angular camera tilt so the packaging is viewed straight-on.
-- **Scene Text OCR:** Server-side **PaddleOCR v4 Mobile** extracts all printed English and Hindi (Devanagari) words, numerals, bounding boxes, and pixel heights in $<800\text{ms}$.
+- **Perspective Rectification:** Automatically unwarps angular camera tilt so the packaging panel is evaluated perpendicular to the lens.
+- **Scene Text OCR:** Server-side **PaddleOCR v4 Mobile** extracts all printed English and Hindi (Devanagari) words, numerals, bounding boxes, and pixel heights in $<800\text{ms}$ on CPU.
 
 ### Step 4: Deterministic Legal Evaluation (Zero AI Hallucination)
-MetroSetu passes the extracted text and measurements to a **pure Python statutory state machine** (NO probabilistic LLMs or ChatGPT):
+MetroLens AI passes the extracted text and measurements to a **pure Python statutory state machine** (NO probabilistic LLMs or external cloud APIs):
 - **Rule 26 / Rule 3:** Checks if the package is exempt (e.g., wholesale $>25\text{kg}$ or small packs $\le 10\text{g/ml}$, while strictly keeping tobacco and pan masala non-exempt).
 - **Rule 6(1)(a)-(h):** Verifies all 8 mandatory declarations (MRP, Net Qty, Mfg Date, Name/Address, Consumer Care phone/email, Country of Origin).
 - **Rule 6(11) Unit Sale Price:** Verifies that declared USP matches calculated $\frac{\text{MRP}}{\text{Net Qty}}$ in standard units (₹/g, ₹/kg, ₹/ml, ₹/l).
 - **Rule 7 Font Heights:** Matches package display area to mandatory minimum height (e.g. Area $50\text{--}100\text{ cm}^2 \rightarrow \text{minimum } 1.50\text{mm}$).
 
 ### Step 5: Plain-Language Verdict & Tamper-Evident Report
-The user immediately sees a clear, color-coded result card, zooms into high-resolution side-by-side evidence crops, and clicks **"Download Official Assessment Report"** to receive a court-admissible PDF embedding cryptographic SHA-256 hashes and a ready-to-issue **Section 36(1) Improvement Notice draft**.
+The user immediately sees a clear, color-coded result badge, zooms into high-resolution side-by-side evidence crops, and clicks **"Download Official Assessment Report"** to receive a court-admissible PDF embedding cryptographic SHA-256 hashes and a ready-to-issue **Section 36(1) Improvement Notice draft**.
 
 ---
 
 ## 4. The 5-State Traffic Light Compliance Framework
 
-To eliminate officer guesswork and prevent false accusations against honest merchants, MetroSetu categorizes every package into five clear states:
+To eliminate officer guesswork and prevent false accusations against honest merchants, MetroLens AI categorizes every package into five clear states:
 
 | Badge | State Name | Meaning & Statutory Triggers | Recommended Officer Action |
 | :---: | :--- | :--- | :--- |
@@ -94,9 +94,9 @@ To eliminate officer guesswork and prevent false accusations against honest merc
 
 ---
 
-## 5. The Four Architectural Pillars (Why MetroSetu is Trustworthy)
+## 5. The Four Architectural Pillars (Why MetroLens AI is Trustworthy)
 
-MetroSetu enforces strict, impenetrable boundaries between perception, mathematics, legal rules, and human governance:
+MetroLens AI enforces strict, impenetrable boundaries between perception, mathematics, legal rules, and human governance:
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -115,43 +115,43 @@ MetroSetu enforces strict, impenetrable boundaries between perception, mathemati
 │ • BOUNDARY: 100% repeatable, auditable, and court-admissible.               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. HUMANS GOVERN (Regulatory Discretion & Officer Authority)                │
-│ • MetroSetu provides assistive screening evidence under Section 15.         │
-│ • BOUNDARY: Software NEVER levies automatic fines. Statutory notices remain  │
+│ • MetroLens AI provides assistive screening evidence under Section 15.      │
+│ • BOUNDARY: Software NEVER levies automatic fines. Statutory notices remain │
 │   under the sole legal authority of the inspecting officer.                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 6. Real-World Defect Scenarios Detected by MetroSetu
+## 6. Real-World Defect Scenarios Detected by MetroLens AI
 
 ### Scenario A: The Microscopic Font Trick (Shrinkflation Stealth)
 - **What Brands Do:** A snack brand shrinks net weight from 100g to 50g. To hide the change, they print "50g" in a tiny 1.15mm font.
 - **The Law:** Under Rule 7 Table-I, for a package with area $75\text{ cm}^2$, the minimum numeral height is **1.50 mm**.
-- **MetroSetu Action:** Detects a measured height of $1.15\text{mm}$ (a statutory deficit of $0.35\text{mm}$). Flags **RED (POTENTIAL NON-COMPLIANCE)** with side-by-side visual crop and Rule 7 citation.
+- **MetroLens AI Action:** Detects a measured height of $1.15\text{mm}$ (a statutory deficit of $0.35\text{mm}$). Flags **RED (POTENTIAL NON-COMPLIANCE)** with side-by-side visual crop and Rule 7 citation.
 
 ### Scenario B: The Missing Unit Sale Price (Deceptive Pricing)
 - **What Brands Do:** Selling a 180g shampoo bottle for ₹249 without declaring the price per milliliter or gram, preventing consumers from comparing it with a 300g bottle.
 - **The Law:** Under Rule 6(11) (enforced October 2022), all goods $>100\text{g/ml}$ must clearly declare Unit Sale Price in standardized units (e.g., ₹/g or ₹/ml).
-- **MetroSetu Action:** Extracts MRP and Net Qty, calculates expected USP ($\text{₹1.38 per ml}$), finds zero declared USP on package, and flags **RED** for missing statutory declaration.
+- **MetroLens AI Action:** Extracts MRP and Net Qty, calculates expected USP ($\text{₹1.38 per ml}$), finds zero declared USP on package, and flags **RED** for missing statutory declaration.
 
 ### Scenario C: Prohibited Non-Metric Units
 - **What Brands Do:** Printing "Net Wt: 500 Gms" or "Volume: 100 ML" or "200 gms.".
 - **The Law:** Rule 6(1)(c) mandates standard SI symbols (`g`, `kg`, `ml`, `l`). Non-standard pluralizations ("Gms", "Kgs", "ML") are prohibited.
-- **MetroSetu Action:** Regex normalizer rejects non-standard notation and flags non-compliance with Gazette citations.
+- **MetroLens AI Action:** Regex normalizer rejects non-standard notation and flags non-compliance with Gazette citations.
 
 ### Scenario D: Miniature Pan Masala & Tobacco Packages
 - **What Brands Do:** Manufacturers of tobacco/gutkha pouches claim exemption under Rule 26(a) because their packets are $\le 10\text{g}$.
 - **The Law:** Under G.S.R. 881(E), pan masala and tobacco products are **strictly carved out** from small-pack exemptions. They must bear all mandatory declarations regardless of size.
-- **MetroSetu Action:** Identifies commodity category; overrides Rule 26 exemption; enforces full Rule 6 compliance check.
+- **MetroLens AI Action:** Identifies commodity category; overrides Rule 26 exemption; enforces full Rule 6 compliance check.
 
 ---
 
 ## 7. Technology Stack (Clean, Fast & Self-Contained)
 
-MetroSetu is engineered to run on commodity laptops and cloud servers without expensive GPUs or per-query third-party API bills:
+MetroLens AI is engineered to run on commodity laptops and cloud servers without expensive GPUs or per-query third-party API bills:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 1. CLIENT TIER (Web Application)                                            │
 │ • React 19 + TypeScript + Vite + Tailwind CSS                               │
@@ -182,7 +182,7 @@ MetroSetu is engineered to run on commodity laptops and cloud servers without ex
 
 During competition presentations, the live demonstration follows an unshakeable second-by-second narrative:
 
-1. **The Hook (0:00–0:45):** The presenter places a physical biscuit packet and a digital vernier caliper on the jury table. Challenges the judges: *"Can anyone tell if that printed '50g' numeral is 1.15mm or 1.50mm? No human eye can. Brands exploit this manual enforcement blind spot. We built MetroSetu to turn that 20-minute manual argument into a 2-second mathematical audit."*
+1. **The Hook (0:00–0:45):** The presenter places a physical biscuit packet and a digital vernier caliper on the jury table. Challenges the judges: *"Can anyone tell if that printed '50g' numeral is 1.15mm or 1.50mm? No human eye can. Brands exploit this manual enforcement blind spot. We built MetroLens AI to turn that 20-minute manual argument into a 2-second mathematical audit."*
 2. **The 2-Second Optical Audit (0:45–1:30):** The presenter drops an ordinary 10-Rupee coin beside the package and taps "Analyze Packaging". Within 2.0s, the system detects the 27.0mm coin, unwarps perspective, and extracts all text.
 3. **Scientific Explainability (1:30–2:30):** Clicking the result card zooms into the high-resolution crop:
    - Package display area: $74\text{ cm}^2$
@@ -196,7 +196,7 @@ During competition presentations, the live demonstration follows an unshakeable 
 
 ## 9. Failover Reliability: The 5-Layer Shield
 
-To guarantee that the demo never fails on stage, MetroSetu includes 5 layers of operational redundancy:
+To guarantee that the demo never fails on stage, MetroLens AI includes 5 layers of operational redundancy:
 - **Layer 1 (Offline Localhost):** Runs 100% offline on `127.0.0.1:8000` with laptop Wi-Fi switched completely OFF. Zero cloud dependency.
 - **Layer 2 (Pre-Loaded Sample Selector):** A persistent dropdown in the navbar pre-loaded with 10 benchmark packaging photos (5 compliant, 5 synthetic defects) that run immediately without camera hardware.
 - **Layer 3 (Manual Caliper Scale Override):** If an odd table surface obscures the coin contour, the inspector taps two points on the coin to manually lock the pixel scale.
@@ -205,9 +205,9 @@ To guarantee that the demo never fails on stage, MetroSetu includes 5 layers of 
 
 ---
 
-## 10. Why MetroSetu Wins (Key Differentiators)
+## 10. Why MetroLens AI Wins (Key Differentiators)
 
-| Dimension | Legacy / Conventional Approach | Generic "AI Startup" Approach | MetroSetu (SIH26034) |
+| Dimension | Legacy / Conventional Approach | Generic "AI Startup" Approach | MetroLens AI (SIH26034) |
 | :--- | :--- | :--- | :--- |
 | **Inspection Time** | 15–20 minutes manual measurement | 5–10 seconds (Cloud API lag) | **$< 2.5\text{ seconds}$** (Local CPU execution) |
 | **Legal Adjudication** | Manual human rulebook lookup | Probabilistic LLM (High hallucination risk) | **100% Deterministic Python State Machine** |
@@ -219,4 +219,4 @@ To guarantee that the demo never fails on stage, MetroSetu includes 5 layers of 
 ---
 
 ## Summary
-**MetroSetu transforms pre-packaged commodities compliance from a 20-minute manual guesswork exercise into a sub-2.5-second, mathematically proven, court-admissible digital audit.** It protects Indian consumers from shrinkflation and deceptive labeling, equips enforcement officers with an unshakeable field tool, and gives brands a transparent pre-market compliance sign-off platform.
+**MetroLens AI transforms pre-packaged commodities compliance from a 20-minute manual guesswork exercise into a sub-2.5-second, mathematically proven, court-admissible digital audit.** It protects Indian consumers from shrinkflation and deceptive labeling, equips enforcement officers with an unshakeable field tool, and gives brands a transparent pre-market compliance sign-off platform.
