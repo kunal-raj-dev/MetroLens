@@ -1,36 +1,28 @@
-# Architecture Decisions Overview
+# Architecture Decisions Overview & Cross-Reference
 
 ## Purpose
-Summarizes the key technical and structural decisions made across the Nirikshak architecture, linking them to formal Architecture Decision Records (ADRs).
+Summarizes the key technical and structural decisions made across the Nirikshak architecture and links them to their formal, canonical Architecture Decision Records (ADRs).
 
-## Scope
-Covers framework selection, vision pipeline design, rule engine execution, database choices, and offline capabilities.
-
-## Authoritative Inputs
-- `docs/15_DECISIONS/`
-- SIH 2026 Problem Statement requirements.
-
-## Assumptions
-- Every significant architectural pivot or constraint must be formally justified in `docs/15_DECISIONS/`.
-
-## Open Questions
-- Long-term synchronization strategy for central departmental telemetry [TBD — PRIMARY SOURCE REQUIRED].
-
-## Dependencies
-- `docs/15_DECISIONS/`
-
-## Verification Requirements
-- Architectural choices must align with the Anti-Hallucination Policy and Lean Architecture Mandate.
+## Canonical Authority Notice
+> [!IMPORTANT]
+> The single canonical source of truth for all formal Architecture Decision Records is **[`docs/15_DECISIONS/`](../15_DECISIONS/README.md)**.
+> This document serves as a contextual architectural index and cross-reference. Teammates must author all new decisions in `docs/15_DECISIONS/` following `docs/15_DECISIONS/ADR_TEMPLATE.md`.
 
 ---
 
-## Architectural Decision Summary Table
+## Architectural Decision Cross-Reference Table
 
-| Decision Area | Chosen Approach | Rejected Alternative | Key Justification |
+| Decision Area | Chosen Approach | Rejected Alternative | Canonical ADR Link |
 | :--- | :--- | :--- | :--- |
-| **Compliance Decision** | Deterministic Code & Schema | LLM / Generative AI Prompting | Zero hallucination; mathematically deterministic & reproducible; legally auditable. |
-| **Physical Measurement** | Optical Reference Calibration | Uncalibrated pixel heuristics | Pixels are not mm; arbitrary conversion produces fatal legal errors. |
-| **Deployment Model** | Modular Monolith / Local Stack | Distributed 14-service microservices | Eliminates network failure in basements; hackathon-practical. |
-| **Evidence Structure** | Directed Acyclic Graph (DAG) | Flat database row | Full chain of custody linking raw pixels to final verdict. |
-| **Rule Versioning** | Historical Regulatory Snapshots | Fixed latest ruleset | Packages manufactured in 2018 cannot be penalized under 2022 rules. |
-| **Image Quality Gate** | Pre-inference blur & glare check | Blind end-to-end processing | Saves compute; eliminates spurious OCR hallucinations on degraded frames. |
+| **Compliance Decision** | Deterministic Code & Schema | LLM / Generative AI Prompting | [ADR-001: Deterministic Rule Engine](../15_DECISIONS/ADR-001-deterministic-rule-engine.md) |
+| **Physical Measurement** | Optical Reference Calibration | Uncalibrated pixel heuristics | [ADR-002: Optical Reference Calibration](../15_DECISIONS/ADR-002-optical-reference-calibration.md) |
+| **Deployment Model** | Modular Monolith / Local Stack | Distributed 14-service microservices | [ADR-003: Modular Monolith Deployment](../15_DECISIONS/ADR-003-modular-monolith-deployment.md) |
+| **Evidence Structure** | Directed Acyclic Graph (DAG) | Flat database row | [ADR-004: DAG Evidence Chain of Custody](../15_DECISIONS/ADR-004-dag-evidence-chain-of-custody.md) |
+| **Rule Versioning** | Historical Regulatory Snapshots | Fixed latest ruleset | [ADR-005: Temporal Regulatory Snapshotting](../15_DECISIONS/ADR-005-temporal-regulatory-snapshotting.md) |
+| **Image Quality Gate** | Pre-inference blur & glare check | Blind end-to-end processing | [ADR-006: Pre-Inference Quality Gate](../15_DECISIONS/ADR-006-quality-gate-pre-inference.md) |
+
+---
+
+## Governance Rules
+1. Any architectural modification affecting package interfaces, models, or deployment topology requires an accepted ADR in `docs/15_DECISIONS/`.
+2. Decisions must satisfy the Anti-Hallucination Policy and the Lean Architecture Mandate.
