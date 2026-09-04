@@ -31,6 +31,7 @@ The repository is governed by authoritative specifications and architecture cont
 | Core Specification | Document Scope | Description |
 | :--- | :--- | :--- |
 | [`docs/PRODUCT_BLUEPRINT.md`](docs/PRODUCT_BLUEPRINT.md) | **Product Master Specification** | Authoritative Blueprint v1.0 defining product vision, user journey, single/multi-image architecture, 5-state framework, and success metrics. |
+| [`docs/METROSETU_PROJECT_DETAILS.md`](docs/METROSETU_PROJECT_DETAILS.md) | **Platform Master Guide** | Comprehensive end-to-end guide: statutory context, 5-step user journey, real-world defect scenarios, 5-layer failovers, and competition demonstration script. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | **System Architecture & Security** | Comprehensive web system architecture, synchronous vs. async analysis, upload pipeline, and threat model. |
 | [`docs/TEAM_RESPONSIBILITIES.md`](docs/TEAM_RESPONSIBILITIES.md) | **Team RACI & Workstreams** | Authoritative 6-member (M1–M6) ownership matrix, "Not My Job" boundaries, workstream dependency graph, and handoffs. |
 | [`docs/API_CONTRACT.md`](docs/API_CONTRACT.md) | **REST API & Schemas** | Frozen OpenAPI 3.1 contract: `POST /api/v1/inspect`, error taxonomies, and Pydantic canonical schemas. |

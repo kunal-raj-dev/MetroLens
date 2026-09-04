@@ -1,6 +1,9 @@
 # TEAM WORKSTREAM ARCHITECTURE & RESPONSIBILITY SPECIFICATION (V1.0)
+
 # MetroLens AI™ — 6-Member Engineering Ownership Matrix (M1–M6)
+
 ### Document Status: Authoritative Single Source of Truth for Team Allocation | Conformance: RFC 2119
+
 **Project Evaluation:** InnoHack 3.0 / Smart India Hackathon 2026 | **Governance Model:** Single Accountable Lead per Domain
 
 ---
@@ -10,6 +13,7 @@
 MetroLens AI is executed by a cross-functional engineering team of **six members (M1 through M6)**. To maximize engineering velocity during an intensive hackathon cycle and eliminate the catastrophic bottlenecks of sequential waiting, the team operates under **decoupled parallel tracks** governed by strict interface contracts and mock test fixtures (`tests/fixtures/`).
 
 ### Core Governance Principles
+
 1. **Single Accountable Owner (No Dual Accountabilities):** Every critical subsystem has exactly **one Accountable Lead (A)**. Multiple owners for a single deliverable create finger-pointing and delayed reviews.
 2. **Explicit "Not My Job" Boundaries:** Preventing role creep is as vital as defining duties. Teammates must know what they are explicitly forbidden from doing (e.g., frontend leads must not write legal rules in React; OCR leads must not decide legal violations).
 3. **Contract-First Independence:** On Day 1, all API and data contracts are frozen. Downstream engineers build against canonical mock JSON fixtures immediately without waiting for upstream algorithms to finish.
@@ -206,22 +210,22 @@ flowchart TD
 * **C — Consulted:** Two-way communication; provides key technical inputs and reviews.
 * **I — Informed:** Kept updated on progress and outcomes.
 
-| Project Domain / Area | M1 (AI/OCR) | M2 (CV/Calib) | M3 (Backend/Rule) | M4 (Frontend/UX) | M5 (Data/QA) | M6 (Product/DevOps) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Scene Text OCR Pipeline** | **A / R** | C | C | I | C | I |
-| **Metric Scale & Calibration**| C | **A / R** | C | I | C | I |
-| **Image Quality & Pre-check** | I | **A / R** | I | C | C | I |
-| **Backend API & Gateway** | C | I | **A / R** | C | I | C |
-| **Entity Normalization** | C | I | **A / R** | I | C | I |
-| **Statutory Rule Engine** | I | I | **A / R** | I | C | C |
-| **Web Frontend & Dropzone** | I | I | C | **A / R** | C | C |
-| **Side-by-Side Evidence UI** | I | C | C | **A / R** | C | I |
-| **Dataset & Ground Truth** | C | C | C | I | **A / R** | I |
-| **Regression & Benchmarking** | C | C | C | I | **A / R** | C |
-| **Tamper-Evident PDF Report** | I | I | C | I | I | **A / R** |
-| **Upload Security & Threats** | I | C | C | C | I | **A / R** |
-| **CI/CD & Cloud Deployment** | I | I | C | I | C | **A / R** |
-| **eMaap Mock Sync Adapter** | I | I | C | I | I | **A / R** |
+| Project Domain / Area                |   M1 (AI/OCR)   |  M2 (CV/Calib)  | M3 (Backend/Rule) | M4 (Frontend/UX) |  M5 (Data/QA)  | M6 (Product/DevOps) |
+| :----------------------------------- | :-------------: | :-------------: | :---------------: | :--------------: | :-------------: | :-----------------: |
+| **Scene Text OCR Pipeline**    | **A / R** |        C        |         C         |        I        |        C        |          I          |
+| **Metric Scale & Calibration** |        C        | **A / R** |         C         |        I        |        C        |          I          |
+| **Image Quality & Pre-check**  |        I        | **A / R** |         I         |        C        |        C        |          I          |
+| **Backend API & Gateway**      |        C        |        I        |  **A / R**  |        C        |        I        |          C          |
+| **Entity Normalization**       |        C        |        I        |  **A / R**  |        I        |        C        |          I          |
+| **Statutory Rule Engine**      |        I        |        I        |  **A / R**  |        I        |        C        |          C          |
+| **Web Frontend & Dropzone**    |        I        |        I        |         C         | **A / R** |        C        |          C          |
+| **Side-by-Side Evidence UI**   |        I        |        C        |         C         | **A / R** |        C        |          I          |
+| **Dataset & Ground Truth**     |        C        |        C        |         C         |        I        | **A / R** |          I          |
+| **Regression & Benchmarking**  |        C        |        C        |         C         |        I        | **A / R** |          C          |
+| **Tamper-Evident PDF Report**  |        I        |        I        |         C         |        I        |        I        |   **A / R**   |
+| **Upload Security & Threats**  |        I        |        C        |         C         |        C        |        I        |   **A / R**   |
+| **CI/CD & Cloud Deployment**   |        I        |        I        |         C         |        I        |        C        |   **A / R**   |
+| **eMaap Mock Sync Adapter**    |        I        |        I        |         C         |        I        |        I        |   **A / R**   |
 
 ---
 
@@ -275,16 +279,17 @@ To prevent integration friction, all subsystem handoffs are governed by explicit
 
 To ensure high code quality, PRs must be reviewed by the designated primary and cross-support leads:
 
-| Subsystem / PR Scope | Primary Reviewer (Required) | Secondary Cross-Reviewer | Escalation & Merge Authority |
-| :--- | :--- | :--- | :--- |
-| **OCR & Neural Runtime** (`packages/ocr/`) | M1 (AI Lead) | M5 (Data/Benchmark) | M3 (Backend Lead) |
-| **CV & Calibration** (`packages/calibration/`) | M2 (CV Lead) | M5 (Data/Benchmark) | M3 (Backend Lead) |
-| **API & Rule Engine** (`apps/api/`, `rules-engine/`) | M3 (Backend Lead) | M6 (Security/DevOps) | M3 / M6 |
-| **Web Frontend** (`apps/web/`) | M4 (Frontend Lead) | M6 (Product/Integration) | M4 / M6 |
-| **Datasets & Benchmarks** (`data/`, `tests/`) | M5 (QA Lead) | M1 (OCR) / M2 (CV) | M5 / M6 |
-| **CI/CD, Docker & PDF** (`infra/`, `reporting/`) | M6 (DevOps Lead) | M3 (Backend Lead) | M6 (Project Lead) |
+| Subsystem / PR Scope                                           | Primary Reviewer (Required) | Secondary Cross-Reviewer | Escalation & Merge Authority |
+| :------------------------------------------------------------- | :-------------------------- | :----------------------- | :--------------------------- |
+| **OCR & Neural Runtime** (`packages/ocr/`)             | M1 (AI Lead)                | M5 (Data/Benchmark)      | M3 (Backend Lead)            |
+| **CV & Calibration** (`packages/calibration/`)         | M2 (CV Lead)                | M5 (Data/Benchmark)      | M3 (Backend Lead)            |
+| **API & Rule Engine** (`apps/api/`, `rules-engine/`) | M3 (Backend Lead)           | M6 (Security/DevOps)     | M3 / M6                      |
+| **Web Frontend** (`apps/web/`)                         | M4 (Frontend Lead)          | M6 (Product/Integration) | M4 / M6                      |
+| **Datasets & Benchmarks** (`data/`, `tests/`)        | M5 (QA Lead)                | M1 (OCR) / M2 (CV)       | M5 / M6                      |
+| **CI/CD, Docker & PDF** (`infra/`, `reporting/`)     | M6 (DevOps Lead)            | M3 (Backend Lead)        | M6 (Project Lead)            |
 
 *Rules:*
+
 - No developer may approve or merge their own Pull Request.
 - At least **1 Primary Reviewer approval** is strictly required to merge into `main`.
 - The Project Lead (M6) and Backend Lead (M3) have unilateral veto authority over any PR that introduces security vulnerabilities or breaks the synchronous sub-2.5s execution budget.
