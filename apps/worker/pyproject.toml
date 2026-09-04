@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nirikshak-worker"
+version = "0.1.0"
+description = "Asynchronous inspection pipeline background worker for Nirikshak."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "nirikshak-shared",
+    "nirikshak-vision",
+    "nirikshak-calibration",
+    "nirikshak-ocr",
+    "nirikshak-extraction",
+    "nirikshak-measurement",
+    "nirikshak-rules-engine",
+    "nirikshak-evidence",
+    "nirikshak-reporting",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
