@@ -1,7 +1,7 @@
 # MetroLens AI™ — Automated Legal Metrology Inspection & Compliance System
 ### Sponsoring Ministry: Ministry of Consumer Affairs, Food & Public Distribution | Problem Statement: SIH26034
 **Evaluation Framework:** InnoHack 3.0 / Smart India Hackathon 2026 | **Document Status:** Authoritative Repository Overview  
-**Local Environment:** Python 3.14+ | Node.js v25+ | Git 2.52+ | **Architecture:** 100% Offline Edge-Native
+**Environment:** Python 3.14+ | Node.js v25+ | Git 2.52+ | **Architecture:** Online Web Application MVP (FastAPI + React) with Deterministic Core
 
 ---
 
@@ -13,31 +13,33 @@
 
 ## 📌 Executive Summary
 
-**MetroLens AI™** is an edge-native, perspective-corrected mobile computer vision and regulatory audit system designed for District Legal Metrology Officers (LMOs) and packaging compliance auditors. It transforms a tedious, manual 20-minute ruler-and-magnifier inspection into a **sub-2.5-second, mathematically verified, tamper-evident regulatory compliance audit**.
+**MetroLens AI™** is an online web application and automated regulatory audit platform designed for District Legal Metrology Officers (LMOs), retail packaging compliance managers, brand quality assurance teams, and e-commerce catalog auditors. It transforms a tedious, manual 20-minute ruler-and-magnifier inspection into a **sub-2.5-second, mathematically verified, tamper-evident regulatory compliance audit**.
 
-By combining a **universally available optical metric anchor** (a standard 10-Rupee coin or ISO card) with **planar metric scale calibration**, MetroLens AI solves the fundamental monocular scale ambiguity of smartphone cameras. It directly evaluates statutory numeral heights (Rule 7 Table-I/II) against calibrated Principal Display Panel (PDP) areas, audits Unit Sale Price (USP) arithmetic against Net Quantity and MRP under Rule 6(11) in standardized denominations, extracts mandatory packaging declarations across English and Hindi using local scene text OCR, and verifies compliance through a **100% deterministic statutory state machine**.
+The primary product experience is centered on an intuitive web interaction paradigm:
+$$\text{UPLOAD IMAGE(S)} \longrightarrow \text{VALIDATE} \longrightarrow \text{PROCESS} \longrightarrow \text{ANALYZE} \longrightarrow \text{VERIFY} \longrightarrow \text{EXPLAIN RESULT}$$
 
-The system operates **entirely offline** on local edge hardware without external cloud dependency, generates a cryptographically sealed (SHA-256) **Image-Based Compliance Assessment Report** under Section 15 of the Legal Metrology Act, 2009 (incorporating the **Jan Vishwas (Amendment of Provisions) Act, 2026 Improvement Notice framework** under Section 36(1)), and provides an **eMaap-Inspired Mock REST Adapter Interface** ready for national portal integration.
+By combining an accessible **browser-based image upload dropzone** with **planar metric scale calibration** (recovering millimeters-per-pixel via a 10-Rupee coin or ISO card anchor), MetroLens AI solves the fundamental monocular scale ambiguity of smartphone photos. It directly audits statutory numeral heights (Rule 7 Table-I/II) against calibrated Principal Display Panel (PDP) areas, verifies Unit Sale Price (USP) arithmetic against Net Quantity and MRP under Rule 6(11) in standardized denominations, extracts mandatory packaging declarations across English and Hindi using server-side quantized scene text OCR, and verifies compliance through a **100% deterministic statutory state machine**.
+
+The system operates as a **first-class online web application** backed by containerized FastAPI endpoints, executes all neural inference on CPU with zero paid cloud AI API dependencies, generates a cryptographically sealed (SHA-256) **Image-Based Compliance Assessment Report PDF** under Section 15 of the Legal Metrology Act, 2009 (incorporating the **Jan Vishwas (Amendment of Provisions) Act, 2026 Improvement Notice framework** under Section 36(1)), and provides an **eMaap-Inspired Mock REST Adapter Interface** ready for national portal integration.
 
 ---
 
-## 🚀 Newly Committed Core Files & Deliverables
+## 🚀 Authoritative Project Documentation Suite
 
-The latest repository commits deliver the authoritative engineering workflow, architecture visuals, authentic legal source archives, and automation tooling:
+The repository is governed by authoritative specifications and architecture contracts:
 
-| Core Deliverable / File | Type / Scope | Description |
+| Core Specification | Document Scope | Description |
 | :--- | :--- | :--- |
-| [`GLOBAL_TEAM_WORKFLOW.md`](GLOBAL_TEAM_WORKFLOW.md) | **Governance & Workflow** | Comprehensive 36-section team development guide adhering to RFC 2119 standards. Covers Optimized GitHub Flow, Conventional Commits, DoR/DoD, testing matrix, code review protocols, and beginner troubleshooting. |
-| [`docs/DEFINITION_OF_READY.md`](docs/DEFINITION_OF_READY.md) | **Governance & DoR Gate** | Authoritative 10-point Definition of Ready specification with real-world subsystem examples, state lifecycle transitions, and beginner quick-start checklist. |
-| [`docs/GLOBAL_TEAM_WORKFLOW.svg`](docs/GLOBAL_TEAM_WORKFLOW.svg) | **Visual Architecture** | High-resolution vector flowchart illustrating all 5 lifecycle phases (Task DoR $\rightarrow$ Branch Isolation $\rightarrow$ Commits & Sync $\rightarrow$ PR & CI $\rightarrow$ Squash Merge), linear trunk architecture, and golden rules. |
-| [`METROLENS_LEGAL_SOURCE_PACK/`](METROLENS_LEGAL_SOURCE_PACK/) | **Official Legal Pack** | Stage 1 verified archive of authentic Ministry of Consumer Affairs (DoCA) gazettes, Primary Acts (2009, Jan Vishwas 2023 & 2026), LMPC Amendments (2011–2026), GST Advisories, Enforcement SOPs, and Judicial Precedents. |
-| [`METROLENS_LEGAL_SOURCE_PACK/00_SOURCE_INDEX/CHECKSUM_MANIFEST.csv`](METROLENS_LEGAL_SOURCE_PACK/00_SOURCE_INDEX/CHECKSUM_MANIFEST.csv) | **Cryptographic Manifest** | SHA-256 integrity checksums and metadata catalog for all official legal PDFs. |
-| [`ALL-IN-ONE context/METROLENS_AI_ALL_IN_ONE_DOCS.md`](ALL-IN-ONE%20context/METROLENS_AI_ALL_IN_ONE_DOCS.md) | **Master Context** | Single unified 228KB engineering dossier consolidating all research, statutory rules, technical specs, and hackathon strategies. |
-| [`tools/legal_sources/collect_official_legal_sources.py`](tools/legal_sources/collect_official_legal_sources.py) | **Operational Tooling** | Automated, reproducible Python pipeline script for scraping, validating, checksumming, and cataloging official legal gazette publications. |
-| [`MVP_UNIFIED_WORKFLOW_GRAPH.md`](MVP_UNIFIED_WORKFLOW_GRAPH.md) | **Technical Architecture** | Master 16-node unified MVP workflow graph, data contracts, failure fallback policies, and M1–M6 team ownership matrix. |
-| [`docs/PRODUCT_BLUEPRINT.md`](docs/PRODUCT_BLUEPRINT.md) | **Technical Specification** | Master Product Blueprint v0.3 establishing the system architecture, mathematical proofs, optical formulas, and acceptance criteria. |
-| [`docs/LEGAL_RULE_MATRIX.md`](docs/LEGAL_RULE_MATRIX.md) | **Statutory Rule Matrix** | Formal codification of Legal Metrology (Packaged Commodities) Rules, 2011 and 2026 statutory amendments. |
-| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | **Execution Roadmap** | 8–9 day execution plan with the 6-member cross-functional allocation matrix and 24-hour validation spikes. |
+| [`docs/PRODUCT_BLUEPRINT.md`](docs/PRODUCT_BLUEPRINT.md) | **Product Master Specification** | Authoritative Blueprint v1.0 defining product vision, user journey, single/multi-image architecture, 5-state framework, and success metrics. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | **System Architecture & Security** | Comprehensive web system architecture, synchronous vs. async analysis, upload pipeline, and threat model. |
+| [`docs/TEAM_RESPONSIBILITIES.md`](docs/TEAM_RESPONSIBILITIES.md) | **Team RACI & Workstreams** | Authoritative 6-member (M1–M6) ownership matrix, "Not My Job" boundaries, workstream dependency graph, and handoffs. |
+| [`docs/API_CONTRACT.md`](docs/API_CONTRACT.md) | **REST API & Schemas** | Frozen OpenAPI 3.1 contract: `POST /api/v1/inspect`, error taxonomies, and Pydantic canonical schemas. |
+| [`docs/TESTING_STRATEGY.md`](docs/TESTING_STRATEGY.md) | **Quality Assurance & Verification** | Multi-tiered testing pyramid, automated test nodes (T01–T06), upload fuzzing, and anti-hallucination verification gates. |
+| [`GLOBAL_TEAM_WORKFLOW.md`](GLOBAL_TEAM_WORKFLOW.md) | **Governance & Workflow** | Comprehensive 36-section team development guide: Optimized GitHub Flow, Conventional Commits, DoR/DoD gates. |
+| [`MVP_UNIFIED_WORKFLOW_GRAPH.md`](MVP_UNIFIED_WORKFLOW_GRAPH.md) | **Pipeline Node Architecture** | Master 16-node unified MVP workflow graph, data contracts, failure fallback policies, and mock fixtures. |
+| [`docs/TECHNICAL_DECISIONS.md`](docs/TECHNICAL_DECISIONS.md) | **Architecture Decision Records** | ADR-001 through ADR-014 recording trade-offs in OCR, calibration, web delivery, security, and retention. |
+| [`docs/DEFINITION_OF_READY.md`](docs/DEFINITION_OF_READY.md) | **Governance & DoR Gate** | Authoritative 10-point Definition of Ready specification with real-world subsystem examples. |
+| [`METROLENS_LEGAL_SOURCE_PACK/`](METROLENS_LEGAL_SOURCE_PACK/) | **Official Legal Source Archive** | Stage 1 verified archive of authentic Ministry of Consumer Affairs gazettes, Acts (2009, 2023, 2026), and LMPC Rules. |
 
 ---
 
@@ -45,10 +47,10 @@ The latest repository commits deliver the authoritative engineering workflow, ar
 
 MetroLens AI enforces strict boundaries between probabilistic AI extraction, exact mathematical calibration, deterministic legal logic, and authorized officer discretion:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 1. AI PERCEIVES (Probabilistic Optical Extraction)                          │
-│ • Quantized PaddleOCR v4 Mobile (DBNet++, SVTR) running on local CPU.       │
+│ • Quantized PaddleOCR v4 Mobile (DBNet++, SVTR) running on server CPU.      │
 │ • Extracts raw character strings and bounding boxes across English & Hindi.  │
 │ • Strict Boundary: AI NEVER decides whether a package violates the law.     │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -63,7 +65,7 @@ MetroLens AI enforces strict boundaries between probabilistic AI extraction, exa
 │ • Strict Boundary: 100% deterministic, audit-traceable, version-stamped.    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. HUMANS GOVERN (Regulatory Discretion & Enforcement)                      │
-│ • 5-State compliance classification and 1-tap inspector confirmation UI.    │
+│ • 5-State compliance classification and interactive web evidence viewer.    │
 │ • Inspecting officer reviews visual crops and issues statutory notices.     │
 │ • Strict Boundary: System acts as assistive screening under Section 15.    │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -87,16 +89,16 @@ To eliminate false-positive harassment of honest merchants, MetroLens AI categor
 
 ## 👥 Six-Member Engineering Ownership Matrix
 
-Aligned with the dual-project hackathon allocation defined in [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md):
+Aligned with [`docs/TEAM_RESPONSIBILITIES.md`](docs/TEAM_RESPONSIBILITIES.md):
 
 | Member | Primary Role | Secondary Support | Core Subsystem Ownership |
 | :---: | :--- | :--- | :--- |
-| **M1** | **AI & OCR Lead** | Backend API Support | PaddleOCR ONNX int8 runtime, CPU thread optimization, Devanagari translation mapping, text box cropping. |
+| **M1** | **AI & OCR Perception Lead** | Backend API Support | PaddleOCR ONNX int8 runtime, CPU thread optimization, Devanagari translation mapping, text box cropping. |
 | **M2** | **Calibration & Geometry Lead** | Physical Data Collection | Optical metric scale recovery ($S = 27.0\text{mm} / d_{\text{major}}$), coin contour detection, vertical cylinder generator invariance. |
 | **M3** | **Backend & Rule Engine Lead** | Architecture Governance | FastAPI server, Pydantic canonical schemas, deterministic Legal Metrology state machine (Rules 6, 7, 8, 26), USP math auditor. |
-| **M4** | **Frontend & UX Lead** | Demo Stagecraft Support | Responsive Vite/React PWA, camera WebRTC viewfinder, 5-state compliance badges, side-by-side evidence viewer. |
+| **M4** | **Frontend & Web UX Lead** | Demo Stagecraft Support | Responsive Vite/React web application, image upload dropzone, 5-state compliance badges, side-by-side evidence viewer. |
 | **M5** | **Data & Benchmark Lead** | Calibration Support | Physical packaging collection (35+ SKUs), 1200 DPI flatbed ground-truth optical scanning, automated CER/WER evaluation. |
-| **M6** | **Product, DevOps & Presentation Lead** | QA & Compliance Audit | Repository governance, GitHub CI/CD workflows, cryptographic SHA-256 PDF report generator, eMaap mock sync adapter. |
+| **M6** | **Product, DevOps & Security Lead** | QA & Compliance Audit | Repository governance, GitHub CI/CD workflows, upload security hardening, cryptographic SHA-256 PDF report generator, eMaap mock sync. |
 
 ---
 
@@ -163,7 +165,7 @@ git checkout -b feat/14-usp-arithmetic-auditor
 ### 3. Local Verification & Commits
 ```bash
 # Run tests locally
-pytest backend/tests/
+python -m pytest tests/
 
 # Commit using Conventional Commits
 git add <modified-files>
@@ -200,7 +202,7 @@ python scripts/verification/verify_claims.py
 python scripts/verification/verify_dataset_manifest.py
 
 # Verify end-to-end verification pipeline
-pytest tests/unit/test_verification_pipeline.py
+python -m pytest tests/unit/test_verification_pipeline.py
 ```
 
 ---
