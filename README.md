@@ -33,6 +33,7 @@ The latest repository commits deliver the authoritative engineering workflow, ar
 | [`METROLENS_LEGAL_SOURCE_PACK/00_SOURCE_INDEX/CHECKSUM_MANIFEST.csv`](METROLENS_LEGAL_SOURCE_PACK/00_SOURCE_INDEX/CHECKSUM_MANIFEST.csv) | **Cryptographic Manifest** | SHA-256 integrity checksums and metadata catalog for all official legal PDFs. |
 | [`ALL-IN-ONE context/METROLENS_AI_ALL_IN_ONE_DOCS.md`](ALL-IN-ONE%20context/METROLENS_AI_ALL_IN_ONE_DOCS.md) | **Master Context** | Single unified 228KB engineering dossier consolidating all research, statutory rules, technical specs, and hackathon strategies. |
 | [`tools/legal_sources/collect_official_legal_sources.py`](tools/legal_sources/collect_official_legal_sources.py) | **Operational Tooling** | Automated, reproducible Python pipeline script for scraping, validating, checksumming, and cataloging official legal gazette publications. |
+| [`MVP_UNIFIED_WORKFLOW_GRAPH.md`](MVP_UNIFIED_WORKFLOW_GRAPH.md) | **Technical Architecture** | Master 16-node unified MVP workflow graph, data contracts, failure fallback policies, and M1–M6 team ownership matrix. |
 | [`docs/PRODUCT_BLUEPRINT.md`](docs/PRODUCT_BLUEPRINT.md) | **Technical Specification** | Master Product Blueprint v0.3 establishing the system architecture, mathematical proofs, optical formulas, and acceptance criteria. |
 | [`docs/LEGAL_RULE_MATRIX.md`](docs/LEGAL_RULE_MATRIX.md) | **Statutory Rule Matrix** | Formal codification of Legal Metrology (Packaged Commodities) Rules, 2011 and 2026 statutory amendments. |
 | [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | **Execution Roadmap** | 8–9 day execution plan with the 6-member cross-functional allocation matrix and 24-hour validation spikes. |
@@ -103,6 +104,7 @@ Aligned with the dual-project hackathon allocation defined in [`docs/IMPLEMENTAT
 ```text
 MetroLens/
 ├── GLOBAL_TEAM_WORKFLOW.md                 # Authoritative 36-Section Team Development Workflow
+├── MVP_UNIFIED_WORKFLOW_GRAPH.md           # Master 16-Node Workflow Graph & JSON Contracts
 ├── README.md                               # Project Overview, Setup & Deliverables
 ├── ALL-IN-ONE context/                     # Unified Master Documentation Dossier (228KB)
 │   └── METROLENS_AI_ALL_IN_ONE_DOCS.md
