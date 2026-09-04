@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nirikshak-extraction"
+version = "0.1.0"
+description = "Rule 6 mandatory declaration field extraction and entity mapping for Nirikshak."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "nirikshak-shared",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
