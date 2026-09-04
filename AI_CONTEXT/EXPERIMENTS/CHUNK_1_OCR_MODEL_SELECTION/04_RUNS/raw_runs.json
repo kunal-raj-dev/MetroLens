@@ -1,0 +1,659 @@
+[
+  {
+    "candidate_id": "OCR-C1-001",
+    "candidate_name": "PP-OCRv3-EN",
+    "sample_id": "SYNTH-01-ENG-FMCG",
+    "language": "en",
+    "median_latency_ms": 720.44,
+    "p95_latency_ms": 733.5,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.8863,
+    "recognized_text": "SYNTHETIC TEST-NOT REALPACKAGING MRP Rs. 20.00 (inclusive of all taxes) Net Qty: 65 g Unit Sale Price: Rs. 0.31 / g MfgDate:08/2026 ConsumerCare:1800-222-4444orcare@biscuit.in",
+    "field_matches": {
+      "mrp": {
+        "expected": "20.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "65 g",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.31 / g",
+        "matched": true
+      },
+      "date": {
+        "expected": "08/2026",
+        "matched": true
+      },
+      "contact": {
+        "expected": "1800-222-4444",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-001",
+    "candidate_name": "PP-OCRv3-EN",
+    "sample_id": "SYNTH-02-HIN-FMCG",
+    "language": "hi",
+    "median_latency_ms": 610.16,
+    "p95_latency_ms": 626.08,
+    "num_boxes_detected": 4,
+    "avg_confidence": 0.7533,
+    "recognized_text": "SYNTHETICTEST-NOTREALPACKAGING 3FgfgGTH74: 245.00 ：05/2026 :care@atta.in",
+    "field_matches": {
+      "mrp": {
+        "expected": "245.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "5 किग्रा",
+        "matched": false
+      },
+      "date": {
+        "expected": "05/2026",
+        "matched": true
+      },
+      "contact": {
+        "expected": "care@atta.in",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-001",
+    "candidate_name": "PP-OCRv3-EN",
+    "sample_id": "SYNTH-03-MIXED-BILINGUAL",
+    "language": "mixed",
+    "median_latency_ms": 633.88,
+    "p95_latency_ms": 648.02,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.8321,
+    "recognized_text": "SYNTHETIC TEST - NOT REAL PACKAGING MRP / 3FgfHGRTHT4:Rs.50.00 Net Qty / fa HIaRI: 150 g UsP: Rs. 0.33 per g BestBefore:12/2026 CustomerCare:support@snack.com",
+    "field_matches": {
+      "mrp": {
+        "expected": "50.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "150 g",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.33 per g",
+        "matched": true
+      },
+      "date": {
+        "expected": "12/2026",
+        "matched": true
+      },
+      "contact": {
+        "expected": "support@snack.com",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-001",
+    "candidate_name": "PP-OCRv3-EN",
+    "sample_id": "SYNTH-04-MICRO-FONT",
+    "language": "en",
+    "median_latency_ms": 698.19,
+    "p95_latency_ms": 709.57,
+    "num_boxes_detected": 5,
+    "avg_confidence": 0.8916,
+    "recognized_text": "SYNTHETIC TEST-NOTREALPACKAGING MRPRs.10.00incl.ofalltaxes NetWeight:35g UnitSalePrice:Rs.0.28/g Mfg:07/2026",
+    "field_matches": {
+      "mrp": {
+        "expected": "10.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "35g",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.28/g",
+        "matched": true
+      },
+      "date": {
+        "expected": "07/2026",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-001",
+    "candidate_name": "PP-OCRv3-EN",
+    "sample_id": "SYNTH-05-LIQUID-VOLUME",
+    "language": "en",
+    "median_latency_ms": 702.79,
+    "p95_latency_ms": 721.37,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.887,
+    "recognized_text": "SYNTHETIC TEST-NOT REALPACKAGING Maximum Retail Price:Rs.125.00 Net Volume: 250 ml UnitSalePrice:Rs.0.50/ml Expiry:04/2028BatchB-902 Helpline:1800-100-9999",
+    "field_matches": {
+      "mrp": {
+        "expected": "125.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "250 ml",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.50/ml",
+        "matched": true
+      },
+      "date": {
+        "expected": "04/2028",
+        "matched": true
+      },
+      "contact": {
+        "expected": "1800-100-9999",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-001",
+    "candidate_name": "PP-OCRv3-EN",
+    "sample_id": "SYNTH-06-PROHIBITED-UNITS",
+    "language": "en",
+    "median_latency_ms": 701.27,
+    "p95_latency_ms": 776.46,
+    "num_boxes_detected": 5,
+    "avg_confidence": 0.8634,
+    "recognized_text": "SYNTHETIC TEST-NOT REALPACKAGING MRPRs.85/-(inclusivealltaxes) NetWt:500Gms Vol:1000ML Mfg:01/2026",
+    "field_matches": {
+      "mrp": {
+        "expected": "85",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "500 Gms",
+        "matched": false
+      },
+      "date": {
+        "expected": "01/2026",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-001",
+    "candidate_name": "PP-OCRv3-EN",
+    "sample_id": "SYNTH-07-BLANK-FRAME",
+    "language": "none",
+    "median_latency_ms": 222.58,
+    "p95_latency_ms": 229.15,
+    "num_boxes_detected": 0,
+    "avg_confidence": 0.0,
+    "recognized_text": "",
+    "field_matches": {}
+  },
+  {
+    "candidate_id": "OCR-C1-001",
+    "candidate_name": "PP-OCRv3-EN",
+    "sample_id": "SYNTH-08-LOW-CONTRAST-FADED",
+    "language": "en",
+    "median_latency_ms": 622.06,
+    "p95_latency_ms": 670.66,
+    "num_boxes_detected": 4,
+    "avg_confidence": 0.8512,
+    "recognized_text": "SYNTHETIC TEST-NOTREALPACKAGING MRPRs.30.00 NET: 40 g EXP11/2026",
+    "field_matches": {
+      "mrp": {
+        "expected": "30.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "40 g",
+        "matched": true
+      },
+      "date": {
+        "expected": "11/2026",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "candidate_name": "PP-OCRv3-HINDI",
+    "sample_id": "SYNTH-01-ENG-FMCG",
+    "language": "en",
+    "median_latency_ms": 537.38,
+    "p95_latency_ms": 547.16,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.8912,
+    "recognized_text": "SYFTHETIC TEST -FOT FEAL PACEAGIG MRP Rs. 20.O0 inclusive of all taxes Net ९ty: 65 ९ Unit Sale Price: Rs. O.31 I g Mfg Date: O812026 Consuer Care: 1800-222-4444 or care4biscuit.im",
+    "field_matches": {
+      "mrp": {
+        "expected": "20.00",
+        "matched": false
+      },
+      "net_quantity": {
+        "expected": "65 g",
+        "matched": false
+      },
+      "usp": {
+        "expected": "0.31 / g",
+        "matched": false
+      },
+      "date": {
+        "expected": "08/2026",
+        "matched": false
+      },
+      "contact": {
+        "expected": "1800-222-4444",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "candidate_name": "PP-OCRv3-HINDI",
+    "sample_id": "SYNTH-02-HIN-FMCG",
+    "language": "hi",
+    "median_latency_ms": 456.13,
+    "p95_latency_ms": 489.78,
+    "num_boxes_detected": 4,
+    "avg_confidence": 0.7856,
+    "recognized_text": "SYTIHEIIL TESI - IOT FEHL PHLEHGIE अधिकतमखुदरामूल्यः२४.॰० पैकिंगकीतारीखः॰५ा२०२६  ः Careतata.",
+    "field_matches": {
+      "mrp": {
+        "expected": "245.00",
+        "matched": false
+      },
+      "net_quantity": {
+        "expected": "5 किग्रा",
+        "matched": false
+      },
+      "date": {
+        "expected": "05/2026",
+        "matched": false
+      },
+      "contact": {
+        "expected": "care@atta.in",
+        "matched": false
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "candidate_name": "PP-OCRv3-HINDI",
+    "sample_id": "SYNTH-03-MIXED-BILINGUAL",
+    "language": "mixed",
+    "median_latency_ms": 454.14,
+    "p95_latency_ms": 510.1,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.8733,
+    "recognized_text": "SYRITHETIC TEST - ROT PEPL PACEAGITIG MR अधिकतमखुदरामूल्यः२s.5०.७० Net 9ty I निवल मात्राI: 150 g USP: Rs. O.33 per 9 Best Before: 1212026 Customer Care: supportasnack. Com",
+    "field_matches": {
+      "mrp": {
+        "expected": "50.00",
+        "matched": false
+      },
+      "net_quantity": {
+        "expected": "150 g",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.33 per g",
+        "matched": false
+      },
+      "date": {
+        "expected": "12/2026",
+        "matched": false
+      },
+      "contact": {
+        "expected": "support@snack.com",
+        "matched": false
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "candidate_name": "PP-OCRv3-HINDI",
+    "sample_id": "SYNTH-04-MICRO-FONT",
+    "language": "en",
+    "median_latency_ms": 441.98,
+    "p95_latency_ms": 465.73,
+    "num_boxes_detected": 5,
+    "avg_confidence": 0.7576,
+    "recognized_text": "STTIHEIIL TES! - TIT FEHL PHHEHGIE MRP Rs. 1O.OO incl. of all taxes Net Weight: 35g Unit Sale Price: Fs. O.ZBIg M9: O7२२६",
+    "field_matches": {
+      "mrp": {
+        "expected": "10.00",
+        "matched": false
+      },
+      "net_quantity": {
+        "expected": "35g",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.28/g",
+        "matched": false
+      },
+      "date": {
+        "expected": "07/2026",
+        "matched": false
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "candidate_name": "PP-OCRv3-HINDI",
+    "sample_id": "SYNTH-05-LIQUID-VOLUME",
+    "language": "en",
+    "median_latency_ms": 510.12,
+    "p95_latency_ms": 569.2,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.894,
+    "recognized_text": "SYFTHETIC TEST -FOT FEAL PACEAGIG Maximum Retail Price: Rs. 125.00 Net Volume: 250 m! Unit Sale Price: Rs. O.50I'm! Expiry: O412028 Batch B-902 Helpline: 1800-100-g999",
+    "field_matches": {
+      "mrp": {
+        "expected": "125.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "250 ml",
+        "matched": false
+      },
+      "usp": {
+        "expected": "0.50/ml",
+        "matched": false
+      },
+      "date": {
+        "expected": "04/2028",
+        "matched": false
+      },
+      "contact": {
+        "expected": "1800-100-9999",
+        "matched": false
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "candidate_name": "PP-OCRv3-HINDI",
+    "sample_id": "SYNTH-06-PROHIBITED-UNITS",
+    "language": "en",
+    "median_latency_ms": 426.56,
+    "p95_latency_ms": 463.61,
+    "num_boxes_detected": 5,
+    "avg_confidence": 0.8089,
+    "recognized_text": "SYFTHETIC TEST -FOT FEAL PACEAGIG MRP Rs. 85I- inclusive all taxes Net Wt: 5O0 GmS Nol:1000 ML Mfg: O1२0२6",
+    "field_matches": {
+      "mrp": {
+        "expected": "85",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "500 Gms",
+        "matched": false
+      },
+      "date": {
+        "expected": "01/2026",
+        "matched": false
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "candidate_name": "PP-OCRv3-HINDI",
+    "sample_id": "SYNTH-07-BLANK-FRAME",
+    "language": "none",
+    "median_latency_ms": 186.0,
+    "p95_latency_ms": 215.71,
+    "num_boxes_detected": 0,
+    "avg_confidence": 0.0,
+    "recognized_text": "",
+    "field_matches": {}
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "candidate_name": "PP-OCRv3-HINDI",
+    "sample_id": "SYNTH-08-LOW-CONTRAST-FADED",
+    "language": "en",
+    "median_latency_ms": 419.99,
+    "p95_latency_ms": 430.17,
+    "num_boxes_detected": 2,
+    "avg_confidence": 0.638,
+    "recognized_text": "NIRP RS.30.O N६१ः४०९",
+    "field_matches": {
+      "mrp": {
+        "expected": "30.00",
+        "matched": false
+      },
+      "net_quantity": {
+        "expected": "40 g",
+        "matched": false
+      },
+      "date": {
+        "expected": "11/2026",
+        "matched": false
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "candidate_name": "PP-OCRv3-DUAL",
+    "sample_id": "SYNTH-01-ENG-FMCG",
+    "language": "en",
+    "median_latency_ms": 1214.11,
+    "p95_latency_ms": 1386.01,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.8863,
+    "recognized_text": "SYNTHETIC TEST-NOT REALPACKAGING MRP Rs. 20.00 (inclusive of all taxes) Net Qty: 65 g Unit Sale Price: Rs. 0.31 / g MfgDate:08/2026 ConsumerCare:1800-222-4444orcare@biscuit.in",
+    "field_matches": {
+      "mrp": {
+        "expected": "20.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "65 g",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.31 / g",
+        "matched": true
+      },
+      "date": {
+        "expected": "08/2026",
+        "matched": true
+      },
+      "contact": {
+        "expected": "1800-222-4444",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "candidate_name": "PP-OCRv3-DUAL",
+    "sample_id": "SYNTH-02-HIN-FMCG",
+    "language": "hi",
+    "median_latency_ms": 1247.14,
+    "p95_latency_ms": 1368.1,
+    "num_boxes_detected": 4,
+    "avg_confidence": 0.7533,
+    "recognized_text": "SYNTHETICTEST-NOTREALPACKAGING 3FgfgGTH74: 245.00 ：05/2026 :care@atta.in",
+    "field_matches": {
+      "mrp": {
+        "expected": "245.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "5 किग्रा",
+        "matched": false
+      },
+      "date": {
+        "expected": "05/2026",
+        "matched": true
+      },
+      "contact": {
+        "expected": "care@atta.in",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "candidate_name": "PP-OCRv3-DUAL",
+    "sample_id": "SYNTH-03-MIXED-BILINGUAL",
+    "language": "mixed",
+    "median_latency_ms": 1194.13,
+    "p95_latency_ms": 1330.04,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.8321,
+    "recognized_text": "SYNTHETIC TEST - NOT REAL PACKAGING MRP / 3FgfHGRTHT4:Rs.50.00 Net Qty / fa HIaRI: 150 g UsP: Rs. 0.33 per g BestBefore:12/2026 CustomerCare:support@snack.com",
+    "field_matches": {
+      "mrp": {
+        "expected": "50.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "150 g",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.33 per g",
+        "matched": true
+      },
+      "date": {
+        "expected": "12/2026",
+        "matched": true
+      },
+      "contact": {
+        "expected": "support@snack.com",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "candidate_name": "PP-OCRv3-DUAL",
+    "sample_id": "SYNTH-04-MICRO-FONT",
+    "language": "en",
+    "median_latency_ms": 1274.31,
+    "p95_latency_ms": 1343.81,
+    "num_boxes_detected": 5,
+    "avg_confidence": 0.8916,
+    "recognized_text": "SYNTHETIC TEST-NOTREALPACKAGING MRPRs.10.00incl.ofalltaxes NetWeight:35g UnitSalePrice:Rs.0.28/g Mfg:07/2026",
+    "field_matches": {
+      "mrp": {
+        "expected": "10.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "35g",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.28/g",
+        "matched": true
+      },
+      "date": {
+        "expected": "07/2026",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "candidate_name": "PP-OCRv3-DUAL",
+    "sample_id": "SYNTH-05-LIQUID-VOLUME",
+    "language": "en",
+    "median_latency_ms": 1354.23,
+    "p95_latency_ms": 1417.13,
+    "num_boxes_detected": 6,
+    "avg_confidence": 0.887,
+    "recognized_text": "SYNTHETIC TEST-NOT REALPACKAGING Maximum Retail Price:Rs.125.00 Net Volume: 250 ml UnitSalePrice:Rs.0.50/ml Expiry:04/2028BatchB-902 Helpline:1800-100-9999",
+    "field_matches": {
+      "mrp": {
+        "expected": "125.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "250 ml",
+        "matched": true
+      },
+      "usp": {
+        "expected": "0.50/ml",
+        "matched": true
+      },
+      "date": {
+        "expected": "04/2028",
+        "matched": true
+      },
+      "contact": {
+        "expected": "1800-100-9999",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "candidate_name": "PP-OCRv3-DUAL",
+    "sample_id": "SYNTH-06-PROHIBITED-UNITS",
+    "language": "en",
+    "median_latency_ms": 1282.88,
+    "p95_latency_ms": 1501.32,
+    "num_boxes_detected": 5,
+    "avg_confidence": 0.8634,
+    "recognized_text": "SYNTHETIC TEST-NOT REALPACKAGING MRPRs.85/-(inclusivealltaxes) NetWt:500Gms Vol:1000ML Mfg:01/2026",
+    "field_matches": {
+      "mrp": {
+        "expected": "85",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "500 Gms",
+        "matched": false
+      },
+      "date": {
+        "expected": "01/2026",
+        "matched": true
+      }
+    }
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "candidate_name": "PP-OCRv3-DUAL",
+    "sample_id": "SYNTH-07-BLANK-FRAME",
+    "language": "none",
+    "median_latency_ms": 490.54,
+    "p95_latency_ms": 509.96,
+    "num_boxes_detected": 0,
+    "avg_confidence": 0.0,
+    "recognized_text": "",
+    "field_matches": {}
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "candidate_name": "PP-OCRv3-DUAL",
+    "sample_id": "SYNTH-08-LOW-CONTRAST-FADED",
+    "language": "en",
+    "median_latency_ms": 1220.49,
+    "p95_latency_ms": 1250.94,
+    "num_boxes_detected": 4,
+    "avg_confidence": 0.8512,
+    "recognized_text": "SYNTHETIC TEST-NOTREALPACKAGING MRPRs.30.00 NET: 40 g EXP11/2026",
+    "field_matches": {
+      "mrp": {
+        "expected": "30.00",
+        "matched": true
+      },
+      "net_quantity": {
+        "expected": "40 g",
+        "matched": true
+      },
+      "date": {
+        "expected": "11/2026",
+        "matched": true
+      }
+    }
+  }
+]
