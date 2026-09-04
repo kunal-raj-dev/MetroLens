@@ -13,7 +13,7 @@
 ---
 
 <p align="center">
-  <img src="docs/GLOBAL_TEAM_WORKFLOW.svg" alt="MetroLens AI Global Team Development Workflow" width="100%" />
+  <img src="docs/GLOBAL_TEAM_WORKFLOW.svg" alt="MetroLens AI Global Team Development Workflow" width="100%" style="max-width: 1050px; height: auto;" />
 </p>
 
 ---
