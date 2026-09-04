@@ -1,0 +1,13 @@
+# MetroLens AI™ — Issue Template Configuration
+# Authoritative single point of entry for repository issue creation
+blank_issues_enabled: false
+contact_links:
+  - name: "📖 MetroLens Global Team Development Workflow"
+    url: "https://github.com/kunal-raj-dev/MetroLens/blob/main/GLOBAL_TEAM_WORKFLOW.md"
+    about: "Review the authoritative 36-section engineering guide, RFC 2119 rules, and git branching lifecycle."
+  - name: "🚦 MetroLens Definition of Ready (DoR) Specification"
+    url: "https://github.com/kunal-raj-dev/MetroLens/blob/main/docs/DEFINITION_OF_READY.md"
+    about: "Mandatory conditions required before any task transitions from SPECIFYING to READY."
+  - name: "🏛️ Legal Metrology Source Pack & Checksum Manifest"
+    url: "https://github.com/kunal-raj-dev/MetroLens/tree/main/METROLENS_LEGAL_SOURCE_PACK"
+    about: "Official Acts (2009, Jan Vishwas 2026), LMPC Rules 2011, Gazette notifications, and SHA-256 manifests."

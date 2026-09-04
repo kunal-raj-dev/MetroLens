@@ -73,7 +73,7 @@ This document provides a verified chronological record of every Legal Metrology 
 - **Exemption:** Not required when MRP = USP
 - **Exemption:** Not required for combination packages, group packages, multi-piece packages, and wholesale packages [SECONDARY RESEARCH — DCA FAQ]
 
-> **V0.2 ERROR CORRECTED:** V0.2 docs stated "≥ 1 kg → per kg" and introduced "per 100g" as a valid denomination. The statutory text specifies "less than one kilogram → per gram" and "one kilogram or more → per kilogram". There is NO "per 100g" denomination in the statute.
+> **V0.2 ERROR CORRECTED:** V0.2 docs stated "≥ 1 kg → per kg" and introduced "per g or kg" as a valid denomination. The statutory text specifies "less than one kilogram → per gram" and "one kilogram or more → per kilogram". There is NO "per g or kg" denomination in the statute.
 
 ---
 

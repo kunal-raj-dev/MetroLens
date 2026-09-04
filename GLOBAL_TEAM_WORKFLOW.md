@@ -201,29 +201,27 @@ Work is tracked visibly on the GitHub Issue Tracker. No work occurs in isolation
 └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-### Standard Issue Template
-Every created issue SHOULD provide the following structure:
-```markdown
-### Summary
-Brief description of the feature, bug, or research task.
+### Standard Issue Intake & Forms
+To enforce the Definition of Ready and eliminate informal task ambiguity ("Bro, make the OCR work"), all tasks MUST be created using the official GitHub Issue Forms in `.github/ISSUE_TEMPLATE/`:
+* [**Feature / Enhancement**](.github/ISSUE_TEMPLATE/feature.yml) — New user-facing or backend capability.
+* [**Bug / Defect Report**](.github/ISSUE_TEMPLATE/bug.yml) — Reproducible defect with step-by-step reproduction and environment data.
+* [**Legal / Regulatory Update**](.github/ISSUE_TEMPLATE/legal-update.yml) — Gazette amendments with primary source traceability to `METROLENS_LEGAL_SOURCE_PACK/`.
+* [**Research / Spike**](.github/ISSUE_TEMPLATE/research.yml) — Timeboxed technical feasibility spikes with concrete decision deliverables.
+* [**Chore / Engineering Task**](.github/ISSUE_TEMPLATE/chore.yml) — CI/CD, dependency, or repository hygiene tasks.
+* [**Documentation Task**](.github/ISSUE_TEMPLATE/documentation.yml) — System specs, architecture records, or onboarding guides.
 
-### Technical Context & Scope
-Which subsystem is affected? (`backend/modules/rules/`, `frontend/components/`, etc.)
+*(Note: Blank issues are disabled via `.github/ISSUE_TEMPLATE/config.yml` to ensure every task captures mandatory DoR fields).*
 
-### Statutory / Architectural Reference
-Reference to Legal Metrology Rule, Master Blueprint v0.3, or ADR.
-
-### Acceptance Criteria
-- [ ] Criterion 1 (e.g., Handles missing Net Qty by returning POTENTIAL_NON_COMPLIANCE)
-- [ ] Criterion 2 (e.g., Test suite passes with 100% coverage on new module)
-- [ ] Criterion 3 (e.g., Executes in < 50ms on standard CPU)
-```
+### Authoritative Definition of Ready
+Before any task can begin development, it MUST pass the 10-point checklist detailed in the standalone [**Definition of Ready Specification (`docs/DEFINITION_OF_READY.md`)**](docs/DEFINITION_OF_READY.md).
 
 ### Issue Labels
-Issues MUST be labeled with at least one Type and one Subsystem label:
-* **Type:** `type:feat`, `type:bug`, `type:docs`, `type:refactor`, `type:test`, `type:chore`
-* **Subsystem:** `sub:cv`, `sub:ocr`, `sub:rules`, `sub:frontend`, `sub:reporting`, `sub:data`
+Issues MUST be categorized using the repository taxonomy (see [`tools/github/github-labels.json`](tools/github/github-labels.json)):
+* **Type:** `type:feat`, `type:bug`, `type:legal`, `type:research`, `type:chore`, `type:docs`, `type:refactor`, `type:test`
+* **Subsystem:** `sub:cv`, `sub:ocr`, `sub:rules`, `sub:frontend`, `sub:reporting`, `sub:data`, `sub:backend`, `sub:legal-pack`, `sub:ci`, `sub:docs`
 * **Priority:** `priority:P0-blocker`, `priority:P1-high`, `priority:P2-medium`, `priority:P3-low`
+* **Status:** `status:backlog`, `status:specifying`, `status:ready`, `status:in-dev`, `status:in-review`, `status:done`
+* **Ownership:** `owner:M1-ocr`, `owner:M2-calibration`, `owner:M3-rules`, `owner:M4-frontend`, `owner:M5-data`, `owner:M6-devops`
 
 ---
 
@@ -912,14 +910,20 @@ vMAJOR.MINOR.PATCH (e.g., v0.3.1)
 
 # 26. Definition of Ready (DoR)
 
-A task or GitHub Issue is **Ready to Start** ONLY when the assigned engineer can check off every item:
+The Definition of Ready (DoR) is the mandatory project-governance gate. A task or GitHub Issue is **Ready to Start** (`status:ready`) ONLY when all 10 criteria below are satisfied. For complete details, rationales, and domain examples, refer to the authoritative [**Definition of Ready Specification (`docs/DEFINITION_OF_READY.md`)**](docs/DEFINITION_OF_READY.md):
 
-- [ ] **Clear Objective:** The desired outcome is unambiguously stated in 1–2 sentences.
-- [ ] **Statutory / Architectural Anchor:** Relevant clauses of LMPC Rules, 2011 or Master Blueprint sections are linked.
-- [ ] **Acceptance Criteria Defined:** Specific, testable pass/fail conditions are documented.
-- [ ] **Scope Boundary Understood:** The developer knows what is in-scope and explicitly what is out-of-scope.
-- [ ] **Dependencies Identified:** Any prerequisite PRs or modules are already merged into `main`.
-- [ ] **Assignee Confirmed:** Exactly one primary owner is assigned.
+- [ ] **1. Clear Objective:** The desired outcome is unambiguously stated in 1–2 sentences.
+- [ ] **2. Context / Problem Understood:** Root cause, user need, statutory mandate, or architectural rationale documented.
+- [ ] **3. Statutory / Architectural Anchor:** Relevant clauses of LMPC Rules, 2011, Jan Vishwas Act 2026, Master Blueprint v0.3, or Traceability Matrix (TR-01–TR-10) linked.
+- [ ] **4. Testable Acceptance Criteria Defined:** Specific, binary pass/fail conditions and boundary cases documented.
+- [ ] **5. In-Scope Boundary Defined:** Explicit list of what the developer must implement.
+- [ ] **6. Out-of-Scope Boundary Defined:** Explicit list of what is excluded to prevent feature creep.
+- [ ] **7. Dependencies Identified & Confirmed:** Prerequisite PRs or modules are already merged into `main`.
+- [ ] **8. Test Approach Understood:** Local, offline verification strategy (e.g. pytest, parameterized cases) planned before coding.
+- [ ] **9. Relevant Subsystem Identified:** Mapped to one of the canonical subsystems (`sub:cv`, `sub:ocr`, `sub:rules`, etc.).
+- [ ] **10. Exactly One Primary Owner Assigned:** Single engineer (M1–M6) confirmed accountable.
+
+> **⚠️ Strict Gate:** Developers MUST NOT create branches or begin local implementation on tasks that have not satisfied the Definition of Ready.
 
 ---
 

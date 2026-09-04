@@ -1,0 +1,168 @@
+name: "🐛 Bug / Defect Report"
+description: "Report a reproducible defect, algorithm failure, or regression in MetroLens AI"
+title: "[BUG]: "
+labels: ["type:bug", "status:specifying"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### MetroLens AI™ — Defect Intake & Triage
+        Thank you for reporting a defect. Please provide exact reproduction steps and test environment data so the assigned lead can diagnose and fix the issue quickly.
+        *Authoritative References:* [`GLOBAL_TEAM_WORKFLOW.md`](../../GLOBAL_TEAM_WORKFLOW.md) | [`docs/DEFINITION_OF_READY.md`](../../docs/DEFINITION_OF_READY.md)
+
+  - type: input
+    id: bug_summary
+    attributes:
+      label: "Bug Summary"
+      description: "A clear, descriptive title summarizing the defect."
+      placeholder: "e.g., Optical scale estimator fails ellipse fit on 10-Rupee coin when camera tilt exceeds 15°"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: bug_confirmation
+    attributes:
+      label: "Defect Verification"
+      description: "Confirm this is a genuine defect rather than a new feature request or general question."
+      options:
+        - label: "I have confirmed this is a defect in existing functionality and not a new feature request"
+          required: true
+        - label: "I have checked existing issues to ensure this bug is not a duplicate"
+          required: true
+
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: "Affected Subsystem"
+      description: "Select the subsystem where the failure originates."
+      options:
+        - "Computer Vision & Metric Scale (modules/cv/)"
+        - "AI & Scene Text OCR (modules/ocr/)"
+        - "Backend & Rule Engine (modules/rules/)"
+        - "Frontend & Viewfinder PWA (frontend/)"
+        - "Tamper-Evident Reporting (modules/reporting/)"
+        - "FastAPI Server / Integration (backend/)"
+        - "Data Pipeline & Benchmarks (data/)"
+        - "CI/CD & Development Tooling (.github/)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Severity / Priority Level"
+      description: "Impact of this bug on the system and team velocity."
+      options:
+        - "P0-blocker (Crashes pipeline, halts demo, or invalidates compliance verdict)"
+        - "P1-high (Core algorithmic failure or statutory calculation error)"
+        - "P2-medium (Non-critical edge case or minor UI glitch)"
+        - "P3-low (Cosmetic blemish, minor warning, or non-blocking defect)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: primary_owner
+    attributes:
+      label: "Primary Owner (Assigned Lead)"
+      description: "Select the primary subsystem lead responsible for investigating and resolving this defect."
+      options:
+        - "M1 — AI & OCR Lead (PaddleOCR ONNX, CPU quantization, Devanagari)"
+        - "M2 — Calibration & Geometry Lead (Optical scale, coin detection, cylinder invariance)"
+        - "M3 — Backend & Rule Engine Lead (FastAPI, schemas, LMPC state machine, USP math)"
+        - "M4 — Frontend & UX Lead (Vite/React PWA, viewfinder, 5-state badges, evidence viewer)"
+        - "M5 — Data & Benchmark Lead (SKU curation, 1200 DPI ground-truth scans, CER/WER)"
+        - "M6 — Product, DevOps & Presentation Lead (Governance, CI/CD, PDF reports, eMaap adapter)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Provide clear, numbered, step-by-step instructions to reproduce the failure."
+      placeholder: |
+        1. Place a standard 10-Rupee coin next to SKU-04 (Britannia biscuit pouch).
+        2. Tilt smartphone camera by approximately 20 degrees off the normal axis.
+        3. Trigger image capture in the PWA viewfinder or execute `python -m modules.cv.scale_calibration --image samples/sku04_tilt20.jpg`.
+        4. Observe the scale factor calculation and contour visualization.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: "Expected Behavior"
+      description: "What should have happened according to statutory rules or system specifications?"
+      placeholder: "e.g., Contour detector detects coin ellipse, compensates for 20° perspective tilt, and reports scale factor S = 27.0mm / d_major within 5% error."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: "Actual Behavior"
+      description: "What actually occurred? Include error messages, incorrect values, or unexpected state transitions."
+      placeholder: "e.g., OpenCV HoughCircles fails to register contour; module raises ValueError: 'No valid calibration reference detected in ROI'."
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment & Test Data"
+      description: "Operating system, runtime versions, sample image SKU, and lighting conditions."
+      placeholder: |
+        - OS: Windows 11 / Ubuntu 22.04
+        - Python Version: 3.10+ / Node: v20+
+        - Test SKU: SKU-04 (Britannia Marie Gold 120g)
+        - Lighting: Indoor ambient (fluorescent, ~300 lux)
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs_and_screenshots
+    attributes:
+      label: "Error Logs, Traceback & Visual Artifacts"
+      description: "Paste terminal stack traces or drag-and-drop screenshots/crops showing the failure."
+      placeholder: "Paste traceback here..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope_boundary
+    attributes:
+      label: "In-Scope Fix Boundary"
+      description: "What specific fix is in-scope, and what related refactorings are out-of-scope?"
+      placeholder: |
+        - In-Scope: Add Otsu adaptive thresholding fallback when HoughCircles fails on tilted coin.
+        - Out-of-Scope: 3D neural surface mesh reconstruction or changing card detector.
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_approach
+    attributes:
+      label: "Verification & Regression Test Strategy"
+      description: "How will you prove this bug is permanently resolved without causing regressions?"
+      placeholder: "e.g., Add parameterized regression test in tests/test_scale_calibration.py with 5 tilted coin fixture images."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dor_verification
+    attributes:
+      label: "Definition of Ready (DoR) Gate Checklist"
+      description: "Confirm all conditions before moving this defect to READY for developer implementation."
+      options:
+        - label: "Defect is reliably reproducible with documented steps"
+          required: true
+        - label: "Expected vs actual behavior clearly contrasted"
+          required: true
+        - label: "Environment and test data fixtures specified"
+          required: true
+        - label: "Fix scope and boundaries clearly defined"
+          required: true
+        - label: "Regression test approach identified"
+          required: true
+        - label: "Exactly one primary owner assigned (M1–M6)"
+          required: true

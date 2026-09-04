@@ -45,7 +45,7 @@
 
 ### [P1-1] What Is the Optimal Statutory Tolerance Buffer for Borderline Font Heights?
 - **Context:** Rule 7 Table-I/II mandates minimum numeral heights ($1.0\text{mm}, 1.5\text{mm}, 2.5\text{mm}$, etc.). Optical edge binarization produces slight stroke jitter. If a true $1.50\text{mm}$ numeral measures $1.46\text{mm}$, flagging a definitive violation creates regulatory harassment.
-- **Investigation Needed:** Test whether a statutory benefit-of-doubt buffer of $0.10\text{mm}$ or $0.15\text{mm}$ minimizes False Positive Rate (FPR) without degrading defect detection sensitivity.
+- **Investigation Needed:** Test whether a Measurement Uncertainty Review Band buffer of $0.10\text{mm}$ or $0.15\text{mm}$ minimizes False Positive Rate (FPR) without degrading defect detection sensitivity.
 - **Resolution Criteria:** FPR $<5.0\%$ on compliant benchmark packages; all packages within buffer flagged as `MANUAL_REVIEW_REQUIRED`.
 - **Owner:** Member 3 (Rule Architect) & Member 5 (Benchmark Lead) | **Deadline:** Day 4, 2:00 PM (T+62h).
 

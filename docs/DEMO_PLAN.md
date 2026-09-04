@@ -77,10 +77,10 @@ SCREEN DISPLAY (Dynamic Pipeline Output):
 • Side-by-Side Visual Evidence Crop:
   - Left: High-resolution rectified image crop of the net quantity numeral.
   - Middle: Detected bounding box with vertical stroke analysis showing:
-    • Calculated PDP Area: ~74.5 cm²
+    • Calculated PDP Area: ~[DYNAMIC MEASURED VALUE] cm²
     • Applicable Statute: Rule 7 Table-I/II, Row 2 (50 to 100 cm²)
     • Mandatory Minimum Height: 1.50 mm
-    • Measured Font Height: ~1.15 mm
+    • Measured Font Height: ~[DYNAMIC MEASURED VALUE] mm
     • STATUTORY DEFICIT: -0.35 mm (POTENTIAL NON-COMPLIANCE)
 • Bottom: Unit Sale Price (USP) Verification Card:
   - Extracted Net Qty: 50g | Extracted MRP: ₹20.00
@@ -89,7 +89,7 @@ SCREEN DISPLAY (Dynamic Pipeline Output):
 
 SPOKEN SCRIPT:
 "Notice the scientific explainability. We do not display an opaque, unexplainable AI score. 
-The system measures the Principal Display Panel at 74.5 square centimeters. 
+The system measures the Principal Display Panel at [DYNAMIC MEASURED VALUE] square centimeters. 
 Under Rule 7 Table-I/II of the Legal Metrology Rules, an area between 50 and 100 cm² legally 
 mandates a minimum numeral height of 1.50 millimeters. 
 Our metric scale engine measured this numeral at 1.15 millimeters—a deficit of 0.35 millimeters!
@@ -126,7 +126,7 @@ mandating an Improvement Notice giving the manufacturer an opportunity to rectif
 Our software does not pretend to act as a judge or issue automated fines. 
 Instead, it generates an objective, tamper-evident Compliance Assessment Report. 
 The raw image crop, calibrated measurements, GPS telemetry, and cryptographic SHA-256 hashes 
-provide lawful prima facie justification for an inspecting officer to issue an Improvement Notice."
+provide lawful supporting justification for an inspecting officer to issue an Improvement Notice."
 
 ================================================================================
 [ 3:15 - 3:45 ] ACT V: PROVING ZERO FALSE-POSITIVE BIAS & CLOSING
