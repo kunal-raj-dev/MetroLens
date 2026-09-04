@@ -1,0 +1,59 @@
+# NIRIKSHAK INFRASTRUCTURE — DEVELOPMENT SCAFFOLD (PRE-IMPLEMENTATION)
+# NOTE: This file specifies a local developer scaffold, NOT a production deployment.
+# Production deployments require dedicated orchestration, secrets management, and TLS.
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nirikshak-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nirikshak_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-nirikshak_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nirikshak_admin} -d ${POSTGRES_DB:-nirikshak_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: nirikshak-api
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_HOST: db
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./data/evidence_store:/app/data/evidence_store
+      - ./regulations:/app/regulations:ro
+      - ./rules:/app/rules:ro
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.web
+    container_name: nirikshak-web
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

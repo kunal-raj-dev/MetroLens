@@ -1,0 +1,50 @@
+# Verified Legal Rule Catalog (Human Reference & Traceability)
+# Note: Canonical machine-readable execution rules reside in rules/
+
+catalog_version: "1.0.0"
+authority: "Department of Consumer Affairs, Government of India"
+verification_standard: "Level 1 Primary Gazette Verification"
+
+rules:
+  - catalog_id: "CAT-RULE-001"
+    statutory_citation: "Rule 6(1), Legal Metrology (Packaged Commodities) Rules, 2011"
+    source_id: "IN-LMPC-2011-GSR202E"
+    topic: "Mandatory Declarations on Retail Packages"
+    instrument_status: "UNKNOWN"
+    verification_status: "PARTIALLY_VERIFIED"
+    executable: false
+    verification_date: null
+    last_reviewed: "2026-09-04"
+    summary: >
+      Every retail package shall bear declarations containing manufacturer name and address,
+      country of origin, generic name, net quantity, month/year of manufacture/packing,
+      maximum retail price (MRP), and consumer care grievance contacts.
+    machine_rule_reference: "rules/proposed/template_declarations_rule.yaml"
+
+  - catalog_id: "CAT-RULE-002"
+    statutory_citation: "Rule 7, Legal Metrology (Packaged Commodities) Rules, 2011"
+    source_id: "IN-LMPC-2011-GSR202E"
+    topic: "Principal Display Panel Area & Minimum Numeral Height"
+    instrument_status: "UNKNOWN"
+    verification_status: "PARTIALLY_VERIFIED"
+    executable: false
+    verification_date: null
+    last_reviewed: "2026-09-04"
+    summary: >
+      Numerals and letters stating net quantity on the Principal Display Panel must meet
+      statutory minimum height thresholds specified in Table-I based on the area of the PDP.
+    machine_rule_reference: "rules/proposed/template_numeral_height_rule.yaml"
+
+  - catalog_id: "CAT-RULE-003"
+    statutory_citation: "Rule 6(11), LMPC Rules as amended by G.S.R. 779(E)"
+    source_id: "IN-LMPC-2021-GSR779E"
+    topic: "Unit Sale Price (USP) Mandatory Declaration"
+    instrument_status: "UNKNOWN"
+    verification_status: "PARTIALLY_VERIFIED"
+    executable: false
+    verification_date: null
+    last_reviewed: "2026-09-04"
+    summary: >
+      Declaration of Unit Sale Price rounded off to the nearest two decimal places
+      for packaged commodities containing more than statutory threshold quantities.
+    machine_rule_reference: "PRIMARY_SOURCE_REQUIRED"

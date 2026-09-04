@@ -1,0 +1,43 @@
+# Rule Record Candidate - Minimum Height of Numerals and Letters
+# STATUS: PRIMARY_SOURCE_REQUIRED. DO NOT MOVE TO CURRENT/ UNTIL PRIMARY SOURCE ON DISK IS VERIFIED.
+
+rule_id: "LMPC-R7-FONT-HEIGHT-TEMPLATE"
+title: "Minimum Height of Numerals and Letters on Principal Display Panel (Candidate/Placeholder)"
+status: "PRIMARY_SOURCE_REQUIRED"
+source_id: "IN-LMPC-2011-GSR202E"
+source_document_sha256: "PRIMARY_SOURCE_REQUIRED"
+source_page: "PRIMARY_SOURCE_REQUIRED"
+source_section: "Rule 7"
+source_rule: "Rule 7"
+source_subrule: "7(1)"
+source_table: "Table-I"
+effective_from: "2011-04-01"
+effective_to: null
+
+applicability:
+  package_types: ["retail_package"]
+  commodity_categories: ["all_commodities"]
+
+requirements:
+  pdp_area_table_reference: "PRIMARY_SOURCE_REQUIRED"
+  measurement_unit: "mm"
+  requires_physical_calibration: true
+
+exceptions: []
+
+evidence_required:
+  - "pdp_panel_image"
+  - "calibration_target_detected"
+  - "character_bounding_box_polygons"
+  - "scale_mm_per_pixel"
+
+uncertainty_policy:
+  if_uncalibrated: "REVIEW"
+  if_low_confidence: "REVIEW"
+  if_ambiguous_text: "REVIEW"
+  if_borderline_measurement: "HUMAN_REVIEW_REQUIRED"
+
+executable: false
+verification_status: "PRIMARY_SOURCE_REQUIRED"
+last_verified: null
+last_reviewed: "2026-09-04"

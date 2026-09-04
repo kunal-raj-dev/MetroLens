@@ -1,0 +1,21 @@
+# Problem Statement Source Record
+
+source_id: "SIH-2026-PS-26034"
+title: "Smart India Hackathon 2026 — Problem Statement 26034"
+authority:
+  organisation: "Smart India Hackathon Organising Committee / AICTE / MIC"
+  ministry: "Ministry of Education's Innovation Cell"
+  jurisdiction: "Republic of India"
+source_type: "official_sih_documentation"
+instrument_status: "OFFICIAL_ANNOUNCEMENT"
+official_url: "https://www.sih.gov.in"
+document_date: "2026-08-01"
+publication_date: "2026-08-01"
+retrieved_at: "2026-09-04"
+sha256: "PRIMARY_SOURCE_REQUIRED"
+local_artifact_path: "docs/01_PROBLEM_STATEMENT/OFFICIAL_PS/problem_statement_original.pdf"
+status: "authoritative_sih"
+verification_status: "PARTIALLY_VERIFIED"
+verified_by: "HACKATHON_ENGINEERING_LEAD"
+verified_at: "2026-09-04"
+notes: "Official Problem Statement description for PS 26034 regarding AI-based inspection and verification of packaged commodities under Legal Metrology standards."

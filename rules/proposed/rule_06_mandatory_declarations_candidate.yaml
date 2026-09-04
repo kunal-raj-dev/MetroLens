@@ -1,0 +1,65 @@
+# Candidate Rule Record - Rule 6(1) Mandatory Declarations on Retail Package
+# STATUS: PRIMARY_SOURCE_REQUIRED. Strictly non-executable until Level 1 primary source verified on disk.
+
+rule_id: "LMPC-R6-DECLARATIONS-CANDIDATE"
+title: "Mandatory Declarations on Retail Packaged Commodities (Candidate Rule)"
+status: "PRIMARY_SOURCE_REQUIRED"
+source_id: "IN-LMPC-2011-GSR202E"
+source_document_sha256: "PRIMARY_SOURCE_REQUIRED"
+source_page: "PRIMARY_SOURCE_REQUIRED"
+source_section: "Rule 6"
+source_rule: "Rule 6"
+source_subrule: "6(1)"
+source_table: "N/A"
+effective_from: "2011-11-01"
+effective_to: null
+
+applicability:
+  package_types: ["retail_package", "pre_packaged_commodity"]
+  commodity_categories: ["all_commercial_packaged_goods"]
+
+requirements:
+  mandatory_declarations:
+    - field_id: "manufacturer_name_and_address"
+      statutory_clause: "Rule 6(1)(a)"
+      description: "Name and address of the manufacturer, packer, or importer"
+    - field_id: "generic_commodity_name"
+      statutory_clause: "Rule 6(1)(b)"
+      description: "Common or generic name of the commodity"
+    - field_id: "net_quantity"
+      statutory_clause: "Rule 6(1)(c)"
+      description: "Net quantity in standard SI metric units (weight, measure, or number)"
+    - field_id: "month_and_year_of_manufacture"
+      statutory_clause: "Rule 6(1)(d)"
+      description: "Month and year in which commodity is manufactured, packed, or imported"
+    - field_id: "maximum_retail_price"
+      statutory_clause: "Rule 6(1)(e)"
+      description: "Retail sale price stated as MRP inclusive of all taxes"
+    - field_id: "consumer_care_contact"
+      statutory_clause: "Rule 6(1)(f)"
+      description: "Name, address, telephone number, and email address for consumer complaints"
+    - field_id: "country_of_origin"
+      statutory_clause: "Rule 6(1)(g)"
+      description: "Country of origin or assembly for all manufactured/imported packages"
+
+exceptions:
+  - "packages_net_weight_or_measure_under_10g_or_10ml"
+  - "packages_net_weight_over_25kg_or_25l_institutional"
+  - "fast_food_packed_by_restaurant_or_hotel"
+
+evidence_required:
+  - "raw_package_images_all_panels"
+  - "ocr_extracted_tokens_with_bounding_boxes"
+  - "pdp_boundary_polygon"
+  - "human_officer_review_log"
+
+uncertainty_policy:
+  if_uncalibrated: "REVIEW"
+  if_low_confidence: "REVIEW"
+  if_ambiguous_text: "REVIEW"
+  if_borderline_measurement: "HUMAN_REVIEW_REQUIRED"
+
+executable: false
+verification_status: "PRIMARY_SOURCE_REQUIRED"
+last_verified: null
+last_reviewed: "2026-09-04"

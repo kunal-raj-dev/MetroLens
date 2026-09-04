@@ -182,4 +182,39 @@ git push -u origin feat/14-usp-arithmetic-auditor
 * **Evidentiary Standard:** *Bharatiya Sakshya Adhiniyam, 2023* (Section 63) / *Indian Evidence Act, 1872* (Section 65B electronic record integrity).
 
 ---
+
+## 🔍 Verification Automation & Integrity Scripts
+
+To ensure consistency and prevent hallucination across the codebase, automated verification scripts are available:
+```bash
+# Verify all legal source artifacts, checksums, and registry entries
+python scripts/verification/verify_legal_sources.py
+
+# Verify machine-readable rules against schema and source provenance
+python scripts/verification/verify_rule_registry.py
+
+# Verify claim statuses against empirical benchmark reports
+python scripts/verification/verify_claims.py
+
+# Verify dataset manifests and licenses
+python scripts/verification/verify_dataset_manifest.py
+
+# Verify end-to-end verification pipeline
+pytest tests/unit/test_verification_pipeline.py
+```
+
+---
+
+## 📜 Licensing & Legal Disclaimer
+
+- Software code is licensed under the **Apache License 2.0**. See [LICENSE](LICENSE).
+- Third-party licenses, data permissions, and legal notices are detailed in:
+  - [`docs/LEGAL_NOTICES.md`](docs/LEGAL_NOTICES.md)
+  - [`docs/THIRD_PARTY_LICENSES.md`](docs/THIRD_PARTY_LICENSES.md)
+  - [`docs/DATA_LICENSES.md`](docs/DATA_LICENSES.md)
+
+> **Official Notice:** MetroLens AI is an engineering decision-support tool. It does not replace the statutory authority of an Inspector of Legal Metrology. Generated reports constitute technical inspection assistance and provenance records; statutory evidentiary determination remains the exclusive prerogative of competent authorities under applicable law and procedure.
+
+---
 *For questions or technical contributions, refer to [`GLOBAL_TEAM_WORKFLOW.md`](GLOBAL_TEAM_WORKFLOW.md) or open an issue on the repository.*
+

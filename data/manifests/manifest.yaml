@@ -1,0 +1,35 @@
+# Nirikshak Dataset Manifest Registry
+# Tracks provenance, licenses, collection details, and ground truth methodologies.
+
+version: "1.0.0"
+last_updated: "2026-09-04"
+
+datasets:
+  - dataset_id: "DS-SYNTH-001"
+    title: "Synthetic FMCG Packaging Benchmark Vector Set"
+    status: "PLANNED"
+    artifact_status: "NOT_GENERATED"
+    source: "Nirikshak Procedural Packaging Generator (Planned Stage 2)"
+    license: "CC0-1.0 (Public Domain)"
+    rights_status: "VERIFIED"
+    permission: "Open research and benchmarking distribution"
+    collection_date: "PLANNED — STAGE 2"
+    geography: "Synthetic / Standard Pan-India Layouts"
+    annotation_method: "Programmatic bounding box and text ground truth export (Planned)"
+    ground_truth_method: "Vector geometry rendering ground truth"
+    known_limitations: "Lacks natural optical distortions, motion blur, and varied sheen. Artifact status: NOT_GENERATED (0 physical files on disk)."
+
+  - dataset_id: "DS-RETAIL-PILOT-001"
+    title: "Field Retail Packaged Commodities Ground-Truth Pilot"
+    status: "PLANNED"
+    artifact_status: "DECLARED_BUT_MISSING"
+    source: "Team physical retail collection from licensed retail stores (Planned Stage 2)"
+    license: "RIGHTS_VERIFICATION_REQUIRED (Image: RIGHTS_VERIFICATION_REQUIRED; Annotations: RIGHTS_VERIFICATION_REQUIRED; Trade Dress: Third-Party Trademark Owners; Redistribution: RESTRICTED)"
+    rights_status: "RIGHTS_VERIFICATION_REQUIRED"
+    permission: "Non-commercial statutory research and hackathon demonstration only; all third-party IP rights: RIGHTS_VERIFICATION_REQUIRED; public redistribution restricted"
+    collection_date: "PLANNED — STAGE 2"
+    geography: "National Capital Region (NCR), India"
+    annotation_method: "Dual-annotator cross-validated manual labeling (Planned protocol)"
+    ground_truth_method: "Physical vernier caliper measurement for font heights and calibrated ruler reference"
+    known_limitations: "Artifact status: DECLARED_BUT_MISSING. Target 50 retail SKU samples across dry food and personal care categories. Currently 0 images, 0 annotation files, and 0 physical measurement sheets exist on disk."
+

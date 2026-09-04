@@ -1,0 +1,29 @@
+# Statutory Exemption Catalog
+# Documents explicit statutory exemptions provided under Chapter II, Rule 3 of the LMPC Rules 2011
+
+catalog_version: "1.0.0"
+source_id: "IN-LMPC-2011-GSR202E"
+verification_status: "PARTIALLY_VERIFIED"
+
+exemptions:
+  - exemption_id: "EXEMPT-SMALL-QTY"
+    statutory_citation: "Rule 3(a), LMPC Rules, 2011"
+    description: >
+      Packages containing net quantity of 10 grams or 10 millilitres or less,
+      subject to specific proviso for tobacco and related products.
+    verification_status: "PARTIALLY_VERIFIED"
+    implementation_rule: "EXEMPT_FROM_CHAPTER_II"
+
+  - exemption_id: "EXEMPT-FAST-FOOD"
+    statutory_citation: "Rule 3(b), LMPC Rules, 2011"
+    description: >
+      Any package containing fast food items packed by restaurant or hotel and the like.
+    verification_status: "PARTIALLY_VERIFIED"
+    implementation_rule: "EXEMPT_FROM_CHAPTER_II"
+
+  - exemption_id: "EXEMPT-BULK-AGRICULTURAL"
+    statutory_citation: "Rule 3(c), LMPC Rules, 2011 as amended"
+    description: >
+      Packages containing commodities exceeding 25 kg or 25 litres, except cement and fertilizers.
+    verification_status: "PARTIALLY_VERIFIED"
+    implementation_rule: "EXEMPT_FROM_CHAPTER_II"

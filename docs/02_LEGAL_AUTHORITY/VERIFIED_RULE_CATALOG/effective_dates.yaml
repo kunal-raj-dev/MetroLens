@@ -1,0 +1,32 @@
+# Regulatory Timeline & Effective Dates Matrix
+# Used by the Regulatory Time-Machine to resolve the applicable rule snapshot on manufacture date
+
+timeline_version: "1.0.0"
+
+epochs:
+  - epoch_id: "EPOCH-2011-BASE"
+    valid_from: "2011-04-01"
+    valid_to: "2017-12-31"
+    description: "Base Legal Metrology (Packaged Commodities) Rules, 2011 regime."
+    active_sources:
+      - "IN-ACT-2009-01"
+      - "IN-LMPC-2011-GSR202E"
+
+  - epoch_id: "EPOCH-2018-ECOMMERCE"
+    valid_from: "2018-01-01"
+    valid_to: "2022-11-30"
+    description: "Post-GSR 629(E) regime introducing e-commerce statutory declarations and enhanced font rules."
+    active_sources:
+      - "IN-ACT-2009-01"
+      - "IN-LMPC-2011-GSR202E"
+      - "IN-LMPC-2017-GSR629E"
+
+  - epoch_id: "EPOCH-2022-CURRENT"
+    valid_from: "2022-12-01"
+    valid_to: null
+    description: "Post-GSR 779(E) regime introducing mandatory Unit Sale Price (USP) and revised standard quantities."
+    active_sources:
+      - "IN-ACT-2009-01"
+      - "IN-LMPC-2011-GSR202E"
+      - "IN-LMPC-2017-GSR629E"
+      - "IN-LMPC-2021-GSR779E"

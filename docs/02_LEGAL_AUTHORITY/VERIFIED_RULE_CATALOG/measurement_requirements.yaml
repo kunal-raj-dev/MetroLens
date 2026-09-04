@@ -1,0 +1,37 @@
+# Physical & Optical Measurement Requirements
+# Specifies dimensional parameters, PDP area computation rules, and font height tables
+
+catalog_version: "1.0.0"
+source_id: "IN-LMPC-2011-GSR202E"
+instrument_status: "UNKNOWN"
+verification_status: "PARTIALLY_VERIFIED"
+executable: false
+verification_date: null
+last_reviewed: "2026-09-04"
+
+pdp_area_computation_formulas:
+  rectangular_package:
+    statutory_rule: "Rule 7(1) Explanation 1(a)"
+    formula_status: "PRIMARY_SOURCE_REQUIRED"
+    formula: "A_pdp = Height * Width (of the side/face that is presented)"
+    unit: "square_centimetres (cm^2)"
+  
+  cylindrical_or_nearly_cylindrical_package:
+    statutory_rule: "Rule 7(1) Explanation 1(b)"
+    formula_status: "PRIMARY_SOURCE_REQUIRED"
+    formula: "A_pdp = 0.40 * Total Surface Area (or 40% of Height * Circumference)"
+    unit: "square_centimetres (cm^2)"
+    notes: "Requires cylindrical surface parameter estimation and dewarping."
+
+  other_shapes:
+    statutory_rule: "Rule 7(1) Explanation 1(c)"
+    formula_status: "PRIMARY_SOURCE_REQUIRED"
+    formula: "A_pdp = 0.20 * Total Surface Area (or major display facet)"
+    unit: "square_centimetres (cm^2)"
+
+measurement_tolerances:
+  font_height_mm:
+    optical_error_bound_max: "TBD — MEASURE"
+    measurement_status: "EXPERIMENT_REQUIRED"
+    requires_physical_calibration: true
+    uncalibrated_policy: "ROUTE_TO_REVIEW"

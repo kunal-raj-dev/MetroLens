@@ -1,0 +1,73 @@
+# Candidate Rule Record - Rule 7 Table-I Minimum Height of Numerals and Letters
+# STATUS: PRIMARY_SOURCE_REQUIRED. Substituted by G.S.R. 629(E), corrected by G.S.R. 1373(E).
+# Strictly non-executable until Level 1 primary source verified on disk.
+
+rule_id: "LMPC-R7-TABLE1-FONT-HEIGHT-CANDIDATE"
+title: "Minimum Height of Numerals and Letters under Table-I (Candidate Rule)"
+status: "PRIMARY_SOURCE_REQUIRED"
+source_id: "IN-LMPC-2017-GSR629E"
+source_document_sha256: "PRIMARY_SOURCE_REQUIRED"
+source_page: "PRIMARY_SOURCE_REQUIRED"
+source_section: "Rule 7"
+source_rule: "Rule 7"
+source_subrule: "7(3)"
+source_table: "Table-I"
+effective_from: "2018-01-01"
+effective_to: null
+
+applicability:
+  package_types: ["retail_package", "pre_packaged_commodity"]
+  commodity_categories: ["all_commercial_packaged_goods"]
+
+requirements:
+  table_1_matrix:
+    - tier: 1
+      pdp_area_cm2_min: 0.0
+      pdp_area_cm2_max: 50.0
+      min_height_normal_mm: 1.0
+      min_height_blown_formed_mm: 1.5
+    - tier: 2
+      pdp_area_cm2_min: 50.0
+      pdp_area_cm2_max: 100.0
+      min_height_normal_mm: 2.0  # Corrected from 1.5 by G.S.R. 1373(E)
+      min_height_blown_formed_mm: 3.0
+    - tier: 3
+      pdp_area_cm2_min: 100.0
+      pdp_area_cm2_max: 500.0
+      min_height_normal_mm: 2.5
+      min_height_blown_formed_mm: 4.0
+    - tier: 4
+      pdp_area_cm2_min: 500.0
+      pdp_area_cm2_max: 2500.0
+      min_height_normal_mm: 4.0
+      min_height_blown_formed_mm: 6.0
+    - tier: 5
+      pdp_area_cm2_min: 2500.0
+      pdp_area_cm2_max: null
+      min_height_normal_mm: 6.0
+      min_height_blown_formed_mm: 6.0
+  width_constraint:
+    min_width_ratio_to_height: 0.3333
+    exceptions: ["1", "i", "I", "l"]
+  measurement_unit: "mm"
+  requires_physical_calibration: true
+
+exceptions: []
+
+evidence_required:
+  - "pdp_panel_image"
+  - "planar_calibration_target_detected"
+  - "character_bounding_box_polygons"
+  - "scale_mm_per_pixel"
+  - "expanded_measurement_uncertainty_bounds"
+
+uncertainty_policy:
+  if_uncalibrated: "REVIEW"
+  if_low_confidence: "REVIEW"
+  if_ambiguous_text: "REVIEW"
+  if_borderline_measurement: "HUMAN_REVIEW_REQUIRED"
+
+executable: false
+verification_status: "PRIMARY_SOURCE_REQUIRED"
+last_verified: null
+last_reviewed: "2026-09-04"
