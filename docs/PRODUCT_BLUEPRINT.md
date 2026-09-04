@@ -1,8 +1,8 @@
-# MASTER PRODUCT BLUEPRINT & TECHNICAL SPECIFICATION (V0.2)
+# MASTER PRODUCT BLUEPRINT & TECHNICAL SPECIFICATION (V0.3)
 # MetroLens AI™ — Automated Legal Metrology Inspection & Compliance System
 ### Sponsoring Ministry: Ministry of Consumer Affairs, Food & Public Distribution | Problem Statement: SIH26034
 **Evaluation Framework:** InnoHack 3.0 / Smart India Hackathon 2026 (100 Marks Total)  
-**Document Status:** Authoritative Single Source of Truth (Post-Audit Edition v0.2) | **Date:** 4 September 2026
+**Document Status:** Authoritative Single Source of Truth (Post-Audit Edition v0.3) | **Date:** 4 September 2026
 
 ---
 
@@ -10,9 +10,9 @@
 
 **MetroLens AI™** is an edge-native, perspective-corrected mobile computer vision and regulatory audit system designed for District Legal Metrology Officers (LMOs) and packaging compliance auditors. It transforms a tedious, manual 20-minute ruler-and-magnifier inspection into a **sub-2.5-second, mathematically verified, tamper-evident regulatory compliance audit**.
 
-By combining a **universally available optical metric anchor** (a standard 10-Rupee coin or ISO card) with **planar metric scale calibration**, MetroLens AI solves the fundamental monocular scale ambiguity of smartphone cameras. It directly evaluates statutory numeral heights (Rule 9 Table 1) against calibrated Principal Display Panel (PDP) areas, audits Unit Sale Price (USP) arithmetic against Net Quantity and MRP under Rule 6(11) in standardized denominations, extracts mandatory packaging declarations across English and Hindi using local scene text OCR, and verifies compliance through a **100% deterministic statutory state machine**.
+By combining a **universally available optical metric anchor** (a standard 10-Rupee coin or ISO card) with **planar metric scale calibration**, MetroLens AI solves the fundamental monocular scale ambiguity of smartphone cameras. It directly evaluates statutory numeral heights (Rule 7 Table-I/II) against calibrated Principal Display Panel (PDP) areas, audits Unit Sale Price (USP) arithmetic against Net Quantity and MRP under Rule 6(11) in standardized denominations, extracts mandatory packaging declarations across English and Hindi using local scene text OCR, and verifies compliance through a **100% deterministic statutory state machine**.
 
-The system operates **entirely offline** on local edge hardware without external cloud dependency, generates a cryptographically sealed (SHA-256) **Image-Based Compliance Assessment Report** under Section 15 of the Legal Metrology Act, 2009 (incorporating the **Jan Vishwas Act, 2023 Improvement Notice framework** under Section 36(1)), and provides an **eMaap-Inspired Mock REST Adapter Interface** ready for national portal integration.
+The system operates **entirely offline** on local edge hardware without external cloud dependency, generates a cryptographically sealed (SHA-256) **Image-Based Compliance Assessment Report** under Section 15 of the Legal Metrology Act, 2009 (incorporating the **Jan Vishwas (Amendment of Provisions) Act, 2026 Improvement Notice framework** under Section 36(1)), and provides an **eMaap-Inspired Mock REST Adapter Interface** ready for national portal integration.
 
 ---
 
@@ -26,7 +26,7 @@ In India, pre-packaged commodities represent over ₹12 Lakh Crore ($150 Billion
 1. **Manual Vernier & Ruler Auditing:** An inspecting officer must physically hold a plastic ruler or micrometer against microscopic print on flexible pouches or curved containers—a slow, contentious, and visually fatiguing procedure.
 2. **Inspection Coverage $<0.01\%$:** Due to extreme human resource constraints, over 99.99% of retail packages are never inspected unless a formal consumer grievance is escalated.
 3. **Shrinkflation & Deceptive USP:** Brands frequently downsize net contents (e.g. from 100g to 82g) while retaining identical packaging footprints and prices. While Rule 6(11) mandates Unit Sale Price (e.g. "₹0.61 per g"), brands often omit USP or print it in microscopic 0.5mm fonts hidden within bottom gussets.
-4. **Decriminalization & Administrative Burden:** The **Jan Vishwas Act, 2023** decriminalized first-time labeling infractions, requiring officers to issue formal **Improvement Notices** with rigorous prima facie evidence before any repeated-offence penalty can be adjudicated.
+4. **Decriminalization & Administrative Burden:** The **Jan Vishwas (Amendment of Provisions) Act, 2026** decriminalized first-time labeling infractions, requiring officers to issue formal **Improvement Notices** with rigorous prima facie evidence before any repeated-offence penalty can be adjudicated.
 
 ---
 
@@ -45,13 +45,13 @@ In India, pre-packaged commodities represent over ₹12 Lakh Crore ($150 Billion
 │ • Physical scale recovery via coplanar metric reference (10-Rupee coin/card)│
 │ • Constrained near-normal capture (<10° tilt) & planar scale calibration.    │
 │ • Deterministic mathematical verification of Unit Sale Price (USP) division.│
-│ • Area calculation of Principal Display Panel (PDP) to index Rule 9 Table 1.│
+│ • Area calculation of Principal Display Panel (PDP) to index Rule 7 Table-I/II.│
 │ • 5-State classification model to prevent regulatory merchant harassment.   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ C. HACKATHON VALUE DIFFERENTIATORS (Scoring Rubric Optimizers)              │
 │ • 100% offline standalone edge execution on localhost.                      │
 │ • Cryptographic SHA-256 evidence package with side-by-side rectified crops.  │
-│ • Statutory alignment with Jan Vishwas Act 2023 Improvement Notice process. │
+│ • Statutory alignment with Jan Vishwas (Amendment of Provisions) Act, 2026 Improvement Notice process. │
 │ • eMaap Mock REST Adapter demonstrating enterprise government readiness.    │
 │ • Brand Pre-Flight Artwork Mode (DPI-to-mm verification for packaging PDFs).│
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -90,7 +90,7 @@ In India, pre-packaged commodities represent over ₹12 Lakh Crore ($150 Billion
   • Planar metric scale recovery using 10-Rupee coin / ISO card
   • Local multilingual OCR (PaddleOCR v4 ONNX int8) on CPU
   • Canonical entity normalizer (regex + Pydantic schema)
-  • Deterministic Rule Engine (Rules 6(1)(a)-(h), 6(11) USP, 7, 8, 9 Table 1, 26)
+  • Deterministic Rule Engine (Rules 6(1)(a)-(h), 6(11) USP, 7, 8, 26)
   • 5-State compliance classification & side-by-side evidence crop viewer
   • Cryptographic Image-Based Compliance Assessment Report PDF (SHA-256)
   • 100% offline localhost execution architecture
@@ -117,7 +117,7 @@ In India, pre-packaged commodities represent over ₹12 Lakh Crore ($150 Billion
 
 ---
 
-## 6. Comprehensive System Architecture (V0.2)
+## 6. Comprehensive System Architecture (V0.3)
 
 ```
                                 SYSTEM ARCHITECTURE
@@ -173,7 +173,7 @@ In India, pre-packaged commodities represent over ₹12 Lakh Crore ($150 Billion
        │ Deterministic Statutory Compliance Rule Engine (Python)  │
        │ • Rule 6(1)(a-h) Mandatory Declaration Verifier          │
        │ • Rule 6(11) Unit Sale Price Deterministic Math Auditor  │
-       │ • Rule 7 & Rule 9 Table 1 Area-to-Font Height Matrix     │
+       │ • Rule 7 & Rule 7 Table-I/II Area-to-Font Height Matrix     │
        │ • Rule 26 Category-Aware Statutory Exemption Switch      │
        └──────────────────────────┬───────────────────────────────┘
                                   │
@@ -240,7 +240,7 @@ Without a known scale reference or physical depth $Z$, absolute metric measureme
 For standard upright cylindrical containers (cans, bottles):
 - Curvature along the circumferential horizontal axis foreshortens text by $\cos\phi$.
 - Along the vertical generator line parallel to the cylinder axis: $y_{\text{proj}} = y_{\text{actual}}$.
-- **Statutory Impact:** Rule 9 font height is strictly measured along the **vertical axis** (numeral capital height / ascender-descender). Therefore, cylindrical curvature introduces zero vertical foreshortening along the generator strip. The system measures font heights strictly within the central $40^\circ$ generator strip ($\cos\phi \ge 0.94$). Tapered, conical, or irregular containers are routed to `MANUAL_REVIEW_REQUIRED`.
+- **Statutory Impact:** Rule 7 font height is strictly measured along the **vertical axis** (numeral capital height / ascender-descender). Therefore, cylindrical curvature introduces zero vertical foreshortening along the generator strip. The system measures font heights strictly within the central $40^\circ$ generator strip ($\cos\phi \ge 0.94$). Tapered, conical, or irregular containers are routed to `MANUAL_REVIEW_REQUIRED`.
 
 ---
 
@@ -295,7 +295,7 @@ class CanonicalDeclaration(BaseModel):
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 1. NO IMAGE-VERIFIABLE VIOLATION DETECTED (Green)                           │
 │ • All mandatory declarations present and syntactically valid.               │
-│ • Measured font heights meet or exceed Rule 9 Table 1 minimums.             │
+│ • Measured font heights meet or exceed Rule 7 Table-I/II minimums.             │
 │ • Declared USP matches calculated MRP / Net Quantity in standard units.     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. POTENTIAL NON-COMPLIANCE (Red)                                           │
@@ -346,7 +346,7 @@ Under Section 63 of the Bharatiya Sakshya Adhiniyam, 2023 / Section 65B of the I
   },
   "pipeline_versions": {
     "ocr_engine": "PaddleOCR-v4-Mobile-ONNX-int8",
-    "rule_engine_version": "2026.09-JanVishwas-v0.2"
+    "rule_engine_version": "2026.09-JanVishwas-v0.3"
   }
 }
 ```
@@ -366,7 +366,7 @@ The generated **Image-Based Compliance Assessment Report** is rendered as a clea
 
 ```
 SIH26034_MetroLens_AI/
-├── docs/                                  # Project Documentation Suite (v0.2)
+├── docs/                                  # Project Documentation Suite (v0.3)
 │   ├── PRODUCT_BLUEPRINT.md               # Master Single Source of Truth
 │   ├── LEGAL_RULE_MATRIX.md               # Statutory Rules & 2026 Legal Foundation
 │   ├── TECHNICAL_DECISIONS.md             # Architecture Decision Records (ADRs)
@@ -401,7 +401,7 @@ SIH26034_MetroLens_AI/
 │   │   │   ├── base_rule.py               # Abstract Rule Interface
 │   │   │   ├── rule_6_declarations.py     # Rule 6(1)(a)-(h) mandatory checks
 │   │   │   ├── rule_6_11_usp.py           # Unit Sale Price arithmetic auditor
-│   │   │   ├── rule_9_font_matrix.py      # Rule 9 Table 1 area lookup
+│   │   │   ├── rule_9_font_matrix.py      # Rule 7 Table-I/II area lookup
 │   │   │   ├── rule_26_exemptions.py      # Category-aware exemption switch
 │   │   │   └── rule_engine.py             # Master Compliance Evaluator
 │   │   ├── reporting/                     # Evidence & Assessment Report
@@ -439,7 +439,7 @@ SIH26034_MetroLens_AI/
 3. **USP Arithmetic Auditor:** Detects $100\%$ of synthetic calculation errors exceeding $\pm 1\%$ rounding margin and flags illegal unit denominations.
 4. **Font Height Measurement:** Achieves Mean Absolute Error $<0.15\text{mm}$ against 1200 DPI flatbed optical scan ground truth on planar packaging.
 5. **Assessment Report Generation:** Renders complete PDF report with SHA-256 hashes and evidence crops in $<500\text{ms}$.
-6. **Rule Engine Test Coverage:** Passes $100\%$ of automated unit test cases across Rules 6(1)(a)-(h), 6(11), 7, 8, 9 Table 1, and 26.
+6. **Rule Engine Test Coverage:** Passes $100\%$ of automated unit test cases across Rules 6(1)(a)-(h), 6(11), 7, 8, and 26.
 
 ### Project-Wide Definition of Done (DoD):
 A feature is marked **DONE** only when:

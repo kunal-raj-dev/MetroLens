@@ -1,4 +1,4 @@
-# OPEN QUESTIONS REGISTER (V0.2)
+# OPEN QUESTIONS REGISTER (V0.3)
 ## MetroLens AI — Automated Legal Metrology Inspection System (SIH26034)
 **Classification Framework:** Prioritized by Engineering Blocking Dependency  
 - **P0 (Critical / Blocker):** Must be answered and experimentally resolved within the First 24 Hours before coding heavy pipelines.  
@@ -33,8 +33,8 @@
 - **Resolution Criteria:** Total text detection + recognition latency must be $\le 1,200\text{ms}$ on CPU with Character Error Rate $<8\%$ on clear declaration panels.
 - **Owner:** Member 1 (AI/CV Lead) | **Deadline:** Day 1, 8:00 PM (T+20h).
 
-### [P0-4] Report Legal Architecture: How to Fully Eliminate "Form A" and False Penalty Wording?
-- **Context:** Audit revealed that "Form A" is a statutory misnomer for inspection reports. Jan Vishwas Act 2023 mandates Improvement Notices for first-time Section 36(1) non-compliances.
+### [P0-4] Report Legal Architecture: How to Fully Eliminate "Image-Based Compliance Assessment Report" and False Penalty Wording?
+- **Context:** Audit revealed that "Image-Based Compliance Assessment Report" is a statutory misnomer for inspection reports. Jan Vishwas (Amendment of Provisions) Act, 2026 mandates Improvement Notices for first-time Section 36(1) non-compliances.
 - **Investigation Needed:** Draft exact schema and wording for the newly designated **"Image-Based Compliance Assessment Report"**.
 - **Resolution Criteria:** Report schema includes: Inspection ID, SHA-256 raw image hash, GPS coordinates, detected declarations, calibrated measurements, rule check breakdown, recommended regulatory action (Improvement Notice / Section 15 sample seizure), and statutory disclaimer. Zero claims of automated penalties.
 - **Owner:** Member 6 (Product Lead) | **Deadline:** Day 1, 4:00 PM (T+16h).
@@ -44,7 +44,7 @@
 ## 2. Priority P1: Must Answer Before Final Integration (Hours 24 to 72)
 
 ### [P1-1] What Is the Optimal Statutory Tolerance Buffer for Borderline Font Heights?
-- **Context:** Rule 9 Table 1 mandates minimum numeral heights ($1.0\text{mm}, 1.5\text{mm}, 2.5\text{mm}$, etc.). Optical edge binarization produces slight stroke jitter. If a true $1.50\text{mm}$ numeral measures $1.46\text{mm}$, flagging a definitive violation creates regulatory harassment.
+- **Context:** Rule 7 Table-I/II mandates minimum numeral heights ($1.0\text{mm}, 1.5\text{mm}, 2.5\text{mm}$, etc.). Optical edge binarization produces slight stroke jitter. If a true $1.50\text{mm}$ numeral measures $1.46\text{mm}$, flagging a definitive violation creates regulatory harassment.
 - **Investigation Needed:** Test whether a statutory benefit-of-doubt buffer of $0.10\text{mm}$ or $0.15\text{mm}$ minimizes False Positive Rate (FPR) without degrading defect detection sensitivity.
 - **Resolution Criteria:** FPR $<5.0\%$ on compliant benchmark packages; all packages within buffer flagged as `MANUAL_REVIEW_REQUIRED`.
 - **Owner:** Member 3 (Rule Architect) & Member 5 (Benchmark Lead) | **Deadline:** Day 4, 2:00 PM (T+62h).

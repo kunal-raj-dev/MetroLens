@@ -1,78 +1,308 @@
-# STATUTORY LEGAL RULE MATRIX & REGULATORY FOUNDATION (V0.2)
-## Legal Metrology (Packaged Commodities) Rules, 2011 (As Amended up to September 2026)
+# STATUTORY LEGAL RULE MATRIX & REGULATORY FOUNDATION (V0.3)
+## Legal Metrology (Packaged Commodities) Rules, 2011 (Consolidated as of September 2026)
 
-**Governing Parent Statute:** The Legal Metrology Act, 2009 (Act No. 1 of 2010) as amended by the **Jan Vishwas (Amendment of Provisions) Act, 2023 (Act No. 18 of 2023)**  
+**Governing Parent Statute:** The Legal Metrology Act, 2009 (Act No. 1 of 2010)  
+**Enforcement Amendment:** Jan Vishwas (Amendment of Provisions) Act, 2026 — Legal Metrology provisions effective **1 May 2026** [PRIMARY RESEARCH FINDING — PIB PRID 2278745]  
 **Nodal Ministry:** Ministry of Consumer Affairs, Food & Public Distribution (Department of Consumer Affairs)  
-**System Role Definition:** Automated Regulatory Compliance Audit & Evidentiary Screening System (Assists Legal Metrology Officers under Section 15; does NOT issue unilateral penalties or judicial orders)
+**System Role Definition:** Image-based compliance assessment tool that supports inspection workflows. Does NOT issue penalties, generate statutory notices, or claim legal standing independently. [ENGINEERING DECISION]
+
+> **V0.3 CORRECTION:** V0.2 incorrectly attributed the Improvement Notice mechanism to "Jan Vishwas (Amendment of Provisions) Act, 2026". The operative enforcement mechanism is the **Jan Vishwas (Amendment of Provisions) Act, 2026**, effective 1 May 2026. See `LEGAL_CHANGELOG_2025_2026.md` for complete amendment chronology.
 
 ---
 
-## 1. Statutory Architecture & Enforcement Reality (Jan Vishwas Act, 2023)
+## 1. Current Enforcement Architecture (Jan Vishwas Act, 2026)
 
-### Crucial Legal Clarification on Section 36 Enforcement & Improvement Notices
-Competing proposals and outdated student projects frequently claim that software can "issue automated fines or compounding notices of ₹25,000 to ₹1,00,000". **Under current Indian law as of September 2026, this is legally false.**
-
-1. **Decriminalization & The Improvement Notice Mechanism (Section 36(1)):**
-   - The **Jan Vishwas (Amendment of Provisions) Act, 2023** fundamentally overhauled Section 36(1) of the Legal Metrology Act, 2009, removing criminal prosecution for first-time packaging declaration non-compliances (Rules 6, 7, 8, 9, 11).
-   - For pre-packaged commodities not conforming to mandatory declarations or font sizes, the statute mandates an **Improvement Notice** for the **First Offence**.
-   - The manufacturer, packer, or importer is granted a statutory compliance window (typically 15 to 30 days) to rectify the non-compliance. If rectified, proceedings are closed with **no financial penalty**.
-   - Financial penalties apply only upon failure to comply with an Improvement Notice or for repeated offences, and these penalties must be formally adjudicated by a designated **Adjudicating Officer** appointed under Section 48A—**never via automated software summons**.
-2. **Short-Weight / Under-Measure Distinction (Section 36(2)):**
-   - For net quantity shortages (e.g., selling 82g in a container declared as 100g), penalties remain stringent under Section 36(2) (first offence up to ₹1,00,000; repeated up to ₹5,00,000).
-   - **Critical Physical Boundary:** Monocular computer vision **cannot weigh an object**. Software must explicitly declare that Section 36(2) physical weight verification requires a physical check-weighing scale certified under Rule 24.
-3. **Evidentiary Role of the System (Section 15 & Section 63 BSA / Section 65B IEA):**
-   - Under **Section 15** of the Legal Metrology Act, 2009, a Legal Metrology Officer (LMO) has the power of inspection, entry, search, and seizure.
-   - MetroLens AI functions as a **Prima Facie Evidentiary Audit Tool**: it captures tamper-evident proof (cryptographic SHA-256 hashes, GPS coordinates, ISO-8601 timestamps, calibrated optical measurements) providing lawful justification for an inspecting officer to issue an Improvement Notice or seize physical samples under Form 1.
-
----
-
-## 2. Master Legal Rule Matrix (Amended up to September 2026)
-
-| Rule Reference | Current Legal Source | Statutory Requirement | Verifiability Classification | Required Extracted Data | Automation & Verification Method | Verifiability Tier & Confidence | Statutory Exceptions & Nuances |
-| :--- | :--- | :--- | :---: | :--- | :--- | :---: | :--- |
-| **Rule 6(1)(a)** | LM(PC) Rules 2011; GSR 779(E) | Name and complete address of manufacturer. If packer is distinct, both names and addresses. For imported goods, name and address of importer. | **Partially Verifiable** | Manufacturer / Packer / Importer block, Street/Area, City, State, PIN code. | OCR text detection $\rightarrow$ Entity extraction $\rightarrow$ Syntactic validation (checks presence of 6-digit Indian PIN code regex, keywords "Mfg by", "Packed by", "Mkt by"). | **High Syntactic (>95%)**<br>*Semantic truth unverified* | Abbreviated address permitted if package surface area $< 10\text{ cm}^2$. Cannot verify physical existence of factory without MCA21 / GSTN API or physical officer visit. |
-| **Rule 6(1)(b)** | LM(PC) Rules 2011 | Generic or common name of the commodity contained in the package. Brand/trademark alone does not satisfy this requirement. | **Image-Verifiable** | Generic commodity descriptor (e.g., "Potato Chips", "Refined Sunflower Oil"). | Multilingual OCR $\rightarrow$ String normalization against National Product Catalog / Food Safety Category taxonomy. | **High (>90%)** | For combo packs containing distinct commodities, each generic name must appear. Lab chemical testing required to confirm contents match label. |
-| **Rule 6(1)(c)** | LM(PC) Rules 2011; GSR 779(E) | Net quantity in standard units of weight or measure (mass, volume, length, area, or count). Non-metric units prohibited. | **Image-Verifiable** | Numerical quantity + approved SI unit symbol (`g`, `kg`, `ml`, `l`, `m`, `N`, `U`, `pieces`). | Deterministic Regex parser validating approved SI symbols. Flags illegal notations: `Gms`, `gms`, `Kgs`, `k.g.`, `ML`, `ltrs`. Enforces decimal notation over vulgar fractions. | **Deterministic (100% logic, >98% OCR)** | Rule 26 exemption: Packages with net quantity $\le 10\text{g}$ or $\le 10\text{ml}$ exempt (except tobacco/pan masala). Fast-food counter items exempt. |
-| **Rule 6(1)(d)** | LM(PC) Rules 2011; FSSAI Harmonization | Month and year of manufacture, packing, or import (e.g., "08/2026", "Aug 2026", "Packed: 08/26"). Best Before / Use By required for perishable items. | **Image-Verifiable** | Date tokens, month/year qualifiers, expiry / shelf-life text. | Multilingual date regex pattern matching + temporal sanity check (flags future dates $>30$ days or expired shelf-life). | **High (>95%)** | Faded dot-matrix inkjet printing on crimped edges requires adaptive contrast enhancement (CLAHE). Electronic items may declare via QR code under circular. |
-| **Rule 6(1)(e)** | LM(PC) Rules 2011 | Maximum Retail Price (MRP) in mandatory format including retail sale price and tax inclusivity qualifier. | **Image-Verifiable** | Currency symbol (`₹`, `Rs.`), price value (float), tax inclusivity qualifier string. | Deterministic Regex extracting price value and validating presence of semantic qualifier: "inclusive of all taxes", "incl. of all taxes", or "कर सहित". | **Deterministic (100% logic, >97% OCR)** | Rounding rules: fraction of a rupee rounded to nearest 50 paise or whole rupee. Overwriting or pasting a sticker over original MRP is a violation under Section 36. |
-| **Rule 6(1)(f) & Rule 6(11)** | GSR 779(E) (2021); Enforced Oct 1, 2022 | Mandatory Unit Sale Price (USP) where package contains $>1$ unit or $>1\text{kg/L}$. Must follow standardized denominations. | **Image-Verifiable & Mathematically Auditable** | Declared USP float + unit denomination, extracted MRP, extracted Net Quantity. | Deterministic Arithmetic Validator: Computes expected USP in standard denomination. Flags discrepancies exceeding $\pm 1\%$ rounding tolerance and non-standard units. | **Deterministic (100% mathematical audit)** | Denomination mapping:<br>• Net Qty $< 1\text{kg}$: ₹/g or ₹/100g<br>• Net Qty $\ge 1\text{kg}$: ₹/kg<br>• Net Qty $< 1\text{L}$: ₹/ml or ₹/100ml<br>• Net Qty $\ge 1\text{L}$: ₹/L<br>• Sold by count: ₹/item or ₹/piece.<br>Exemption: Packages where net quantity = 1 or where package price = unit sale price. |
-| **Rule 6(1)(g)** | LM(PC) Rules 2011 | Consumer Care details: Name, physical address, telephone number, and official email address of person/office handling consumer complaints. | **Image-Verifiable** | Contact name/designation, physical address, 10-digit/toll-free phone number, email address. | RFC 5322 regex for email validation + Indian telecom regex (toll-free 1800/1860, STD landlines, +91 mobile). | **High (>96%)** | Statute mandates BOTH phone AND email. Omission of either channel constitutes a non-compliance. |
-| **Rule 6(1)(h)** | LM(PC) Rules 2011 | Country of origin on all imported commodities: "Country of Origin: [Name]" or "Made in [Country]". | **Image-Verifiable** | Country name token, origin phrasing. | ISO 3166-1 country lookup dictionary + phrase regex ("Made in", "Country of Origin", "Product of"). | **High (>95%)** | Mandatory on all imported commodities. On domestic products, absence is permitted if manufacturer address in India is clearly stated. |
-| **Rule 6(10)** | LM(PC) Amendment 2017 & 2021 | E-Commerce Marketplace Listings: Digital listing must display mandatory declarations except mfg date. | **Web/Platform Verifiable** *(Post-Hackathon)* | Listing attributes and packshot images (Amazon, Blinkit, Zepto, Flipkart). | Headless DOM inspection / packshot OCR verifying presence of generic name, net qty, MRP, USP, manufacturer, origin. | **High (>90%)** | INTERMEDIARY LIABILITY: Marketplaces liable under Section 36(1) for non-compliant listings. Scoped out of hackathon MVP to protect team bandwidth. |
-| **Rule 7 & Rule 2(h)** | LM(PC) Rules 2011 | Principal Display Panel (PDP) dimensions: part of package likely to be displayed. Rectangular: $H \times W$; Cylindrical: $40\% \times (H \times \text{Circumference})$; Other: $20\%$ total surface. | **Partially Verifiable (Requires Coplanar Reference)** | Packaging outer boundary bounding box, scale factor from metric reference. | Package boundary segmentation $\rightarrow$ metric homography transformation to metric centimeters $\rightarrow$ PDP area calculation ($A\text{ cm}^2$). | **Medium-High (85–90%)** | Monocular camera requires known planar scale anchor (standard 10-Rupee coin or ISO card) to calculate physical area in $\text{cm}^2$. |
-| **Rule 8** | LM(PC) Rules 2011 | Prominence, Placement & Clear Space: Declarations must be legible, conspicuous, and maintain clear blank space around net quantity numeral (equal to numeral height above/below, twice width left/right). | **Image-Verifiable** | Numeral bounding box, neighboring text/graphic bounding boxes, stroke clarity. | Spatial intersection query on OCR bounding boxes + background uniformity check around the net quantity numeral. | **Medium-High (85–90%)** | Decorative artwork or graphic splashes overlapping quantity numeral violate Rule 8. Declarations permitted in Hindi or English. |
-| **Rule 9 & Table 1** | LM(PC) Rules 2011 | Statutory Minimum Font Height: Minimum numeral and letter heights based on PDP area $A$ and Net Quantity:<br>• $A \le 50\text{ cm}^2 \rightarrow \ge 1.0\text{ mm}$<br>• $50 < A \le 100\text{ cm}^2 \rightarrow \ge 1.5\text{ mm}$<br>• $100 < A \le 500\text{ cm}^2 \rightarrow \ge 2.5\text{ mm}$<br>• $500 < A \le 2500\text{ cm}^2 \rightarrow \ge 4.0\text{ mm}$<br>• $A > 2500\text{ cm}^2 \rightarrow \ge 6.0\text{ mm}$<br>Width must be $\ge \frac{1}{3}\text{ Height}$ (except numeral "1"). | **Partially Verifiable (Strict Calibration Required)** | PDP Area $A$, Bounding box of numerals in Net Quantity, USP, and MRP, metric pixel-to-mm scale. | Metric calibration via reference anchor $\rightarrow$ character contour extraction $\rightarrow$ vertical stroke height measurement (x-height in mm) $\rightarrow$ Table 1 lookup. | **Target MAE: $\pm 0.12\text{ mm}$**<br>*Borderline cases: Manual Review* | Blown, formed, or molded packaging has higher thresholds (2.0mm, 3.0mm, 4.0mm, 6.0mm, 8.0mm). Software implements a $0.10\text{ mm}$ statutory benefit-of-doubt buffer. |
-| **Rule 26** | LM(PC) Rules 2011 | Statutory Exemptions: Packages $\le 10\text{g}$ or $\le 10\text{ml}$ (except tobacco); industrial packages $> 25\text{kg}$ or $> 25\text{L}$; fast-food counter items; LPG cylinders. | **Image-Verifiable** | Extracted Net Quantity number and unit, product category. | Conditional rule switch: If Net Qty $\le 10\text{g}$ or $\le 10\text{ml}$ and category is NOT tobacco/pan masala, engine flags `STATUTORY_EXEMPTION_APPLIED`. | **Deterministic (100%)** | Prevents false-positive violations on miniature hotel soaps, ketchup sachets, or single chewing gum packs. |
-| **Medical Devices (2025)** | GSR 778(E) (Oct 24, 2025) | Medical Devices Rule Harmonization: Packaging of medical devices governed under Medical Devices Rules, 2017 supersedes LM(PC) font size rules. | **Categorical Exception** | Product category classification. | If product is identified as Medical Device (CDSCO licensed), Rule 9 font height checks are bypassed in favor of MDR 2017 standards. | **High (>95%)** | Prevents erroneous notices against syringes, IV sets, or diagnostic kits. |
-| **Pan Masala (2025/2026)** | GSR 881(E) (Dec 2, 2025; in force Feb 1, 2026) | Revocation of Pan Masala packaging exemptions: Full declaration sizes and font heights mandatory on all pouch sizes. | **Categorical Inclusion** | Product category classification ("Pan Masala", "Gutkha"). | Engine strictly enforces standard Rule 9 Table 1 thresholds with zero miniature pouch exemptions. | **Deterministic (100%)** | High government enforcement priority area. |
-| **QR Code Circular (2022/2023)** | DCA Circulars on Electronic Products | Electronic Products QR Code Exemption: Electronic items permitted to declare address, consumer care, and specs via external QR code, provided MRP, Net Qty, Mfg Date, and Country are physical. | **Image-Verifiable** | Barcode / QR code detector + physical declaration presence. | QR code detection + payload URL verification. If electronic commodity, missing address on carton is permitted if valid QR code is present. | **High (>92%)** | Restricted strictly to electronic products; food and cosmetics cannot substitute physical declarations with QR codes. |
-
----
-
-## 3. Strict Boundary: Image-Verifiable vs. Laboratory/Physical Testing
+### Section 36(1) — Packaging Declaration Non-Compliances [PRIMARY RESEARCH FINDING]
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                     STATUTORY VERIFICATION BOUNDARIES                    │
-├──────────────────────────────────┬───────────────────────────────────────┤
-│    IMAGE-VERIFIABLE BY SYSTEM    │      PHYSICAL / EXTERNAL REALITY      │
-│  (What MetroLens AI evaluates)   │   (Requires physical tools or labs)   │
-├──────────────────────────────────┼───────────────────────────────────────┤
-│ • Presence of mandatory fields   │ • Actual physical net weight inside   │
-│ • SI unit syntax (g vs Gms)      │   (Requires certified weighing scale) │
-│ • Tax inclusivity text on MRP    │ • Chemical / nutritional purity       │
-│ • Mathematical USP correctness   │   (Requires FSSAI chemical lab test)  │
-│ • Valid email and phone syntax   │ • Physical factory existence at PIN   │
-│ • Area-proportional font height  │   (Requires physical officer visit)   │
-│ • Clear blank space prominence   │ • Sub-surface tamper/re-sealing       │
-│ • Rule 26 miniature exemption    │ • Dynamic wholesale invoice pricing   │
-└──────────────────────────────────┴───────────────────────────────────────┘
+INSPECTION by authorized officer (Section 15)
+    ↓
+DETECTION of potential Section 36(1) non-compliance
+    ↓
+FIRST OFFENCE?
+    ├── YES → IMPROVEMENT NOTICE
+    │         → Compliance window (prescribed period)
+    │         → If rectified: MATTER CLOSED (no penalty)
+    │         → If not rectified: ADJUDICATION (Section 48A)
+    │
+    └── NO (repeat offence) → DIRECT ADJUDICATION
+         → 2nd offence: higher penalties
+         → 3rd offence: ₹25 lakh to ₹50 lakh [SECONDARY RESEARCH]
+
+SCOPE: Section 36(1) now explicitly includes e-commerce platforms,
+       online marketplaces, and electronic service providers.
 ```
+
+### Section 36(2) — Short Weight / Under-Measure
+- Separate and stricter penalties remain (first offence up to ₹1,00,000; repeat up to ₹5,00,000)
+- **MetroLens CANNOT verify net weight** — monocular camera cannot weigh objects
+- Physical check-weighing under Rule 24 with certified scale is required
+
+### MetroLens System Role — Precise Legal Positioning [ENGINEERING DECISION]
+- MetroLens is designed to **support authorized inspection workflows**
+- It provides image-based preliminary assessment and evidence packaging
+- It does NOT: issue penalties, generate statutory notices, claim evidentiary standing independently, or make binding legal determinations
+- A hash (SHA-256) provides **integrity verification** (tamper-evident record), NOT digital signature, authentication, or legal certification
+
+> **V0.3 CORRECTIONS FROM V0.2:**
+> - Removed: "Prima Facie Evidentiary Audit Tool" → Replaced with: "image-based compliance assessment tool"
+> - Removed: "cryptographically sealed" → Replaced with: "tamper-evident integrity record (SHA-256)"
+> - Removed: "provides lawful justification under Section 15" → Replaced with: "designed to support authorized inspection workflows"
+> - Removed: "Form 1" references → Form references removed pending verification of current statutory form numbering
 
 ---
 
-## 4. Statutory Language Guidelines for Software Output
-1. **Never Output:** *"This package is 100% legally compliant under Indian Law."*
-2. **Always Output:** *"Image-Based Compliance Assessment: No image-verifiable non-compliances detected under Rules 6, 7, 8, 9, 11 of LM(PC) Rules, 2011."*
-3. **Never Output:** *"Penalty of ₹25,000 imposed."*
-4. **Always Output:** *"Potential Non-Compliance Flagged. Recommended Regulatory Action: Issue Improvement Notice under Section 36(1) (as amended by Jan Vishwas Act, 2023) or verify physical sample under Section 15."*
+## 2. Package Applicability Gate
+
+Before checking individual rules, the system must determine whether a package falls within scope. [ENGINEERING DECISION]
+
+```
+STEP 1: Is this a pre-packaged commodity intended for retail sale?
+    ├── NO → NOT APPLICABLE (Rules do not apply)
+    └── YES ↓
+
+STEP 2: Is the package within scope exclusions?
+    ├── Rule 3: Industrial/institutional package? → EXCLUDED
+    ├── Rule 3: Net Qty > 25 kg or > 25 L? → EXCLUDED (wholesale/bulk)
+    ├── Rule 26(a): Net Qty ≤ 10g or ≤ 10ml? 
+    │     ├── AND category is pan masala? → NOT EXEMPT (G.S.R. 881(E))
+    │     ├── AND category is tobacco? → NOT EXEMPT
+    │     └── OTHERWISE → EXEMPT from most declarations
+    ├── Rule 26: Fast-food counter items? → EXEMPT
+    ├── Rule 26: Scheduled formulations (Drugs Price Control)? → EXEMPT
+    └── G.S.R. 778(E): Medical device? → GOVERNED BY Medical Devices Rules, 2017
+
+STEP 3: What category does this package belong to?
+    → Determines applicable regulatory profile (see Section 4)
+
+STEP 4: Which Rule 6 declarations apply?
+    → Category-specific checklist (see Section 3)
+```
+
+> **V0.3 CORRECTION:** V0.2 incorrectly placed all scope exclusions under Rule 26. Industrial/institutional and >25 kg/>25 L exclusions derive from Rule 3 (application scope). Rule 26 covers specific exemptions (small packs, fast food, scheduled drugs). The system must correctly attribute each exclusion.
+
+---
+
+## 3. Master Rule 6 Declaration Map (Current Consolidated)
+
+### Rule 6(1) Clause Structure [PRIMARY RESEARCH FINDING — Indian Kanoon]
+
+| Clause | Requirement | Image-Verifiable? | Notes |
+|:---|:---|:---:|:---|
+| **6(1)(a)** | Name and complete address of manufacturer/packer/importer | Partially | Cannot verify physical existence of address |
+| **6(1)(aa)** | Country of origin (imported goods) | Yes | Added by G.S.R. 779(E) 2021 |
+| **6(1)(b)** | Common or generic name of commodity | Yes | Brand/trademark alone insufficient |
+| **6(1)(c)** | Net quantity in standard SI units | Yes | Deterministic SI validation |
+| **6(1)(d)** | Month and year of manufacture/packing/import; best before/use by for perishables | Yes | Date parsing + temporal validation |
+| **6(1)(da)** | [UNKNOWN / UNVERIFIED] — Verify whether clause (da) exists in current consolidated rules | — | Research required |
+| **6(1)(e)** | Maximum Retail Price (MRP) inclusive of all taxes | Yes | Deterministic regex + qualifier check |
+| **6(1)(f)** | [Verify current assignment — may relate to consumer care or other] | — | Cross-check against consolidated text |
+| **6(1)(g)** | Consumer care details (name, address, phone, email) | Yes | Both phone AND email mandatory |
+| **6(1)(h)** | [Verify current assignment — country of origin may have moved to (aa)] | — | Original (h) may have been re-assigned |
+| **6(10)** | E-commerce marketplace listing declarations | Post-MVP | Currently deferred |
+| **6(10A)** | E-commerce country-of-origin filters (G.S.R. 128(E), effective 1 Jul 2026) | Post-MVP | Currently deferred |
+| **6(11)** | Unit Sale Price (USP) — added by G.S.R. 226(E), effective 1 Oct 2022 | Yes + Math | See USP section below |
+
+> **V0.3 NOTE:** The exact current clause numbering of Rule 6(1) requires line-by-line verification against the latest consolidated text. Clauses (da), (f), and (h) need specific verification. The system should not hard-code clause references that may have shifted due to amendments. Mark as [UNKNOWN / UNVERIFIED] until confirmed.
+
+---
+
+## 4. Category Classification → Applicable Regulatory Profile [ENGINEERING DECISION]
+
+The system must NOT apply a universal "every package → same checklist". Different commodity categories have different regulatory interactions.
+
+### MVP Supported Categories (Recommended: 1–2 deeply defensible)
+
+| Category | LM(PC) Rules Apply? | Regulatory Interactions | MVP Recommendation |
+|:---|:---:|:---|:---|
+| **FMCG / Grocery** (biscuits, snacks, dry goods) | Yes | Food articles have special treatment under Rule 6 re: FSSAI labelling overlap. Rule 7(5) exempts certain provisions when information is required under another law. | PRIMARY — most common inspection target |
+| **Household / Personal Care** (soap, sanitizer, detergent) | Yes | Fewer regulatory overlaps. BIS marking may apply separately. | SECONDARY — good fallback category |
+| **Electronics accessories** (cables, batteries, chargers) | Yes | QR code circular permits partial electronic declaration. | OPTIONAL — if time permits |
+| **Beverages** (water, juice, carbonated drinks) | Yes | FSSAI + LM overlap. Liquid-specific USP rules apply. | DEFER to v2 unless trivial |
+| **Cosmetics** | Yes | Drugs & Cosmetics Act overlap for certain declarations | DEFER |
+| **Medical Devices** | **NO** | Carved out by G.S.R. 778(E) Oct 2025 → Medical Devices Rules, 2017 | **EXCLUDED** |
+| **Pan Masala** | Yes (enhanced) | G.S.R. 881(E) removes small-pack exemption | AWARENESS only |
+| **Tobacco** | Yes (enhanced) | Never exempt from Rule 26(a) small-pack exemption | AWARENESS only |
+
+> **V0.3 CORRECTION:** V0.2 stated medical devices "bypass Rule 9 font height rules". This is too narrow — G.S.R. 778(E) carves medical devices out of the entire LM(PC) Rules declaration framework, not just font heights.
+
+---
+
+## 5. Rule 7 — Font Height Tables & PDP (CORRECTED) [PRIMARY RESEARCH FINDING — Indian Kanoon doc/151004919]
+
+> **CRITICAL V0.3 CORRECTION:** V0.2 repeatedly cited "Rule 7 Table-I/II" for font-size thresholds. The font-size tables are in **Rule 7**, NOT Rule 9. Rule 8 governs placement/space. Rule 9 governs manner/legibility/contrast. This is a P0 documentation correction.
+
+### Table-I: Minimum Height — Net Quantity Declared by Weight or Volume [OFFICIAL FACT]
+
+| # | PDP Area (A) in cm² | Min Height (normal, mm) | Min Height (blown/formed/molded, mm) |
+|:---:|:---|:---:|:---:|
+| 1 | A < 50 | 1.0 | 1.5 |
+| 2 | 50 ≤ A < 100 | 1.5 | 3.0 |
+| 3 | 100 ≤ A < 500 | 2.5 | 4.0 |
+| 4 | 500 ≤ A < 2500 | 4.0 | 6.0 |
+| 5 | A ≥ 2500 | 6.0 | 6.0 |
+
+### Table-II: Minimum Height — Net Quantity Declared by Length, Area, or Number [OFFICIAL FACT]
+
+| # | PDP Area (A) in cm² | Min Height (normal, mm) | Min Height (blown/formed/molded/embossed/perforated, mm) |
+|:---:|:---|:---:|:---:|
+| 1 | A ≤ 100 | 1 | 2 |
+| 2 | 100 < A ≤ 500 | 2 | 4 |
+| 3 | 500 < A ≤ 2500 | 4 | 6 |
+| 4 | A > 2500 | 6 | 6 |
+
+### Font Height Decision Matrix [ENGINEERING DECISION]
+
+```
+INPUT: Net Quantity Type + PDP Area
+    ↓
+Is net quantity declared by weight (g/kg) or volume (ml/L)?
+    ├── YES → Use Table-I
+    └── NO → Is net quantity declared by length, area, or number?
+              ├── YES → Use Table-II
+              └── UNKNOWN → MANUAL_REVIEW_REQUIRED
+    ↓
+Is the packaging blown, formed, molded, embossed, or perforated?
+    ├── YES → Use Column (3) of applicable table
+    └── NO  → Use Column (2) of applicable table
+    ↓
+COMPARE measured font height against threshold
+    ↓
+Result:
+    • Height ≥ threshold → PASS
+    • Height < threshold AND within MEASUREMENT UNCERTAINTY REVIEW BAND → MANUAL_REVIEW_REQUIRED
+    • Height < threshold beyond uncertainty band → POTENTIAL_NON_COMPLIANCE
+```
+
+### Width Requirement — Rule 7(3) [OFFICIAL FACT]
+- Width of letter or numeral ≥ ⅓ of its height
+- Exception: numeral "1" and letters (i), (I), (l)
+
+### PDP Area Calculation — Rule 7(4) [OFFICIAL FACT]
+- **Rectangular package:** H × W of the principal display panel side
+- **Cylindrical or nearly cylindrical:** 40% × (H × circumference)
+- **Other shapes:** 40% of total surface area, or the area of the principal display panel
+- **Exclusions from area calculation:** top, bottom, flange at top and bottom of cans, shoulders and neck of bottles and jars
+
+> **V0.3 CORRECTION:** V0.2 mixed Legal Metrology PDP formulas with FSSAI food-labelling PDP rules. The above are the ONLY PDP formulas from Rule 7(4) of LM(PC) Rules. Do NOT import FSSAI formulas into the Legal Metrology rules engine.
+
+### Small Package Provision — Rule 7(1) [OFFICIAL FACT]
+- Package with capacity ≤ **10 cubic centimetres** (NOT 10 square centimetres)
+- May use a card or tape affixed firmly to the package bearing required information
+
+> **V0.3 CORRECTION:** V0.2 contained references to "10 cm²" (square centimetres). The legal threshold is **10 cm³** (cubic centimetres / capacity).
+
+---
+
+## 6. Rule 8 — Placement & Prominence [SECONDARY RESEARCH]
+
+- All mandatory declarations must appear on the **Principal Display Panel**
+- Clear blank space required around net quantity numeral: height of numeral above/below, twice width left/right
+- If package has outside container/wrapper: must also carry declarations unless wrapper is transparent and inner declarations readable
+- Declarations must NOT be placed where they must be read through liquid in the package
+
+---
+
+## 7. Rule 9 — Manner of Declaration (Legibility, Language, Contrast) [SECONDARY RESEARCH]
+
+- Declarations must be **legible and prominent**
+- Language: Hindi or English; may also appear in regional language
+- MRP and Net Quantity numerals must be in a color that **contrasts conspicuously** with background
+- Exception: contrast requirement does not apply to blown/molded/formed/embossed text on glass or plastic containers
+
+> **Rule 9 does NOT contain any font-size table.** It governs HOW declarations appear (legible, prominent, contrasting), not their minimum physical dimensions.
+
+---
+
+## 8. Unit Sale Price (USP) — Rule 6(11) (CORRECTED) [PRIMARY RESEARCH FINDING]
+
+### Current Statutory Logic (G.S.R. 226(E), effective 1 Oct 2022)
+
+| Net Quantity Type | Threshold | USP Denomination |
+|:---|:---|:---|
+| Weight | < 1 kg | Per gram (₹/g) |
+| Weight | ≥ 1 kg | Per kilogram (₹/kg) |
+| Length | < 1 m | Per centimetre (₹/cm) |
+| Length | ≥ 1 m | Per metre (₹/m) |
+| Volume | < 1 L | Per millilitre (₹/ml) |
+| Volume | ≥ 1 L | Per litre (₹/L) |
+| Count | Any | Per number or per unit |
+
+**Rounding:** To nearest two decimal places  
+**Exemption:** Not required when MRP equals USP  
+**Exemption:** Not required for combination, group, multi-piece, and wholesale packages [SECONDARY RESEARCH — DCA FAQ]
+
+> **V0.3 CORRECTIONS FROM V0.2:**
+> - Removed: "per 100g" — this denomination does NOT exist in the statute
+> - Corrected: "≥ 1 kg" boundary — statute says "less than one kilogram → per gram" and "one kilogram or more → per kilogram"
+> - Removed: "±1% tolerance" as though it were a statutory tolerance — if used, it must be labeled as [ENGINEERING COMPARISON TOLERANCE], not a legal requirement
+> - Added: exemptions for combination/group/multi-piece/wholesale packages
+
+### USP Verification Architecture [ENGINEERING DECISION]
+
+```
+EXTRACT: MRP (₹), Net Quantity (value + unit), Declared USP (₹/unit)
+    ↓
+DETERMINE: USP denomination from table above
+    ↓
+COMPUTE: Expected USP = MRP / Net Quantity (in standard denomination)
+    ↓
+ROUND: to 2 decimal places
+    ↓
+COMPARE: |Declared USP - Computed USP|
+    ↓
+Result:
+    • Match (within ENGINEERING COMPARISON TOLERANCE) → PASS
+    • Mismatch → POTENTIAL_NON_COMPLIANCE
+    • Cannot extract reliably → INPUT_INSUFFICIENT
+    • Package is combination/group/multi-piece → USP_NOT_REQUIRED
+```
+
+> **IMPORTANT DISTINCTION:**
+> - **ARITHMETIC CORRECTNESS** = Does declared USP match computed USP? (Engineering check)
+> - **STATUTORY DECLARATION COMPLIANCE** = Is USP declared in the correct denomination? Is it present when required?
+> - These are separate checks. Do NOT say "USP differs by >1% therefore illegal" unless the law creates such a tolerance. The ±tolerance is our engineering comparison buffer for OCR/rounding variance.
+
+---
+
+## 9. Customary Units (2026 Advisory) [PRODUCT ASSUMPTION — NEEDS VERIFICATION]
+
+A 2026 DCA advisory addressed customary units as supplementary statements alongside standard SI units.
+
+**System must distinguish:**
+- ✅ VALID: Standard SI declaration + supplementary customary information (e.g., "500 g (approx. 1.1 lbs)")
+- ❌ NON-COMPLIANT: Customary unit used as substitute for SI declaration (e.g., "1.1 lbs" without "500 g")
+- ❌ NON-COMPLIANT: Non-standard abbreviations used as the primary declaration (e.g., "500 Gms" instead of "500 g")
+
+> **V0.3 NOTE:** The exact advisory text must be verified. The rule engine must NOT flag a customary unit merely because it exists alongside a valid SI declaration. It must flag only: (a) customary unit used as substitute, or (b) non-standard SI abbreviation used as primary declaration.
+
+---
+
+## 10. Compliance Status Model [ENGINEERING DECISION]
+
+The system must NOT output binary PASS/FAIL for legal compliance. The following status model reflects uncertainty honestly:
+
+| Status | Meaning | When Used |
+|:---|:---|:---|
+| `NO_IMAGE_VERIFIABLE_VIOLATION_DETECTED` | All image-checkable rules passed | All checks pass within confidence |
+| `POTENTIAL_NON_COMPLIANCE` | Rule violation detected with high confidence | Clear discrepancy found |
+| `MANUAL_REVIEW_REQUIRED` | System cannot determine with sufficient confidence | Borderline measurement, low OCR confidence, ambiguous category |
+| `NOT_APPLICABLE` | Rule does not apply to this package/category | Exemption or scope exclusion applies |
+| `NOT_IMAGE_VERIFIABLE` | Cannot be checked from image alone | Weight verification, factory existence, etc. |
+| `INPUT_INSUFFICIENT` | Image quality or OCR too poor to assess | Blurry, occluded, or unreadable |
+| `RULE_APPLICABILITY_UNCERTAIN` | Cannot determine which rules apply | Unknown category, ambiguous package type |
+
+> **CRITICAL PRINCIPLE:** `NO_IMAGE_VERIFIABLE_VIOLATION_DETECTED` ≠ "legally compliant in every respect". The system assesses what the camera can see. It cannot verify physical weight, chemical composition, factory existence, or declarations on unseen panels.
+
+---
+
+## 11. Statutory Language Guidelines for System Output [ENGINEERING DECISION]
+
+| ❌ NEVER Output | ✅ ALWAYS Output Instead |
+|:---|:---|
+| "This package is 100% legally compliant" | "No image-verifiable non-compliances detected for the assessed declarations" |
+| "Penalty of ₹X imposed" | "Potential non-compliance flagged. Recommended: review by authorized officer" |
+| "Improvement Notice issued" | "Assessment suggests Improvement Notice may be applicable under current enforcement framework" |
+| "Court-admissible evidence" | "Tamper-evident inspection record with integrity metadata" |
+| "Chain of custody established" | "Image integrity verified via SHA-256 hash" |
+| "Certified inspection report" | "Image-based compliance assessment report" |

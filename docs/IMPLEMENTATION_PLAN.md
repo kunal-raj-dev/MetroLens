@@ -1,4 +1,4 @@
-# MASTER 8–9 DAY EXECUTION PLAN & SIX-MEMBER ALLOCATION (V0.2)
+# MASTER 8–9 DAY EXECUTION PLAN & SIX-MEMBER ALLOCATION (V0.3)
 ## MetroLens AI — Automated Legal Metrology Inspection System (SIH26034)
 **Plan Status:** Authoritative Engineering Roadmap | **Version:** 0.2 (Post-Audit Edition)  
 **Date:** 4 September 2026 | **Governing Constraint:** 6 Members Developing 2 SIH Projects in Parallel
@@ -85,7 +85,7 @@ At **T+48 Hours**, the team conducts a formal binary review across **5 Hard Gate
 
 | Gate | Description | Pass Threshold | Warning Condition | Failure Condition | Action upon Failure |
 | :---: | :--- | :--- | :--- | :--- | :--- |
-| **Gate A** | **Legal Rule Engine** | 100% tests pass on 25 synthetic test cases. | 1–2 edge cases fail on obscure rounding. | Fundamental logic flaw in USP or Rule 9. | Refactor rule logic; lock rule scope to core 6 clauses. |
+| **Gate A** | **Legal Rule Engine** | 100% tests pass on 25 synthetic test cases. | 1–2 edge cases fail on obscure rounding. | Fundamental logic flaw in USP or Rule 7. | Refactor rule logic; lock rule scope to core 6 clauses. |
 | **Gate B** | **Scene Text OCR** | CER $< 8\%$, CPU latency $< 1,200\text{ms}$ on 15 packages. | CER $8\text{–}12\%$ or latency $1.2\text{–}1.8\text{s}$. | Model crashes or CER $> 15\%$ on clear print. | Add CLAHE contrast preprocessing; switch to ROI cropping. |
 | **Gate C** | **Metric Calibration** | Scale error $< 5\%$ (MAE $< 0.15\text{mm}$) on planar packs. | Scale error $5\text{–}8\%$. | Scale error $> 10\%$; ellipse fit unstable. | **DROP AUTOMATIC FONT MEASUREMENT FROM MVP.** Pivot demo to declaration presence, SI units, and USP math. |
 | **Gate D** | **Assessment Report** | PDF compiles with SHA-256 hash in $< 500\text{ms}$. | Styling or layout clipping on long text. | PDF compilation crashes backend. | Switch from ReportLab to clean HTML-to-PDF template. |
@@ -164,7 +164,7 @@ At **T+48 Hours**, the team conducts a formal binary review across **5 Hard Gate
 - **Milestones:**
   - M1: Profile and optimize CPU inference threads to ensure consistent latency.
   - M2: Fine-tune contour edge detection to minimize stroke jitter.
-  - M3: Implement Rule 9 Table 1 lookup engine indexing calibrated PDP area.
+  - M3: Implement Rule 7 Table-I/II lookup engine indexing calibrated PDP area.
   - M4: Build Visual Evidence viewer with side-by-side rectified crop and deficit badge.
   - M5: Run automated benchmark script across all Phase 2 packages; record CER, WER, MAE.
   - M6: Add Inspector Manual Review toggle screen with 1-tap field confirmation.
