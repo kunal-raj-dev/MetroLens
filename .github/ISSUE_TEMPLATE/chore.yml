@@ -1,0 +1,121 @@
+name: "🔧 Chore / Engineering Task"
+description: "Tooling, CI/CD, dependency maintenance, repository hygiene, or infrastructure tasks"
+title: "[CHORE]: "
+labels: ["type:chore", "status:specifying"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### MetroLens AI™ — Chore & Tooling Specification
+        Chores maintain repository health, developer productivity, CI automation, and offline runtime environments.
+        *Authoritative Reference:* [`GLOBAL_TEAM_WORKFLOW.md`](../../GLOBAL_TEAM_WORKFLOW.md)
+
+  - type: input
+    id: chore_summary
+    attributes:
+      label: "Chore Summary"
+      description: "Concise title describing the operational or tooling task."
+      placeholder: "e.g., Configure GitHub Actions CI workflow for automated pytest execution"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_context
+    attributes:
+      label: "Context & Rationale"
+      description: "Why is this engineering task necessary? What maintenance or operational risk does it address?"
+      placeholder: "e.g., Pull requests currently require manual local testing by maintainers. Automated CI guarantees that syntax errors and regression tests are caught on PR creation."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: "Subsystem / Target Domain"
+      description: "Domain affected by this chore."
+      options:
+        - "CI/CD & GitHub Automation (.github/workflows/)"
+        - "Local Development Tooling & Scripts (tools/)"
+        - "Dependency Management & Requirements (pyproject.toml / requirements.txt)"
+        - "Repository Governance & Quality Gates"
+        - "FastAPI Server Infrastructure (backend/)"
+        - "Frontend Build & Bundler Setup (frontend/)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority Level"
+      description: "Urgency of this task relative to milestone goals."
+      options:
+        - "P0-blocker (Blocks team development or PR merges)"
+        - "P1-high (Essential infrastructure for milestone delivery)"
+        - "P2-medium (Standard operational improvement)"
+        - "P3-low (Convenience tooling or non-urgent cleanup)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: primary_owner
+    attributes:
+      label: "Primary Owner (Assigned Lead)"
+      description: "Single engineer accountable for this chore."
+      options:
+        - "M6 — Product, DevOps & Presentation Lead (Governance, CI/CD, scripts)"
+        - "M3 — Backend & Rule Engine Lead (FastAPI & environment config)"
+        - "M4 — Frontend & UX Lead (Node/Vite bundling & PWA config)"
+        - "M1 — AI & OCR Lead (ONNX model files & runtime setup)"
+        - "M2 — Calibration & Geometry Lead (OpenCV test fixtures)"
+        - "M5 — Data & Benchmark Lead (Dataset scripts & manifests)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope_boundary
+    attributes:
+      label: "Scope Boundaries"
+      description: "Specify what is included in this chore and what is excluded."
+      placeholder: |
+        - In-Scope: Add GitHub Actions workflow running pytest on Ubuntu 22.04 with Python 3.11.
+        - Out-of-Scope: Deploying to remote cloud hosting (MetroLens runs 100% offline).
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: "Acceptance Criteria"
+      description: "Measurable pass/fail conditions for completing this chore."
+      placeholder: |
+        - [ ] CI workflow executes successfully on clean PR branches.
+        - [ ] No unpinned dependencies introduced.
+        - [ ] Workflow finishes in under 3 minutes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_approach
+    attributes:
+      label: "Verification Approach"
+      description: "How will this chore be validated?"
+      placeholder: "e.g., Open a draft PR with passing tests to verify workflow triggers and completes green."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dor_verification
+    attributes:
+      label: "Definition of Ready (DoR) Gate Checklist"
+      description: "Confirm readiness before starting implementation."
+      options:
+        - label: "Rationale and objective clearly explained"
+          required: true
+        - label: "Scope boundaries clearly demarcated"
+          required: true
+        - label: "Acceptance criteria defined"
+          required: true
+        - label: "Verification approach understood"
+          required: true
+        - label: "Exactly one primary owner assigned (M1–M6)"
+          required: true

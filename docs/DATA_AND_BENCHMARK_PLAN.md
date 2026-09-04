@@ -94,7 +94,7 @@ Handheld digital calipers applied directly to tiny printed ink characters introd
      "sku_id": "SKU-014-BISCUIT",
      "category": "Snacks",
      "brand_type": "Synthetic Mock",
-     "true_pdp_area_sqcm": 74.5,
+     "true_pdp_area_sqcm": [DYNAMIC MEASURED VALUE],
      "true_numeral_height_mm": 1.15,
      "true_mrp": 20.0,
      "true_net_quantity": 50.0,

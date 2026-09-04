@@ -10,7 +10,7 @@
 
 **MetroLens AI™** is an edge-native, perspective-corrected mobile computer vision and regulatory audit system designed for District Legal Metrology Officers (LMOs) and packaging compliance auditors. It transforms a tedious, manual 20-minute ruler-and-magnifier inspection into a **sub-2.5-second, mathematically verified, tamper-evident regulatory compliance audit**.
 
-By combining a **universally available optical metric anchor** (a standard 10-Rupee coin or ISO card) with **planar metric scale calibration**, MetroLens AI solves the fundamental monocular scale ambiguity of smartphone cameras. It directly evaluates statutory numeral heights (Rule 7 Table-I/II) against calibrated Principal Display Panel (PDP) areas, audits Unit Sale Price (USP) arithmetic against Net Quantity and MRP under Rule 6(11) in standardized denominations, extracts mandatory packaging declarations across English and Hindi using local scene text OCR, and verifies compliance through a **100% deterministic statutory state machine**.
+By combining a **universally available optical metric anchor** (a standard 10-Rupee coin or ISO card) with **planar metric scale calibration**, MetroLens AI solves the fundamental monocular scale ambiguity of smartphone cameras. It directly evaluates statutory numeral heights (Rule 7 Table-I/II) against calibrated Principal Display Panel (PDP) areas, audits Unit Sale Price (USP) arithmetic against Net Quantity and MRP under Rule 6(11) in standardized denominations, extracts mandatory packaging declarations across English and Hindi using local scene text OCR, and verifies compliance through a **high-confidence deterministic statutory state machine**.
 
 The system operates **entirely offline** on local edge hardware without external cloud dependency, generates a cryptographically sealed (SHA-256) **Image-Based Compliance Assessment Report** under Section 15 of the Legal Metrology Act, 2009 (incorporating the **Jan Vishwas (Amendment of Provisions) Act, 2026 Improvement Notice framework** under Section 36(1)), and provides an **eMaap-Inspired Mock REST Adapter Interface** ready for national portal integration.
 
@@ -26,7 +26,7 @@ In India, pre-packaged commodities represent over ₹12 Lakh Crore ($150 Billion
 1. **Manual Vernier & Ruler Auditing:** An inspecting officer must physically hold a plastic ruler or micrometer against microscopic print on flexible pouches or curved containers—a slow, contentious, and visually fatiguing procedure.
 2. **Inspection Coverage $<0.01\%$:** Due to extreme human resource constraints, over 99.99% of retail packages are never inspected unless a formal consumer grievance is escalated.
 3. **Shrinkflation & Deceptive USP:** Brands frequently downsize net contents (e.g. from 100g to 82g) while retaining identical packaging footprints and prices. While Rule 6(11) mandates Unit Sale Price (e.g. "₹0.61 per g"), brands often omit USP or print it in microscopic 0.5mm fonts hidden within bottom gussets.
-4. **Decriminalization & Administrative Burden:** The **Jan Vishwas (Amendment of Provisions) Act, 2026** decriminalized first-time labeling infractions, requiring officers to issue formal **Improvement Notices** with rigorous prima facie evidence before any repeated-offence penalty can be adjudicated.
+4. **Decriminalization & Administrative Burden:** The **Jan Vishwas (Amendment of Provisions) Act, 2026** decriminalized first-time labeling infractions, requiring officers to issue formal **Improvement Notices** with rigorous supporting evidence before any repeated-offence penalty can be adjudicated.
 
 ---
 
@@ -64,7 +64,7 @@ In India, pre-packaged commodities represent over ₹12 Lakh Crore ($150 Billion
 ### Measurable Engineering Goals
 1. **Accurate Perception:** Extract statutory packaging declarations with Character Error Rate $<6.0\%$ on local CPU.
 2. **Calibrated Physical Measurement:** Measure printed numeral heights with target Mean Absolute Error (MAE) $<0.15\text{mm}$ against 1200 DPI optical scan ground truth.
-3. **100% Deterministic Rule Evaluation:** Evaluate legal rules using isolated Python state machines—**zero LLM hallucination in compliance decisions**.
+3. **high-confidence deterministic Rule Evaluation:** Evaluate legal rules using isolated Python state machines—**zero LLM hallucination in compliance decisions**.
 4. **Sub-2.5-Second Latency:** Complete the scan-to-report pipeline in $<2.5\text{ seconds}$ on standard consumer quad-core laptop CPUs.
 5. **100% Offline Capability:** Execute the entire live stage demonstration with Wi-Fi and Cellular toggled off.
 6. **Legally Grounded Evidentiary Output:** Generate a tamper-evident Compliance Assessment Report embedding SHA-256 hashes and Section 36(1) Improvement Notice recommendations.
@@ -211,7 +211,7 @@ In India, pre-packaged commodities represent over ₹12 Lakh Crore ($150 Billion
 │ 3. RULES DECIDE (Deterministic Statutory Domain)                            │
 │ • Technology: Versioned Python State Machine (`modules/rules/`).            │
 │ • Role: Codifies Gazette clauses, Table 1 area thresholds, and exemptions.  │
-│ • Boundary: 100% deterministic, audit-traceable, and version-stamped.       │
+│ • Boundary: high-confidence deterministic, audit-traceable, and version-stamped.       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. HUMANS GOVERN (Regulatory Enforcement & Discretion)                      │
 │ • Technology: 5-State Result Classification & 1-Tap Manual Review UI.       │

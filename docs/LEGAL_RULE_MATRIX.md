@@ -45,7 +45,7 @@ SCOPE: Section 36(1) now explicitly includes e-commerce platforms,
 - A hash (SHA-256) provides **integrity verification** (tamper-evident record), NOT digital signature, authentication, or legal certification
 
 > **V0.3 CORRECTIONS FROM V0.2:**
-> - Removed: "Prima Facie Evidentiary Audit Tool" → Replaced with: "image-based compliance assessment tool"
+> - Removed: "supporting inspection evidence Audit Tool" → Replaced with: "image-based compliance assessment tool"
 > - Removed: "cryptographically sealed" → Replaced with: "tamper-evident integrity record (SHA-256)"
 > - Removed: "provides lawful justification under Section 15" → Replaced with: "designed to support authorized inspection workflows"
 > - Removed: "Form 1" references → Form references removed pending verification of current statutory form numbering
@@ -233,7 +233,7 @@ Result:
 **Exemption:** Not required for combination, group, multi-piece, and wholesale packages [SECONDARY RESEARCH — DCA FAQ]
 
 > **V0.3 CORRECTIONS FROM V0.2:**
-> - Removed: "per 100g" — this denomination does NOT exist in the statute
+> - Removed: "per g or kg" — this denomination does NOT exist in the statute
 > - Corrected: "≥ 1 kg" boundary — statute says "less than one kilogram → per gram" and "one kilogram or more → per kilogram"
 > - Removed: "±1% tolerance" as though it were a statutory tolerance — if used, it must be labeled as [ENGINEERING COMPARISON TOLERANCE], not a legal requirement
 > - Added: exemptions for combination/group/multi-piece/wholesale packages
@@ -303,6 +303,6 @@ The system must NOT output binary PASS/FAIL for legal compliance. The following 
 | "This package is 100% legally compliant" | "No image-verifiable non-compliances detected for the assessed declarations" |
 | "Penalty of ₹X imposed" | "Potential non-compliance flagged. Recommended: review by authorized officer" |
 | "Improvement Notice issued" | "Assessment suggests Improvement Notice may be applicable under current enforcement framework" |
-| "Court-admissible evidence" | "Tamper-evident inspection record with integrity metadata" |
+| "supporting inspection evidence evidence" | "Tamper-evident inspection record with integrity metadata" |
 | "Chain of custody established" | "Image integrity verified via SHA-256 hash" |
 | "Certified inspection report" | "Image-based compliance assessment report" |

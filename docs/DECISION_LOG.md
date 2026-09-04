@@ -89,7 +89,7 @@
 - **Status:** **VALIDATED** (Legally Cautious Re-framing)
 - **Context:** Under Section 63 of Bharatiya Sakshya Adhiniyam, 2023 / Section 65B of Indian Evidence Act, electronic records require verifiable authenticity and integrity.
 - **Decision:** Embed cryptographic SHA-256 hashes of the raw uncompressed capture, rectified crops, and inspection metadata into the assessment report.
-- **Statutory Boundary:** State explicitly that cryptographic hashing provides **tamper-evidence and data integrity**; it does not automatically confer legal court admissibility without an authorized officers statutory certificate.
+- **Statutory Boundary:** State explicitly that cryptographic hashing provides **tamper-evidence and data integrity**; it does not automatically confer legal court admissibility without an authorized officers Assessment Report.
 - **Explicit Rejection:** **REJECT BLOCKCHAIN / SMART CONTRACTS.** Blockchain adds zero legal standing in Indian district courts, wastes engineering bandwidth, and represents hackathon buzzword distraction.
 - **Validation Required:** Unit test verifying SHA-256 checksum recalculation on generated report artifacts.
 

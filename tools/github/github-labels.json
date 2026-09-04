@@ -1,0 +1,172 @@
+[
+  {
+    "name": "type:feat",
+    "color": "1d76db",
+    "description": "New user-facing or backend capability"
+  },
+  {
+    "name": "type:bug",
+    "color": "d93f0b",
+    "description": "Reproducible defect, calculation error, or regression"
+  },
+  {
+    "name": "type:legal",
+    "color": "006b75",
+    "description": "Statutory amendment, Gazette notification, or regulatory mandate"
+  },
+  {
+    "name": "type:research",
+    "color": "8250df",
+    "description": "Timeboxed spike, architectural investigation, or benchmark"
+  },
+  {
+    "name": "type:chore",
+    "color": "5319e7",
+    "description": "Tooling, CI/CD, dependency, or repository hygiene"
+  },
+  {
+    "name": "type:docs",
+    "color": "0075ca",
+    "description": "Architecture docs, guides, or legal source updates"
+  },
+  {
+    "name": "type:refactor",
+    "color": "bfdadc",
+    "description": "Code restructuring without external behavior changes"
+  },
+  {
+    "name": "type:test",
+    "color": "fbca04",
+    "description": "Adding or updating automated test suites"
+  },
+  {
+    "name": "sub:cv",
+    "color": "0e8a16",
+    "description": "Computer vision, contour detection, and metric scale calibration"
+  },
+  {
+    "name": "sub:ocr",
+    "color": "1f883d",
+    "description": "PaddleOCR runtime, quantization, and scene text extraction"
+  },
+  {
+    "name": "sub:rules",
+    "color": "b60205",
+    "description": "Deterministic statutory state machine and rule verification"
+  },
+  {
+    "name": "sub:frontend",
+    "color": "1d76db",
+    "description": "React/Vite PWA, camera viewfinder, and compliance UI"
+  },
+  {
+    "name": "sub:reporting",
+    "color": "d93f0b",
+    "description": "Tamper-evident assessment reports, SHA-256 integrity, PDF"
+  },
+  {
+    "name": "sub:data",
+    "color": "c5def5",
+    "description": "Packaging dataset curation, 1200 DPI scans, ground truth"
+  },
+  {
+    "name": "sub:backend",
+    "color": "bfd4f2",
+    "description": "FastAPI server, Pydantic canonical schemas, integration"
+  },
+  {
+    "name": "sub:legal-pack",
+    "color": "0052cc",
+    "description": "Official gazette PDFs, Act amendments, and checksum manifests"
+  },
+  {
+    "name": "sub:ci",
+    "color": "5319e7",
+    "description": "GitHub Actions, automated test workflows, and linters"
+  },
+  {
+    "name": "sub:docs",
+    "color": "e99695",
+    "description": "System specifications, architecture documents, and ADRs"
+  },
+  {
+    "name": "priority:P0-blocker",
+    "color": "b60205",
+    "description": "Showstopper defect or critical path blocker; immediate action"
+  },
+  {
+    "name": "priority:P1-high",
+    "color": "d93f0b",
+    "description": "High priority milestone deliverable or critical algorithmic fix"
+  },
+  {
+    "name": "priority:P2-medium",
+    "color": "fbca04",
+    "description": "Standard priority feature enhancement or non-blocking defect"
+  },
+  {
+    "name": "priority:P3-low",
+    "color": "0e8a16",
+    "description": "Low priority improvement, cosmetic tweak, or cleanup"
+  },
+  {
+    "name": "status:backlog",
+    "color": "cfd3d7",
+    "description": "Submitted task pending detailed specification"
+  },
+  {
+    "name": "status:specifying",
+    "color": "fef2c0",
+    "description": "Context, scope, acceptance criteria, and DoR being drafted"
+  },
+  {
+    "name": "status:ready",
+    "color": "0e8a16",
+    "description": "Definition of Ready satisfied; assigned and cleared for Phase 2 branch"
+  },
+  {
+    "name": "status:in-dev",
+    "color": "1d76db",
+    "description": "Active implementation on dedicated feature branch"
+  },
+  {
+    "name": "status:in-review",
+    "color": "8250df",
+    "description": "Pull Request opened; peer review and CI checks in progress"
+  },
+  {
+    "name": "status:done",
+    "color": "24292f",
+    "description": "Merged into main and verified; issue resolved"
+  },
+  {
+    "name": "owner:M1-ocr",
+    "color": "c2e0c6",
+    "description": "M1 (AI & OCR Lead) ownership"
+  },
+  {
+    "name": "owner:M2-calibration",
+    "color": "c2e0c6",
+    "description": "M2 (Calibration & Geometry Lead) ownership"
+  },
+  {
+    "name": "owner:M3-rules",
+    "color": "c2e0c6",
+    "description": "M3 (Backend & Rule Engine Lead) ownership"
+  },
+  {
+    "name": "owner:M4-frontend",
+    "color": "c2e0c6",
+    "description": "M4 (Frontend & UX Lead) ownership"
+  },
+  {
+    "name": "owner:M5-data",
+    "color": "c2e0c6",
+    "description": "M5 (Data & Benchmark Lead) ownership"
+  },
+  {
+    "name": "owner:M6-devops",
+    "color": "c2e0c6",
+    "description": "M6 (Product, DevOps & Presentation Lead) ownership"
+  }
+]

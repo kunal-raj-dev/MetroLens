@@ -73,7 +73,7 @@
 ### Defect 2: Statutory Misnomer & Illegal Enforcement Logic
 - **What Was Wrong:** V0.1 generated a document titled "Image-Based Compliance Assessment Report", cited Section 36 penalties up to ₹25,000, and framed the output as an automated fine.
 - **Why It Is Problematic:** Under the Legal Metrology (Packaged Commodities) Rules, 2011, "Image-Based Compliance Assessment Report" is an application for manufacturer registration under Rule 27; it has nothing to do with inspection reports. Furthermore, under the **Jan Vishwas (Amendment of Provisions) Act, 2026**, Section 36(1) labeling violations have been decriminalized: the first offence mandates an **Improvement Notice** giving the brand time to rectify, with zero initial fine. Adjudication of repeated offences is restricted to statutory Adjudicating Officers under Section 48A.
-- **V0.3 Correction:** Completely removed "Image-Based Compliance Assessment Report". The output is renamed **"MetroLens AI — Image-Based Compliance Assessment Report"**. The system acts strictly as an **assistive evidentiary screening tool under Section 15**, generating prima facie evidence and recommending an Improvement Notice under Section 36(1).
+- **V0.3 Correction:** Completely removed "Image-Based Compliance Assessment Report". The output is renamed **"MetroLens AI — Image-Based Compliance Assessment Report"**. The system acts strictly as an **assistive evidentiary screening tool under Section 15**, generating supporting evidence and recommending an Improvement Notice under Section 36(1).
 
 ### Defect 3: Scope Creep (Headless E-Commerce Scraping & Live eMaap Sync)
 - **What Was Wrong:** V0.1 scheduled building a Playwright headless browser scraper for Amazon/Blinkit listings and a live webhook integration with the National eMaap portal.
@@ -83,7 +83,7 @@
 ### Defect 4: Cloud LLM in the Critical Compliance Decision Path
 - **What Was Wrong:** V0.1 suggested using Gemini 1.5 Flash to parse entities and assist with compliance evaluation.
 - **Why It Is Problematic:** Any live internet dependency during a hackathon demonstration creates existential failure risk when venue Wi-Fi drops. Furthermore, LLMs hallucinate statutory clauses and fail on decimal arithmetic required for Unit Sale Price (USP).
-- **V0.3 Correction:** **100% Offline Localhost Execution.** Quantized PaddleOCR v4 ONNX running on CPU handles text extraction. Entity normalization is performed by deterministic regex pipelines. The statutory compliance engine is 100% deterministic Python. Gemini is restricted to an optional, secondary cloud enrichment demo.
+- **V0.3 Correction:** **100% Offline Localhost Execution.** Quantized PaddleOCR v4 ONNX running on CPU handles text extraction. Entity normalization is performed by deterministic regex pipelines. The statutory compliance engine is high-confidence deterministic Python. Gemini is restricted to an optional, secondary cloud enrichment demo.
 
 ### Defect 5: Binary Pass/Fail Status Model
 - **What Was Wrong:** V0.1 used a binary red/green verdict model (VERIFIED_COMPLIANT vs NON_COMPLIANT).
@@ -115,4 +115,4 @@
 ## 4. Architectural Invariant Rules (Non-Negotiable)
 1. **Rule of Determinism:** Zero neural network or LLM probabilistic outputs in the legal compliance verdict path. AI extracts; mathematics validates; deterministic rules decide.
 2. **Rule of Offline Resilience:** The core demonstration pipeline MUST execute end-to-end on `localhost:8000` with zero outbound internet requests.
-3. **Rule of Assistive Governance:** The system NEVER pretends to issue fines or judicial orders. It generates prima facie compliance assessments to assist authorized officers.
+3. **Rule of Assistive Governance:** The system NEVER pretends to issue fines or judicial orders. It generates supporting compliance assessments to assist authorized officers.

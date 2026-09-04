@@ -111,7 +111,7 @@ This document records the architectural, algorithmic, and engineering trade-offs
   3. System metadata (UTC ISO-8601 timestamp, GPS coordinates, device identifier, model version hash, rule-engine commit SHA).
   4. Composite inspection certificate checksum signing the entire record.
 - **Explicit Rejection of Blockchain:** Reject blockchain smart contracts or distributed ledger technology. Blockchain adds zero legal standing in Indian district courts, wastes engineering bandwidth, and represents hackathon buzzword distraction.
-- **Statutory Language Guardrail:** System outputs are described as **tamper-evident prima facie inspection packages**, not unilateral judicial decrees.
+- **Statutory Language Guardrail:** System outputs are described as **tamper-evident supporting inspection packages**, not unilateral judicial decrees.
 
 ---
 
