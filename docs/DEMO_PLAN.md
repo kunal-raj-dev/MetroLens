@@ -1,4 +1,4 @@
-# LIVE DEMO STAGECRAFT & 5-LAYER REDUNDANCY PLAN (V0.2)
+# LIVE DEMO STAGECRAFT & 5-LAYER REDUNDANCY PLAN (V0.3)
 ## MetroLens AI — Automated Legal Metrology Inspection System (SIH26034)
 **Document Status:** Competition Presentation Script & Failover Architecture | **Version:** 0.2 (Post-Audit Edition)  
 **Date:** 4 September 2026 | **Governing Rule:** All On-Screen Numbers Represent Dynamic Pipeline Outputs. Zero Staged Hardcoding.
@@ -11,7 +11,7 @@ The presenter must place the following physical items on the jury table before s
 
 1. **Defective Benchmark Package (The "Hook"):** A physical packaging specimen (biscuit pouch or snack pack) featuring a custom synthetic mock sleeve clearly labeled:  
    *“Synthetic Test Specimen — Not an Actual Manufacturer Violation.”*  
-   The Net Quantity numeral is printed at $1.15\text{mm}$ despite a Principal Display Panel $> 50\text{ cm}^2$ (Rule 9 Table 1 mandates minimum $1.50\text{mm}$).
+   The Net Quantity numeral is printed at $1.15\text{mm}$ despite a Principal Display Panel $> 50\text{ cm}^2$ (Rule 7 Table-I/II mandates minimum $1.50\text{mm}$).
 2. **Compliant Retail Package:** A standard retail personal care item (e.g., Dettol sanitizer or Colgate carton) fully compliant across all mandatory declarations.
 3. **Physical Metric Reference Anchors:**
    - A crisp, uncirculated **standard Indian 10-Rupee coin** (official RBI outer diameter: $27.0\text{mm}$).
@@ -78,7 +78,7 @@ SCREEN DISPLAY (Dynamic Pipeline Output):
   - Left: High-resolution rectified image crop of the net quantity numeral.
   - Middle: Detected bounding box with vertical stroke analysis showing:
     • Calculated PDP Area: ~74.5 cm²
-    • Applicable Statute: Rule 9 Table 1, Row 2 (50 to 100 cm²)
+    • Applicable Statute: Rule 7 Table-I/II, Row 2 (50 to 100 cm²)
     • Mandatory Minimum Height: 1.50 mm
     • Measured Font Height: ~1.15 mm
     • STATUTORY DEFICIT: -0.35 mm (POTENTIAL NON-COMPLIANCE)
@@ -90,7 +90,7 @@ SCREEN DISPLAY (Dynamic Pipeline Output):
 SPOKEN SCRIPT:
 "Notice the scientific explainability. We do not display an opaque, unexplainable AI score. 
 The system measures the Principal Display Panel at 74.5 square centimeters. 
-Under Rule 9 Table 1 of the Legal Metrology Rules, an area between 50 and 100 cm² legally 
+Under Rule 7 Table-I/II of the Legal Metrology Rules, an area between 50 and 100 cm² legally 
 mandates a minimum numeral height of 1.50 millimeters. 
 Our metric scale engine measured this numeral at 1.15 millimeters—a deficit of 0.35 millimeters!
 
@@ -108,9 +108,9 @@ SCREEN DISPLAY:
 • Title: "METROLENS AI — IMAGE-BASED COMPLIANCE ASSESSMENT REPORT"
 • Subtitle: "Automated Regulatory Inspection & Evidentiary Screening Report"
 • Side-by-side evidence crop with bounding box coordinates.
-• Exact statutory citations: Rule 6(11) and Rule 9 Table 1.
+• Exact statutory citations: Rule 6(11) and Rule 7 Table-I/II.
 • Recommended Regulatory Action: "Issue Improvement Notice under Section 36(1) 
-  (as amended by Jan Vishwas Act, 2023) or verify physical sample under Section 15."
+  (as amended by Jan Vishwas (Amendment of Provisions) Act, 2026) or verify physical sample under Section 15."
 • Tamper-Evident Integrity Block:
   - Raw Capture SHA-256 Checksum
   - Calibrated Crop SHA-256 Checksum

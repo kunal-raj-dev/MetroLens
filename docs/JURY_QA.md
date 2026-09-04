@@ -1,4 +1,4 @@
-# COMPREHENSIVE JURY Q&A DEFENSE STRATEGY (32 ADVERSARIAL QUESTIONS) — V0.2
+# COMPREHENSIVE JURY Q&A DEFENSE STRATEGY (32 ADVERSARIAL QUESTIONS) — V0.3
 ## MetroLens AI — Automated Legal Metrology Inspection System (SIH26034)
 **Evaluation Context:** InnoHack 3.0 / Smart India Hackathon 2026 | **Defense Framework:** Categorized by FACT, ENGINEERING DECISION, LIMITATION, and FUTURE WORK.  
 **Governing Standard:** Zero Invented Numbers. Defendable Science and Transparent Boundary Realism.
@@ -18,7 +18,7 @@
 #### Q2: "What if the packaging is curved, like a soda can, shampoo bottle, or glass jar?"
 - **Answer:**
   - **FACT:** A right circular cylinder $\mathbf{P}(\phi, y) = (R\cos\phi, y, R\sin\phi)$ has curvature strictly along its circumferential axis. Along the vertical generator line parallel to the cylinder axis, the surface coordinate maps linearly to the sensor: $y_{\text{proj}} = y_{\text{actual}}$.
-  - **ENGINEERING DECISION:** Under Rule 9, statutory font height is strictly measured along the **vertical axis** (numeral capital height / ascender-descender). Therefore, on upright right circular cylinders, horizontal curvature does not foreshorten vertical numeral stroke height. We restrict automated measurement to the **central $40^\circ$ generator strip** ($\cos\phi \ge 0.94$).
+  - **ENGINEERING DECISION:** Under Rule 7, statutory font height is strictly measured along the **vertical axis** (numeral capital height / ascender-descender). Therefore, on upright right circular cylinders, horizontal curvature does not foreshorten vertical numeral stroke height. We restrict automated measurement to the **central $40^\circ$ generator strip** ($\cos\phi \ge 0.94$).
   - **LIMITATION:** This mathematical invariance holds strictly for true right cylinders held vertically perpendicular to the camera. Tapered bottles, conical necks, spherical jars, and crumpled pouches violate this assumption.
   - **ENGINEERING DECISION:** The system detects non-cylindrical or irregular packaging and automatically flags: `MANUAL_REVIEW_REQUIRED — Non-Planar Curvature Detected`.
 - **Evidence:** Central generator crop visualization on a physical beverage can.
@@ -34,10 +34,10 @@
 
 #### Q4: "How do you calculate the Principal Display Panel (PDP) area to know which font threshold from Table 1 applies?"
 - **Answer:**
-  - **FACT:** Under Rule 7, PDP area for a rectangular container is height $\times$ width of the largest face. Under Rule 9 Table 1, area $A$ determines statutory font minimums ($1.0\text{mm}$ for $A \le 50\text{ cm}^2$, $1.5\text{mm}$ for $50 < A \le 100\text{ cm}^2$, $2.5\text{mm}$ for $100 < A \le 500\text{ cm}^2$).
+  - **FACT:** Under Rule 7, PDP area for a rectangular container is height $\times$ width of the largest face. Under Rule 7 Table-I/II, area $A$ determines statutory font minimums ($1.0\text{mm}$ for $A \le 50\text{ cm}^2$, $1.5\text{mm}$ for $50 < A \le 100\text{ cm}^2$, $2.5\text{mm}$ for $100 < A \le 500\text{ cm}^2$).
   - **ENGINEERING DECISION:** When the inspector captures the package panel with the metric anchor, our boundary detector segments the outer container edges. Using the calibrated millimeter-per-pixel scale, the system calculates surface area $A$ in $\text{cm}^2$, which directly indexes Table 1.
   - **LIMITATION:** In monocular vision, calculating 3D surface area on non-planar packages requires manual panel dimension entry or flat carton unfolding.
-- **Evidence:** On-screen calculation card displaying calculated PDP area indexing Rule 9 Table 1.
+- **Evidence:** On-screen calculation card displaying calculated PDP area indexing Rule 7 Table-I/II.
 
 #### Q5: "What if the 10-Rupee coin is worn out, dirty, or tilted relative to the package?"
 - **Answer:**
@@ -57,10 +57,10 @@
   - **LIMITATION:** Software is an assistive tool; legal authority rests exclusively with the human officer.
 - **Evidence:** Generated Assessment Report citing Section 36(1) Improvement Notice statutory wording.
 
-#### Q7: "Why was the generated report renamed from 'Form A' in v0.2?"
+#### Q7: "Why was the generated report renamed from 'Image-Based Compliance Assessment Report' in v0.3?"
 - **Answer:**
-  - **FACT:** Under the Legal Metrology (Packaged Commodities) Rules, 2011, "Form A" is an application format for registration of manufacturers/packers under Rule 27; it is not a statutory inspection or violation notice. Seizure notices are issued under Form 1 / Section 15.
-  - **ENGINEERING DECISION:** We eliminated "Form A" across all documents, code, and UI to ensure absolute legal integrity. The output is officially titled: **"MetroLens AI — Image-Based Compliance Assessment Report"** with subtitle: *Automated Regulatory Inspection & Evidentiary Screening Report*.
+  - **FACT:** Under the Legal Metrology (Packaged Commodities) Rules, 2011, "Image-Based Compliance Assessment Report" is an application format for registration of manufacturers/packers under Rule 27; it is not a statutory inspection or violation notice. Seizure notices are issued under Form 1 / Section 15.
+  - **ENGINEERING DECISION:** We eliminated "Image-Based Compliance Assessment Report" across all documents, code, and UI to ensure absolute legal integrity. The output is officially titled: **"MetroLens AI — Image-Based Compliance Assessment Report"** with subtitle: *Automated Regulatory Inspection & Evidentiary Screening Report*.
 - **Evidence:** Renamed PDF report title and clean legal citation block.
 
 #### Q8: "How does the system verify the Unit Sale Price (USP) mandate introduced in recent amendments?"
@@ -134,7 +134,7 @@
 #### Q16: "How is this different from consumer food barcode scanning apps like Yuka or HealthifyMe?"
 - **Answer:**
   - **FACT:** Barcode apps scan 1D EAN/UPC barcodes to look up crowdsourced nutritional databases. They do not inspect the physical printed packaging at all!
-  - **ENGINEERING DECISION:** Barcode apps cannot detect physical shrinkflation (reducing weight from 100g to 82g), cannot measure font millimeter heights under Rule 9, cannot verify Unit Sale Price math, and cannot enforce Legal Metrology statutes. MetroLens AI performs direct computer vision inspection of the physical printed packaging surface.
+  - **ENGINEERING DECISION:** Barcode apps cannot detect physical shrinkflation (reducing weight from 100g to 82g), cannot measure font millimeter heights under Rule 7, cannot verify Unit Sale Price math, and cannot enforce Legal Metrology statutes. MetroLens AI performs direct computer vision inspection of the physical printed packaging surface.
 - **Evidence:** System architecture inspecting raw pixels without querying barcode databases.
 
 #### Q17: "How is this different from industrial print inspection systems like GlobalVision or EyeC?"
@@ -247,6 +247,6 @@
   - **ENGINEERING DECISION:** Other teams will present generic OCR wrappers: an uncalibrated script or an end-to-end ChatGPT prompt that hallucinates legal rules and has zero optical physics.
   - **OUR THREEFOLD TECHNICAL MOAT:**
     1. *Metric Scale Calibration:* We solve the monocular scale ambiguity using a standard 10-Rupee coin or ISO card, enabling physical font measurement.
-    2. *Deterministic Statutory Engine:* We codified Gazette clauses, Unit Sale Price arithmetic, and the Jan Vishwas Act 2023 Improvement Notice framework into an audit-proof Python state machine.
+    2. *Deterministic Statutory Engine:* We codified Gazette clauses, Unit Sale Price arithmetic, and the Jan Vishwas (Amendment of Provisions) Act, 2026 Improvement Notice framework into an audit-proof Python state machine.
     3. *100% In-Room Ground Truth:* We take any physical package sitting on your table right now, scan it live in 2 seconds, and defend every millimeter with this digital caliper.
 - **Evidence:** The live demonstration just executed.

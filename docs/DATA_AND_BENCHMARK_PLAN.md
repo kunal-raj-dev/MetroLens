@@ -1,4 +1,4 @@
-# DATA STRATEGY & BENCHMARK VALIDATION PLAN (V0.2)
+# DATA STRATEGY & BENCHMARK VALIDATION PLAN (V0.3)
 ## MetroLens AI — Automated Legal Metrology Inspection System (SIH26034)
 **Document Status:** Empirical Scientific Evaluation Protocol | **Version:** 0.2 (Post-Audit Edition)  
 **Date:** 4 September 2026 | **Governing Principle:** Zero Invented Metrics. Empirical Results Must Be Measured on Real Hardware.
@@ -46,7 +46,7 @@ To ensure absolute credibility during technical jury inspection while respecting
 > To prevent ethical and legal misrepresentation, all defect test cases MUST use custom printed mock sleeves or neutral package mockups clearly marked:  
 > **"Synthetic Test Specimen — Not an Actual Manufacturer Violation."** Real commercial brand packaging must never be altered or displayed publicly as an accusation.
 
-1. **Defect Mode A (Sub-Millimeter Font Deficit):** Net quantity numeral printed at $1.15\text{mm}$ on a package with $\text{PDP} = 75\text{ cm}^2$ (Rule 9 Table 1 mandates minimum $1.50\text{mm}$).
+1. **Defect Mode A (Sub-Millimeter Font Deficit):** Net quantity numeral printed at $1.15\text{mm}$ on a package with $\text{PDP} = 75\text{ cm}^2$ (Rule 7 Table-I/II mandates minimum $1.50\text{mm}$).
 2. **Defect Mode B (Missing Unit Sale Price):** Packaged commodity with Net Qty $> 100\text{g}$ omitting USP declaration (Rule 6(11) violation).
 3. **Defect Mode C (USP Arithmetic Discrepancy):** Declared USP printed as ₹0.85/g when $\text{MRP} / \text{Net Qty} = ₹0.50/\text{g}$ (mathematical contradiction).
 4. **Defect Mode D (Prohibited Unit Notation):** Net quantity declared as "50 Gms" or "100 ML" (violates Rule 6(1)(c) metric standard).
@@ -83,7 +83,7 @@ Handheld digital calipers applied directly to tiny printed ink characters introd
 
 ### Measurement Procedure:
 1. **Outer Package Dimensions (PDP Area):** Measured using a calibrated digital vernier caliper ($0.01\text{mm}$ resolution) across three independent trials. Recorded as $H, W$ in millimeters; PDP Area $A = \frac{H \times W}{100}\text{ cm}^2$.
-2. **Numeral & Character Heights (Rule 9):**
+2. **Numeral & Character Heights (Rule 7):**
    - Package panel scanned on a flatbed optical scanner at **1200 DPI resolution** ($1\text{ pixel} \equiv 0.02116\text{mm}$).
    - Two independent team members (Rater 1 and Rater 2) measure the vertical pixel height of the Net Quantity numeral and MRP digits using an optical reticle tool.
    - Ground truth height $h_{\text{true}} = \text{pixels} \times 0.02116\text{mm}$.
@@ -143,7 +143,7 @@ Handheld digital calipers applied directly to tiny printed ink characters introd
 > [!NOTE]
 > To preserve absolute scientific integrity, theoretical engineering targets are explicitly separated from empirical recorded results. All "Actual" columns remain unpopulated until the formal Day 7–8 benchmark execution on host hardware.
 
-| Metric | Scientific Definition | Literature Baseline (Generic Tesseract / Zero-Shot LLM) | MetroLens AI Target (v0.2) | Empirical Result (Day 7–8 Benchmark) | Test Environment / Hardware |
+| Metric | Scientific Definition | Literature Baseline (Generic Tesseract / Zero-Shot LLM) | MetroLens AI Target (v0.3) | Empirical Result (Day 7–8 Benchmark) | Test Environment / Hardware |
 | :--- | :--- | :---: | :---: | :---: | :--- |
 | **OCR CER** | Character Error Rate on declaration crops | $\sim 28\%$ | $< 6.0\%$ | *[To be recorded]* | Laptop CPU (quad-core, no GPU) |
 | **OCR WER** | Word Error Rate on mandatory fields | $\sim 36\%$ | $< 10.0\%$ | *[To be recorded]* | Laptop CPU (quad-core, no GPU) |

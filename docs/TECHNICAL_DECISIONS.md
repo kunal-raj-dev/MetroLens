@@ -1,7 +1,7 @@
-# ARCHITECTURE DECISION RECORDS (ADRs) — V0.2
+# ARCHITECTURE DECISION RECORDS (ADRs) — V0.3
 ## MetroLens AI — Automated Legal Metrology Inspection System (SIH26034)
 **Document Status:** Authoritative Architectural Single Source of Truth  
-**Review Version:** 0.2 (Post-Audit Edition) | **Date:** 4 September 2026
+**Review Version:** 0.3 (Final Audit Edition) | **Date:** 4 September 2026
 
 This document records the architectural, algorithmic, and engineering trade-offs governing the implementation of MetroLens AI for InnoHack 3.0 / Smart India Hackathon 2026. All decisions are categorized under strict validation states: **PROPOSED**, **VALIDATED**, **REJECTED**, or **DEFERRED**.
 
@@ -23,9 +23,9 @@ This document records the architectural, algorithmic, and engineering trade-offs
 
 ---
 
-### ADR-002: Metric Scale Reference Anchor for Physical Font-Height Measurement (Rule 9)
+### ADR-002: Metric Scale Reference Anchor for Physical Font-Height Measurement (Rule 7)
 - **Status:** **PROPOSED** (Experiment-First Approach; Feasibility Spike Scheduled Day 1)
-- **Context:** In monocular computer vision, absolute real-world dimensions cannot be recovered from pixel coordinates without a scale reference (scale ambiguity: $u = f \cdot \frac{X}{Z}$). Rule 9 Table 1 mandates minimum numeral heights in millimeters ($1.0\text{mm}, 1.5\text{mm}, 2.5\text{mm}, 4.0\text{mm}, 6.0\text{mm}$). Perspective tilt introduces foreshortening by $\cos(\theta)$.
+- **Context:** In monocular computer vision, absolute real-world dimensions cannot be recovered from pixel coordinates without a scale reference (scale ambiguity: $u = f \cdot \frac{X}{Z}$). Rule 7 Tables I and II mandate minimum numeral heights in millimeters ($1.0\text{mm}, 1.5\text{mm}, 2.0\text{mm}, 2.5\text{mm}, 4.0\text{mm}, 6.0\text{mm}$). Perspective tilt introduces foreshortening by $\cos(\theta)$.
 - **Decision:** Implement metric scale calibration using a universally accessible physical anchor: a **standard Indian 10-Rupee coin** (official RBI outer diameter: $27.0\text{mm}$) under constrained near-normal capture ($\le 10^\circ$), with a standard **ISO/IEC 7810 ID-1 card / ATM card** ($85.60\text{mm} \times 53.98\text{mm}$) providing 4-corner planar homography ($H$) rectification as an advanced option.
 - **Alternatives Considered:**
   1. *Monocular Depth Estimation (MiDaS / Depth-Anything):* Predicts relative depth maps, but lacks absolute metric scale without lidar and suffers from edge bleeding on thin text.
@@ -125,7 +125,7 @@ This document records the architectural, algorithmic, and engineering trade-offs
 ---
 
 ### ADR-009: E-Commerce Listing Web Scraper (Playwright)
-- **Status:** **DEFERRED** (Post-Hackathon Roadmap)
+- **Status:** **REJECTED** (Post-Hackathon Roadmap)
 - **Context:** V0.1 scheduled building an automated scraper for Amazon/Blinkit listings under Rule 6(10).
 - **Decision:** **Excise e-commerce scraping from the 8–9 day MVP.** 
 - **Rationale:** Anti-bot protections (Cloudflare, CAPTCHAs), dynamic DOM changes, and scraping failures introduce high demonstration risk and consume 15+ engineering hours needed for core vision, rules, and physical benchmarks.
@@ -133,10 +133,10 @@ This document records the architectural, algorithmic, and engineering trade-offs
 
 ---
 
-### ADR-010: Inspection Report Redesign & Removal of "Form A"
+### ADR-010: Inspection Report Redesign & Removal of "Image-Based Compliance Assessment Report"
 - **Status:** **VALIDATED** (Legal Correction Implemented)
-- **Context:** V0.1 named the generated PDF "Form A", which is a statutory misnomer under the LM(PC) Rules, 2011.
+- **Context:** V0.1 named the generated PDF "Image-Based Compliance Assessment Report", which is a statutory misnomer under the LM(PC) Rules, 2011.
 - **Decision:** Rename the document to **"MetroLens AI — Image-Based Compliance Assessment Report"**.
   - Frame the report as an objective evidentiary screening tool under Section 15.
-  - Cite Improvement Notices under Section 36(1) as amended by Jan Vishwas Act, 2023.
+  - Cite Improvement Notices under Section 36(1) as amended by Jan Vishwas (Amendment of Provisions) Act, 2026.
   - Include explicit statutory disclaimer: *"Automated image-based assessment. Final legal determination remains with the authorized officer."*
