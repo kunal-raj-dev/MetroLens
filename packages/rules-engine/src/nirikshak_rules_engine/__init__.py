@@ -7,8 +7,49 @@ from nirikshak_shared.models.primitives import RuleVerdict, CalibrationStatus
 from nirikshak_shared.models.contracts import DeclarationField, MeasurementResult, RuleEvaluation
 
 
+from .schemas import (
+    ComplianceState,
+    VerdictBadgeColor,
+    UnitType,
+    ScriptType,
+    OCRToken,
+    MetricScaleResult,
+    CanonicalDeclaration,
+    RuleEvaluationRecord,
+    EvidenceCropMetadata,
+    ImprovementNoticePayload,
+    ComplianceEvaluationResult,
+)
+
+from .normalizer import TokenNormalizer
+from .usp_validator import USPValidator
+from .font_matrix import FontMatrixValidator
+from .notice_builder import ImprovementNoticeBuilder
+from .rule_engine import StatutoryRuleEngine
+from .fopnl import (
+    FOPNLValidator,
+    NutritionalDeclaration,
+    DietClassification,
+    FoodClassification,
+    HFSSWarning,
+)
+from .penalties import (
+    PenaltyCalculator,
+    PenaltyAssessment,
+    OffenseTier,
+    EnforcementAction,
+)
+
+RuleEngine = StatutoryRuleEngine
+FontMatrix = FontMatrixValidator
+NoticeBuilder = ImprovementNoticeBuilder
+
+
 class NirikshakRulesEngine:
     """Executes statutory rules deterministically without generative AI."""
+
+    def __init__(self):
+        self.statutory_engine = StatutoryRuleEngine()
 
     def evaluate_mandatory_declarations(
         self,
@@ -164,4 +205,36 @@ class NirikshakRulesEngine:
         return evals
 
 
-__all__ = ["NirikshakRulesEngine", "RuleEvaluation", "RuleVerdict"]
+__all__ = [
+    "NirikshakRulesEngine",
+    "StatutoryRuleEngine",
+    "RuleEngine",
+    "RuleEvaluation",
+    "RuleVerdict",
+    "ComplianceState",
+    "VerdictBadgeColor",
+    "UnitType",
+    "ScriptType",
+    "OCRToken",
+    "MetricScaleResult",
+    "CanonicalDeclaration",
+    "RuleEvaluationRecord",
+    "EvidenceCropMetadata",
+    "ImprovementNoticePayload",
+    "ComplianceEvaluationResult",
+    "TokenNormalizer",
+    "USPValidator",
+    "FontMatrixValidator",
+    "FontMatrix",
+    "ImprovementNoticeBuilder",
+    "NoticeBuilder",
+    "FOPNLValidator",
+    "NutritionalDeclaration",
+    "DietClassification",
+    "FoodClassification",
+    "HFSSWarning",
+    "PenaltyCalculator",
+    "PenaltyAssessment",
+    "OffenseTier",
+    "EnforcementAction",
+]

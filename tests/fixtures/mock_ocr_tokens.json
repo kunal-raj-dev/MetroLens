@@ -1,0 +1,141 @@
+{
+  "fixtures": {
+    "PKG-01-COMPLIANT-FMCG-CASHEWS": {
+      "description": "Standard retail compliant cashew pouch with full mandatory declarations",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Premium Roasted Cashews", "confidence": 0.99, "bbox": [50.0, 30.0, 450.0, 70.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Quantity: 200 g", "confidence": 0.98, "bbox": [50.0, 90.0, 260.0, 120.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "MRP ₹ 240.00 (inclusive of all taxes)", "confidence": 0.97, "bbox": [50.0, 140.0, 480.0, 175.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "Unit Sale Price: ₹ 1.20 / g", "confidence": 0.96, "bbox": [50.0, 190.0, 320.0, 220.0], "script": "latin"},
+        {"token_id": "tok_05", "text": "Mfg Date: 08/2026", "confidence": 0.98, "bbox": [50.0, 240.0, 240.0, 270.0], "script": "latin"},
+        {"token_id": "tok_06", "text": "Manufactured By: MetroLens Foods Pvt Ltd, Okhla Phase-III, New Delhi 110020", "confidence": 0.95, "bbox": [50.0, 290.0, 650.0, 320.0], "script": "latin"},
+        {"token_id": "tok_07", "text": "Consumer Care: 1800-11-4000, Email: care@metrolens.in", "confidence": 0.96, "bbox": [50.0, 340.0, 520.0, 370.0], "script": "latin"},
+        {"token_id": "tok_08", "text": "Country of Origin: India", "confidence": 0.99, "bbox": [50.0, 390.0, 280.0, 420.0], "script": "latin"}
+      ]
+    },
+    "PKG-02-BILINGUAL-HINDI-ATTA": {
+      "description": "Bilingual Devanagari Hindi retail wheat flour package",
+      "tokens": [
+        {"token_id": "tok_01", "text": "चक्की ताजा आटा (Chakki Fresh Atta)", "confidence": 0.97, "bbox": [40.0, 30.0, 400.0, 75.0], "script": "devanagari"},
+        {"token_id": "tok_02", "text": "शुद्ध मात्रा: 1 kg", "confidence": 0.96, "bbox": [40.0, 90.0, 220.0, 120.0], "script": "devanagari"},
+        {"token_id": "tok_03", "text": "अधिकतम खुदरा मूल्य: ₹ 45.00 (सभी कर सहित)", "confidence": 0.98, "bbox": [40.0, 140.0, 450.0, 175.0], "script": "devanagari"},
+        {"token_id": "tok_04", "text": "इकाई विक्रय मूल्य: ₹ 45.00 / kg", "confidence": 0.95, "bbox": [40.0, 190.0, 310.0, 220.0], "script": "devanagari"},
+        {"token_id": "tok_05", "text": "पैकिंग तिथि: 05/2026", "confidence": 0.97, "bbox": [40.0, 240.0, 220.0, 270.0], "script": "devanagari"},
+        {"token_id": "tok_06", "text": "उत्पादक: किसान फूड्स लिमिटेड, प्लॉट 12, जयपुर 302013", "confidence": 0.94, "bbox": [40.0, 290.0, 580.0, 320.0], "script": "devanagari"},
+        {"token_id": "tok_07", "text": "उपभोक्ता सेवा: support@kisanfoods.in, 1800-200-5555", "confidence": 0.96, "bbox": [40.0, 340.0, 500.0, 370.0], "script": "devanagari"},
+        {"token_id": "tok_08", "text": "Made in India", "confidence": 0.99, "bbox": [40.0, 390.0, 180.0, 420.0], "script": "latin"}
+      ]
+    },
+    "PKG-03-MISSING-TAX-QUALIFIER": {
+      "description": "Retail package with MRP missing mandatory tax qualifier",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Crispy Potato Chips", "confidence": 0.99, "bbox": [50.0, 30.0, 300.0, 65.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Wt: 50 g", "confidence": 0.98, "bbox": [50.0, 80.0, 180.0, 110.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "MRP Rs. 20.00", "confidence": 0.97, "bbox": [50.0, 125.0, 220.0, 155.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "USP ₹ 0.40/g", "confidence": 0.96, "bbox": [50.0, 170.0, 200.0, 200.0], "script": "latin"},
+        {"token_id": "tok_05", "text": "PKD: 06/2026", "confidence": 0.98, "bbox": [50.0, 215.0, 190.0, 245.0], "script": "latin"},
+        {"token_id": "tok_06", "text": "Packed by: SnackZone Pvt Ltd, Mumbai 400001", "confidence": 0.95, "bbox": [50.0, 260.0, 480.0, 290.0], "script": "latin"},
+        {"token_id": "tok_07", "text": "Care: care@snackzone.com, Ph: 022-28475511", "confidence": 0.94, "bbox": [50.0, 305.0, 440.0, 335.0], "script": "latin"},
+        {"token_id": "tok_08", "text": "Country of Origin: India", "confidence": 0.99, "bbox": [50.0, 350.0, 280.0, 380.0], "script": "latin"}
+      ]
+    },
+    "PKG-04-PROHIBITED-UNITS-GMS": {
+      "description": "Package declaring prohibited unit Gms instead of standard g",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Organic Turmeric Powder", "confidence": 0.98, "bbox": [50.0, 30.0, 380.0, 65.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Weight: 500 Gms", "confidence": 0.98, "bbox": [50.0, 80.0, 270.0, 110.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "MRP Rs. 120.00 incl. of all taxes", "confidence": 0.97, "bbox": [50.0, 125.0, 380.0, 155.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "USP Rs 0.24 / gm", "confidence": 0.96, "bbox": [50.0, 170.0, 250.0, 200.0], "script": "latin"},
+        {"token_id": "tok_05", "text": "Mfg: 04/2026", "confidence": 0.98, "bbox": [50.0, 215.0, 190.0, 245.0], "script": "latin"},
+        {"token_id": "tok_06", "text": "Mfr: SpiceKing India Ltd, Kochi 682001", "confidence": 0.95, "bbox": [50.0, 260.0, 420.0, 290.0], "script": "latin"},
+        {"token_id": "tok_07", "text": "Toll Free: 1800-425-1122, help@spiceking.in", "confidence": 0.96, "bbox": [50.0, 305.0, 450.0, 335.0], "script": "latin"},
+        {"token_id": "tok_08", "text": "Product of India", "confidence": 0.99, "bbox": [50.0, 350.0, 220.0, 380.0], "script": "latin"}
+      ]
+    },
+    "PKG-05-PROHIBITED-UNITS-CAPS-ML": {
+      "description": "Liquid beverage declaring non-standard capital ML",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Natural Mineral Water", "confidence": 0.98, "bbox": [50.0, 30.0, 320.0, 65.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Volume: 750 ML", "confidence": 0.97, "bbox": [50.0, 80.0, 260.0, 110.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "MRP: ₹ 30.00 (inclusive of all taxes)", "confidence": 0.98, "bbox": [50.0, 125.0, 390.0, 155.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "Unit Sale Price: ₹ 0.04 / ml", "confidence": 0.96, "bbox": [50.0, 170.0, 300.0, 200.0], "script": "latin"},
+        {"token_id": "tok_05", "text": "Date of Packing: 07/2026", "confidence": 0.97, "bbox": [50.0, 215.0, 280.0, 245.0], "script": "latin"},
+        {"token_id": "tok_06", "text": "Bottled by: AquaPure Ltd, Solan 173212", "confidence": 0.94, "bbox": [50.0, 260.0, 410.0, 290.0], "script": "latin"},
+        {"token_id": "tok_07", "text": "Consumer Care: feedback@aquapure.com", "confidence": 0.96, "bbox": [50.0, 305.0, 420.0, 335.0], "script": "latin"},
+        {"token_id": "tok_08", "text": "Country of Origin: India", "confidence": 0.99, "bbox": [50.0, 350.0, 280.0, 380.0], "script": "latin"}
+      ]
+    },
+    "PKG-06-NOISY-CTC-CONFUSIONS": {
+      "description": "OCR token stream with typical CTC character confusions (O for 0, l for 1)",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Basmati Rice Super", "confidence": 0.95, "bbox": [50.0, 30.0, 300.0, 65.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Qty: l000 g", "confidence": 0.91, "bbox": [50.0, 80.0, 220.0, 110.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "MRP Rs. 2O5.OO (inclusive of all taxes)", "confidence": 0.92, "bbox": [50.0, 125.0, 420.0, 155.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "USP: Rs 2O5.OO / kg", "confidence": 0.90, "bbox": [50.0, 170.0, 280.0, 200.0], "script": "latin"},
+        {"token_id": "tok_05", "text": "MFG: O8/2026", "confidence": 0.93, "bbox": [50.0, 215.0, 200.0, 245.0], "script": "latin"},
+        {"token_id": "tok_06", "text": "Mfr: Golden Grains Ltd, Karnal 132001", "confidence": 0.94, "bbox": [50.0, 260.0, 420.0, 290.0], "script": "latin"},
+        {"token_id": "tok_07", "text": "Helpline: 1800-180-2222, contact@goldengrains.in", "confidence": 0.94, "bbox": [50.0, 305.0, 500.0, 335.0], "script": "latin"},
+        {"token_id": "tok_08", "text": "Made in India", "confidence": 0.98, "bbox": [50.0, 350.0, 190.0, 380.0], "script": "latin"}
+      ]
+    },
+    "PKG-07-DATE-FORMAT-BEST-BEFORE": {
+      "description": "Perishable snack with Best Before duration and manufacturing month",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Butter Cookies", "confidence": 0.99, "bbox": [40.0, 30.0, 250.0, 65.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Qty: 150 g", "confidence": 0.98, "bbox": [40.0, 80.0, 200.0, 110.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "MRP: ₹ 75.00 (incl. of all taxes)", "confidence": 0.98, "bbox": [40.0, 125.0, 360.0, 155.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "USP: ₹ 0.50 per g", "confidence": 0.96, "bbox": [40.0, 170.0, 250.0, 200.0], "script": "latin"},
+        {"token_id": "tok_05", "text": "Mfg: 06/2026. Best Before 6 Months from Packaging", "confidence": 0.95, "bbox": [40.0, 215.0, 520.0, 245.0], "script": "latin"},
+        {"token_id": "tok_06", "text": "Mfr: BakerBite Ltd, Pune 411001", "confidence": 0.96, "bbox": [40.0, 260.0, 360.0, 290.0], "script": "latin"},
+        {"token_id": "tok_07", "text": "Consumer Care: 1800-44-8888, care@bakerbite.com", "confidence": 0.97, "bbox": [40.0, 305.0, 480.0, 335.0], "script": "latin"},
+        {"token_id": "tok_08", "text": "Country of Origin: India", "confidence": 0.99, "bbox": [40.0, 350.0, 280.0, 380.0], "script": "latin"}
+      ]
+    },
+    "PKG-08-MINIATURE-PAN-MASALA": {
+      "description": "Miniature sachet of Pan Masala (4g) subject to G.S.R. 881(E) non-exemption",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Royal Pan Masala", "confidence": 0.99, "bbox": [30.0, 20.0, 240.0, 50.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Qty: 4 g", "confidence": 0.98, "bbox": [30.0, 60.0, 160.0, 85.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "MRP ₹ 5.00 (incl. of all taxes)", "confidence": 0.98, "bbox": [30.0, 95.0, 280.0, 120.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "Mfg: 08/2026", "confidence": 0.97, "bbox": [30.0, 130.0, 160.0, 155.0], "script": "latin"},
+        {"token_id": "tok_05", "text": "Mfr: Royal Fragrances Pvt Ltd, Kanpur 208001", "confidence": 0.95, "bbox": [30.0, 165.0, 400.0, 190.0], "script": "latin"},
+        {"token_id": "tok_06", "text": "Care: 1800-99-7777, care@royalpan.com", "confidence": 0.96, "bbox": [30.0, 200.0, 380.0, 225.0], "script": "latin"},
+        {"token_id": "tok_07", "text": "Made in India", "confidence": 0.99, "bbox": [30.0, 235.0, 160.0, 260.0], "script": "latin"}
+      ]
+    },
+    "PKG-09-MINIATURE-SOAP-EXEMPT": {
+      "description": "Miniature hotel guest soap (8g) validly exempt under Rule 26(a)",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Luxury Hotel Guest Soap", "confidence": 0.98, "bbox": [30.0, 20.0, 280.0, 50.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Wt: 8 g", "confidence": 0.98, "bbox": [30.0, 60.0, 150.0, 85.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "Hotel Complimentary Pack - Not for Retail Sale", "confidence": 0.96, "bbox": [30.0, 95.0, 420.0, 120.0], "script": "latin"}
+      ]
+    },
+    "PKG-10-WHOLESALE-BULK-30KG": {
+      "description": "Wholesale bulk package (30 kg) excluded under Rule 3",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Commercial Whole Wheat", "confidence": 0.98, "bbox": [50.0, 40.0, 360.0, 80.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Weight: 30 kg", "confidence": 0.99, "bbox": [50.0, 100.0, 250.0, 135.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "Wholesale Grain Package for Industrial Use", "confidence": 0.97, "bbox": [50.0, 150.0, 500.0, 185.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "Packer: Punjab Agro Hub, Ludhiana 141001", "confidence": 0.95, "bbox": [50.0, 200.0, 480.0, 235.0], "script": "latin"}
+      ]
+    },
+    "PKG-11-USP-ARITHMETIC-MISMATCH": {
+      "description": "Package where declared USP differs significantly from computed MRP/Qty",
+      "tokens": [
+        {"token_id": "tok_01", "text": "Refined Sunflower Oil", "confidence": 0.99, "bbox": [50.0, 30.0, 310.0, 65.0], "script": "latin"},
+        {"token_id": "tok_02", "text": "Net Volume: 500 ml", "confidence": 0.98, "bbox": [50.0, 80.0, 240.0, 110.0], "script": "latin"},
+        {"token_id": "tok_03", "text": "MRP ₹ 100.00 (inclusive of all taxes)", "confidence": 0.98, "bbox": [50.0, 125.0, 380.0, 155.0], "script": "latin"},
+        {"token_id": "tok_04", "text": "USP: ₹ 0.35 / ml", "confidence": 0.97, "bbox": [50.0, 170.0, 220.0, 200.0], "script": "latin"},
+        {"token_id": "tok_05", "text": "Mfg Date: 09/2026", "confidence": 0.98, "bbox": [50.0, 215.0, 230.0, 245.0], "script": "latin"},
+        {"token_id": "tok_06", "text": "Mfr: SunAgro Ltd, Ahmedabad 380001", "confidence": 0.96, "bbox": [50.0, 260.0, 410.0, 290.0], "script": "latin"},
+        {"token_id": "tok_07", "text": "Helpline: 1800-22-3344, care@sunagro.in", "confidence": 0.97, "bbox": [50.0, 305.0, 440.0, 335.0], "script": "latin"},
+        {"token_id": "tok_08", "text": "Country of Origin: India", "confidence": 0.99, "bbox": [50.0, 350.0, 280.0, 380.0], "script": "latin"}
+      ]
+    },
+    "PKG-12-BLANK-FRAME": {
+      "description": "Empty image frame producing zero tokens",
+      "tokens": []
+    }
+  }
+}
