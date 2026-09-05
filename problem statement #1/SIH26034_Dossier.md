@@ -97,7 +97,7 @@ Currently, enforcement is executed manually by approximately **2,500 District Le
 ### Primary Governing Statute
 - **The Legal Metrology Act, 2009 (Act No. 1 of 2010)**
   - *Section 18:* Prohibition on manufacturing, packing, selling, distributing, or importing pre-packaged commodities unless they conform to packaging rules.
-  - *Section 36(1):* Penalty for selling non-standard packages (Fines up to ₹25,000 for first offence, ₹50,000 for second, and up to ₹1,00,000 or imprisonment for subsequent offences).
+  - *Section 36(1):* Penalty for selling non-standard packages (Substituted by Jan Vishwas Act, 2026: First offence mandates an Improvement Notice with reasonable cure period; second offence penalty up to ₹5,00,000; subsequent offences ₹25,00,000 to ₹50,00,000; fully decriminalized with zero imprisonment).
   - *Section 49:* Offences by companies and nomination of directors.
   - *Section 52:* Power of Central Government to make rules.
 

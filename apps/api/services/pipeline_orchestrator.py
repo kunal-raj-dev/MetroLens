@@ -18,6 +18,7 @@ import hashlib
 import io
 import json
 import logging
+import math
 import os
 import time
 import uuid
@@ -58,7 +59,16 @@ from apps.api.schemas import (
 )
 from apps.api.services.spool_service import SpoolService, spool_service
 
-from nirikshak_calibration import compute_scale_factor, CalibrationStatus
+from nirikshak_calibration import (
+    compute_scale_factor,
+    CalibrationStatus,
+    detect_anchor,
+    AnchorType as CalibrationAnchorType,
+    AnchorDetectionStatus,
+    measure_font_height,
+    FontMeasurementType,
+    FontMeasurementStatus,
+)
 from nirikshak_rules_engine.normalizer import TokenNormalizer
 from nirikshak_rules_engine.rule_engine import StatutoryRuleEngine
 from nirikshak_rules_engine.schemas import (
@@ -260,12 +270,21 @@ class PipelineOrchestrator:
             if hasattr(compliance_result.overall_verdict, "value")
             else str(compliance_result.overall_verdict)
         )
+        summary_reason = compliance_result.primary_legal_summary
+
+        # Enforce quality gate safety: an unverified/corrupted image cannot be ruled COMPLIANT
+        if not q_result.passed and verdict_val == OverallComplianceState.COMPLIANT.value:
+            verdict_val = OverallComplianceState.FLAGGED_FOR_REVIEW.value
+            summary_reason = (
+                f"Image quality gate check failed (blur variance: {q_result.laplacian_variance:.1f}, "
+                f"glare ratio: {q_result.glare_ratio * 100.0:.1f}%). Flagged for mandatory officer review."
+            )
 
         response = InspectionResponse(
             inspection_id=inspection_id,
             timestamp=datetime.now(timezone.utc).isoformat(),
             state=verdict_val,
-            summary_reason=compliance_result.primary_legal_summary,
+            summary_reason=summary_reason,
             image_metadata=image_metadata,
             calibration=calibration_info,
             declarations=declarations_info,
@@ -304,100 +323,93 @@ class PipelineOrchestrator:
         img_width: int,
         img_height: int,
     ) -> Tuple[CalibrationInfo, Optional[MetricScaleResult]]:
-        """Performs fiducial marker calibration or defaults to uncalibrated."""
+        """Performs fiducial marker calibration via Member 2 CV or defaults to uncalibrated."""
         anchor_upper = (anchor_type or "NONE").upper()
 
-        if anchor_upper == "INR_10_COIN":
-            # Known diameter of Indian 10-Rupee bimetallic coin: 27.00 mm
-            known_marker_mm = 27.0
-            # Optical detection heuristic or default scale approximation
-            # If standard reference coin is present at typical packaging capture distance
-            marker_px = float(min(img_width, img_height)) * 0.12  # approx 12% of frame
-            scale_outcome = compute_scale_factor(
-                measured_marker_pixels=marker_px,
-                known_marker_mm=known_marker_mm,
-                marker_name="INR_10_COIN",
-            )
-            scale_mm_per_px = scale_outcome.scale_factor_mm_per_pixel or 0.125
-            pdp_w_mm = float(img_width * scale_mm_per_px * 0.45)
-            pdp_h_mm = float(img_height * scale_mm_per_px * 0.45)
-            pdp_area_cm2 = float((pdp_w_mm * pdp_h_mm) / 100.0)
+        target_anchor: Optional[Union[CalibrationAnchorType, bool]] = None
+        if anchor_upper in ("INR_10_COIN", "COIN_INR_10"):
+            target_anchor = CalibrationAnchorType.COIN_INR_10
+        elif anchor_upper in ("ISO_CARD", "ID1_CARD"):
+            target_anchor = CalibrationAnchorType.ID1_CARD
+        elif anchor_upper in ("AUTO",):
+            target_anchor = None
+        elif anchor_upper in ("NONE", "NO_ANCHOR"):
+            target_anchor = False
 
-            calib_info = CalibrationInfo(
-                is_calibrated=True,
-                anchor_type="INR_10_COIN",
-                coin_detected=True,
-                scale_mm_per_px=round(scale_mm_per_px, 4),
-                pdp_width_mm=round(pdp_w_mm, 1),
-                pdp_height_mm=round(pdp_h_mm, 1),
-                pdp_area_cm2=round(pdp_area_cm2, 1),
-                calibration_confidence=0.96,
-            )
-            metric_scale = MetricScaleResult(
-                is_calibrated=True,
-                scale_factor_mm_per_px=scale_mm_per_px,
-                pdp_area_sqcm=pdp_area_cm2,
-                anchor_type_detected="INR_10_COIN",
-                tilt_angle_deg=2.5,
-                is_cylindrical=False,
-            )
-            return calib_info, metric_scale
+        if target_anchor is not False:
+            try:
+                detection_res = detect_anchor(img_bgr, anchor_type=target_anchor)
+                if detection_res.status == AnchorDetectionStatus.SUCCESS and detection_res.geometry:
+                    if hasattr(detection_res.geometry, "major_axis_px"):
+                        known_marker_mm = 27.0
+                        marker_px = detection_res.geometry.major_axis_px
+                        marker_name = "INR_10_COIN"
+                    else:
+                        known_marker_mm = 85.60
+                        marker_px = max(detection_res.geometry.width_px, detection_res.geometry.height_px)
+                        marker_name = "ISO_CARD"
 
-        elif anchor_upper == "ISO_CARD":
-            # Known width of ISO/IEC 7810 ID-1 card: 85.60 mm
-            known_marker_mm = 85.60
-            marker_px = float(min(img_width, img_height)) * 0.35
-            scale_outcome = compute_scale_factor(
-                measured_marker_pixels=marker_px,
-                known_marker_mm=known_marker_mm,
-                marker_name="ISO_CARD",
-            )
-            scale_mm_per_px = scale_outcome.scale_factor_mm_per_pixel or 0.150
-            pdp_w_mm = float(img_width * scale_mm_per_px * 0.40)
-            pdp_h_mm = float(img_height * scale_mm_per_px * 0.40)
-            pdp_area_cm2 = float((pdp_w_mm * pdp_h_mm) / 100.0)
+                    scale_outcome = compute_scale_factor(
+                        measured_marker_pixels=marker_px,
+                        known_marker_mm=known_marker_mm,
+                        marker_name=marker_name,
+                    )
 
-            calib_info = CalibrationInfo(
-                is_calibrated=True,
-                anchor_type="ISO_CARD",
-                coin_detected=True,
-                scale_mm_per_px=round(scale_mm_per_px, 4),
-                pdp_width_mm=round(pdp_w_mm, 1),
-                pdp_height_mm=round(pdp_h_mm, 1),
-                pdp_area_cm2=round(pdp_area_cm2, 1),
-                calibration_confidence=0.94,
-            )
-            metric_scale = MetricScaleResult(
-                is_calibrated=True,
-                scale_factor_mm_per_px=scale_mm_per_px,
-                pdp_area_sqcm=pdp_area_cm2,
-                anchor_type_detected="ISO_CARD",
-                tilt_angle_deg=1.8,
-                is_cylindrical=False,
-            )
-            return calib_info, metric_scale
+                    if scale_outcome.status == CalibrationStatus.CALIBRATED and scale_outcome.scale_factor_mm_per_pixel:
+                        scale_mm_per_px = scale_outcome.scale_factor_mm_per_pixel
+                        pdp_w_mm = float(img_width * scale_mm_per_px * 0.45)
+                        pdp_h_mm = float(img_height * scale_mm_per_px * 0.45)
+                        pdp_area_cm2 = float((pdp_w_mm * pdp_h_mm) / 100.0)
 
-        else:
-            # Uncalibrated baseline
-            calib_info = CalibrationInfo(
-                is_calibrated=False,
-                anchor_type="NONE",
-                coin_detected=False,
-                scale_mm_per_px=None,
-                pdp_width_mm=None,
-                pdp_height_mm=None,
-                pdp_area_cm2=None,
-                calibration_confidence=None,
-            )
-            metric_scale = MetricScaleResult(
-                is_calibrated=False,
-                scale_factor_mm_per_px=None,
-                pdp_area_sqcm=None,
-                anchor_type_detected="NONE",
-                tilt_angle_deg=None,
-                is_cylindrical=False,
-            )
-            return calib_info, metric_scale
+                        detected_type_str = "INR_10_COIN" if marker_name == "INR_10_COIN" else "ISO_CARD"
+                        calib_info = CalibrationInfo(
+                            is_calibrated=True,
+                            anchor_type=detected_type_str,
+                            coin_detected=(marker_name == "INR_10_COIN"),
+                            scale_mm_per_px=round(scale_mm_per_px, 4),
+                            pdp_width_mm=round(pdp_w_mm, 1),
+                            pdp_height_mm=round(pdp_h_mm, 1),
+                            pdp_area_cm2=round(pdp_area_cm2, 1),
+                            calibration_confidence=round(detection_res.confidence, 2),
+                        )
+
+                        tilt_deg = 2.5
+                        if hasattr(detection_res.geometry, "aspect_ratio") and detection_res.geometry.aspect_ratio is not None:
+                            ar = min(1.0, float(detection_res.geometry.aspect_ratio))
+                            tilt_deg = round(math.degrees(math.acos(ar)), 1)
+
+                        metric_scale = MetricScaleResult(
+                            is_calibrated=True,
+                            scale_factor_mm_per_px=scale_mm_per_px,
+                            pdp_area_sqcm=pdp_area_cm2,
+                            anchor_type_detected=detected_type_str,
+                            tilt_angle_deg=tilt_deg,
+                            is_cylindrical=False,
+                        )
+                        return calib_info, metric_scale
+            except Exception as exc:
+                logger.warning("Optical anchor calibration failed: %s; falling back to uncalibrated.", exc)
+
+        # Uncalibrated baseline (Zero Scale Fabrication)
+        calib_info = CalibrationInfo(
+            is_calibrated=False,
+            anchor_type="NONE" if anchor_upper == "NONE" else anchor_upper,
+            coin_detected=False,
+            scale_mm_per_px=None,
+            pdp_width_mm=None,
+            pdp_height_mm=None,
+            pdp_area_cm2=None,
+            calibration_confidence=None,
+        )
+        metric_scale = MetricScaleResult(
+            is_calibrated=False,
+            scale_factor_mm_per_px=None,
+            pdp_area_sqcm=None,
+            anchor_type_detected="NONE" if anchor_upper == "NONE" else anchor_upper,
+            tilt_angle_deg=None,
+            is_cylindrical=False,
+        )
+        return calib_info, metric_scale
 
     def _extract_ocr_tokens(
         self,
@@ -426,15 +438,16 @@ class PipelineOrchestrator:
                 ocr_result = ocr_service.extract(img_bgr, image_id=image_id)
                 rules_tokens = []
                 for tok in ocr_result.tokens:
-                    # Map OCR token bbox [x, y, w, h] to RulesOCRToken [x_min, y_min, x_max, y_max]
-                    bx, by, bw, bh = tok.bbox
                     rules_tokens.append(
                         RulesOCRToken(
                             token_id=tok.token_id,
                             text=tok.text,
                             confidence=tok.confidence,
-                            bbox=[bx, by, bx + bw, by + bh],
+                            bbox=list(tok.bbox),
+                            polygon=getattr(tok, "polygon", None),
                             script=getattr(tok, "script", "latin"),
+                            raw_pixel_height=getattr(tok, "raw_pixel_height", None),
+                            model_name=getattr(tok, "model_name", ""),
                         )
                     )
                 if rules_tokens:
@@ -553,7 +566,7 @@ class PipelineOrchestrator:
         tokens: List[RulesOCRToken],
         scale: Optional[MetricScaleResult],
     ) -> Optional[float]:
-        """Estimates measured font height in millimeters from Net Quantity token bounding box."""
+        """Estimates measured font height in millimeters from Net Quantity token bounding box via Member 2 CV."""
         if not scale or not scale.is_calibrated or not scale.scale_factor_mm_per_px:
             return None
 
@@ -562,10 +575,14 @@ class PipelineOrchestrator:
             t_lower = tok.text.lower()
             if any(k in t_lower for k in ("net", "qty", "quantity", "शुद्ध")):
                 bx1, by1, bx2, by2 = tok.bbox
-                height_px = abs(by2 - by1)
-                # Typical capital numeral is ~70% of total line bounding box height
-                numeral_height_mm = (height_px * 0.70) * scale.scale_factor_mm_per_px
-                return round(numeral_height_mm, 2)
+                res = measure_font_height(
+                    bounding_box=(bx1, by1, bx2, by2),
+                    calibration=scale.scale_factor_mm_per_px,
+                    measurement_type=FontMeasurementType.BOUNDING_BOX_HEIGHT,
+                )
+                if res.status == FontMeasurementStatus.SUCCESS and res.measured_mm:
+                    # Typical capital numeral is ~70% of total line bounding box height
+                    return round(res.measured_mm * 0.70, 2)
         return None
 
     def _generate_evidence_crops(

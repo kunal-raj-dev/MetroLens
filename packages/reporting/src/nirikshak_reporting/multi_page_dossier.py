@@ -475,7 +475,7 @@ class MultiPageDossierCompiler:
             story.append(Spacer(1, 4 * mm))
 
         # Compounding Penalty Ladder Schedule
-        story.append(Paragraph("Statutory Compounding Penalty Ladder (Jan Vishwas Act 2023)", h2_style))
+        story.append(Paragraph("Statutory Penalty Ladder (Jan Vishwas Act, 2026 — Section 36(1))", h2_style))
         ladder_data = [
             [
                 Paragraph("<b>Offense Classification</b>", cell_bold),
@@ -486,20 +486,20 @@ class MultiPageDossierCompiler:
             [
                 Paragraph("First Statutory Non-Compliance", cell_style),
                 Paragraph("Section 36(1)", cell_style),
-                Paragraph("Penalty up to <b>Rs. 25,000</b>", cell_style),
-                Paragraph("Zero criminal liability / Decriminalized", cell_style),
+                Paragraph("Improvement Notice (<b>₹0 initial fine</b>)", cell_style),
+                Paragraph("Reasonable cure period (15 days demonstration default); compounding under Sec 48 if unrectified", cell_style),
             ],
             [
                 Paragraph("Second Non-Compliance (Repeat Offense)", cell_style),
-                Paragraph("Section 36(1) & 48", cell_style),
-                Paragraph("Penalty up to <b>Rs. 50,000</b>", cell_style),
-                Paragraph("Compounding under authorized officer", cell_style),
+                Paragraph("Section 36(1) & 48A", cell_style),
+                Paragraph("Penalty up to <b>Rs. 5,00,000</b>", cell_style),
+                Paragraph("Adjudication under Section 48A; non-compoundable under Sec 48(2)", cell_style),
             ],
             [
                 Paragraph("Subsequent Non-Compliance (3rd+ Offense)", cell_style),
                 Paragraph("Section 36(1) & 48A", cell_style),
-                Paragraph("Penalty up to <b>Rs. 1,00,000</b>", cell_style),
-                Paragraph("Compounding ladder escalation", cell_style),
+                Paragraph("Penalty: <b>Rs. 25,00,000 to Rs. 50,00,000</b>", cell_style),
+                Paragraph("Adjudication under Section 48A for repeat offenders", cell_style),
             ],
         ]
         t_ladder = Table(ladder_data, colWidths=[45 * mm, 35 * mm, 45 * mm, 55 * mm])

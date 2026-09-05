@@ -223,7 +223,10 @@ class ImprovementNoticePayload(BaseModel):
         default="Section 36(1) read with Jan Vishwas (Amendment of Provisions) Act, 2026",
         description="Governing statutory enactment citation"
     )
-    cure_period_days: int = Field(default=15, description="Statutory rectification cure period (15 days)")
+    cure_period_days: int = Field(
+        default=15,
+        description="Reasonable cure period specified in the Improvement Notice; 15 days is the current configurable demonstration default"
+    )
     statutory_grounds: str = Field(default="", description="Summary of non-compliance grounds")
     compounding_authority: str = Field(
         default="Legal Metrology Compounding Officer",

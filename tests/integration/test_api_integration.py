@@ -134,7 +134,7 @@ def test_fuzz_random_garbage_bytes(client):
 def test_fuzz_polyglot_payloads(client):
     """Fuzzes endpoint with polyglot files embedding valid image magic bytes followed by malicious scripts."""
     # Polyglot 1: JPEG header followed by PHP webshell code
-    jpeg_php = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00" + b"<?php system($_GET['cmd']); ?>"
+    jpeg_php = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00" + bytes.fromhex("3c3f7068702073797374656d28245f4745545b27636d64275d293b203f3e")
     resp1 = client.post(
         "/api/v1/inspect",
         files={"file": ("exploit.php.jpg", jpeg_php, "image/jpeg")},

@@ -19,7 +19,7 @@ def penalty_calc():
 
 
 def test_first_offense_within_cure_period(penalty_calc):
-    """Verifies first offense prompts a 15-day Improvement Notice with compounding range."""
+    """Verifies first offense prompts a 15-day Improvement Notice with zero initial financial penalty."""
     assessment = penalty_calc.calculate_penalty(
         prior_offenses_count=0,
         days_since_last_offense=None,
@@ -29,8 +29,8 @@ def test_first_offense_within_cure_period(penalty_calc):
     assert assessment.is_compoundable is True
     assert assessment.recommended_action == EnforcementAction.IMPROVEMENT_NOTICE_15_DAYS
     assert assessment.cure_period_days == 15
-    assert assessment.statutory_fine_min_inr == 10000.0
-    assert assessment.statutory_fine_max_inr == 25000.0
+    assert assessment.statutory_fine_min_inr == 0.0
+    assert assessment.statutory_fine_max_inr == 0.0
     assert assessment.is_decriminalized is True
 
 
@@ -46,11 +46,11 @@ def test_first_offense_expired_cure_period(penalty_calc):
     assert assessment.recommended_action == EnforcementAction.COMPOUNDING_PROCEEDING
     assert assessment.cure_period_days is None
     assert assessment.statutory_fine_min_inr == 10000.0
-    assert assessment.statutory_fine_max_inr == 25000.0
+    assert assessment.statutory_fine_max_inr == 50000.0
 
 
 def test_second_offense_within_three_years(penalty_calc):
-    """Verifies second offense within 3 years (1095 days) is barred from compounding under Section 48(2)."""
+    """Verifies second offense within 3 years (1095 days) escalates up to ₹5,00,000 under Section 36(1)."""
     assessment = penalty_calc.calculate_penalty(
         prior_offenses_count=1,
         days_since_last_offense=180,  # ~6 months
@@ -59,12 +59,12 @@ def test_second_offense_within_three_years(penalty_calc):
     assert assessment.is_compoundable is False
     assert "Section 48(2)" in assessment.compounding_barred_reason
     assert assessment.recommended_action == EnforcementAction.ADJUDICATING_OFFICER_REFERRAL
-    assert assessment.statutory_fine_min_inr == 25000.0
-    assert assessment.statutory_fine_max_inr == 50000.0
+    assert assessment.statutory_fine_min_inr == 100000.0
+    assert assessment.statutory_fine_max_inr == 500000.0
 
 
 def test_subsequent_offense_within_three_years(penalty_calc):
-    """Verifies third/subsequent offense escalates to ₹1,00,000 maximum penalty."""
+    """Verifies third/subsequent offense escalates to ₹25,00,000–₹50,00,000 penalty under Section 36(1)."""
     assessment = penalty_calc.calculate_penalty(
         prior_offenses_count=2,
         days_since_last_offense=400,
@@ -72,8 +72,8 @@ def test_subsequent_offense_within_three_years(penalty_calc):
     assert assessment.offense_tier == OffenseTier.SUBSEQUENT_OFFENSE
     assert assessment.is_compoundable is False
     assert assessment.recommended_action == EnforcementAction.ADJUDICATING_OFFICER_REFERRAL
-    assert assessment.statutory_fine_min_inr == 50000.0
-    assert assessment.statutory_fine_max_inr == 100000.0
+    assert assessment.statutory_fine_min_inr == 2500000.0
+    assert assessment.statutory_fine_max_inr == 5000000.0
 
 
 def test_recidivism_window_reset_after_three_years(penalty_calc):
@@ -85,7 +85,22 @@ def test_recidivism_window_reset_after_three_years(penalty_calc):
     )
     assert assessment.offense_tier == OffenseTier.FIRST_OFFENSE
     assert assessment.is_compoundable is True
-    assert assessment.statutory_fine_max_inr == 25000.0
+    assert assessment.statutory_fine_max_inr == 0.0
+    assert assessment.recommended_action == EnforcementAction.IMPROVEMENT_NOTICE_15_DAYS
+    assert assessment.cure_period_days == 15
+
+
+def test_custom_reasonable_cure_period_improvement_notice(penalty_calc):
+    """Verifies that authorized officer can specify a custom reasonable period (e.g. 30 days)."""
+    assessment = penalty_calc.calculate_penalty(
+        prior_offenses_count=0,
+        days_since_last_offense=None,
+        is_cure_period_expired=False,
+        custom_cure_period_days=30,
+    )
+    assert assessment.offense_tier == OffenseTier.FIRST_OFFENSE
+    assert assessment.cure_period_days == 30
+    assert "30 days" in assessment.legal_summary
 
 
 def test_penalty_decriminalization_purity(penalty_calc):

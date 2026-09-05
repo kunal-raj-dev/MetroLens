@@ -11,6 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "nirikshak-shared",
     "reportlab>=4.1.0",
+    "qrcode>=7.4.0",
 ]
 
 [project.optional-dependencies]

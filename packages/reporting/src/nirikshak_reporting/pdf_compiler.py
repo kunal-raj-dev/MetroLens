@@ -580,8 +580,9 @@ class PDFReportCompiler:
             Spacer(1, 4),
             Paragraph(
                 "<b>NOTICE OF STATUTORY OBLIGATION:</b> The manufacturer/packer is hereby directed to rectify "
-                "the above declaration defect(s) within the mandatory 15-day cure period. Failure to rectify "
-                "shall initiate compounding proceedings or administrative adjudication under Section 48 / 48A.",
+                "the above declaration defect(s) within the reasonable cure period specified in this Improvement Notice "
+                "(15 days demonstration default). Failure to rectify shall initiate compounding proceedings or administrative "
+                "adjudication under Section 48 / 48A.",
                 self.styles["LegalNoticeText"],
             ),
         ]

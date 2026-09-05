@@ -93,7 +93,8 @@ class PrioritizedInspectionQueue:
     def __init__(self, max_workers: int = 4, max_queue_depth: int = 1000) -> None:
         self.max_workers = max_workers
         self.max_queue_depth = max_queue_depth
-        self._queue: List[Tuple[int, float, TaskRecord]] = []
+        self._queue: List[Tuple[int, float, int, TaskRecord]] = []
+        self._counter: int = 0
         self._tasks: Dict[str, TaskRecord] = {}
         self._dead_letter_queue: Dict[str, TaskRecord] = {}
         self._lock = threading.Lock()
@@ -156,8 +157,9 @@ class PrioritizedInspectionQueue:
                 raise RuntimeError(f"Task queue depth limit ({self.max_queue_depth}) exceeded.")
 
             self._tasks[task_id] = record
-            # Heap item: (priority, submission_timestamp, record)
-            entry = (int(priority), time.time(), record)
+            self._counter += 1
+            # Heap item: (priority, submission_timestamp, counter, record)
+            entry = (int(priority), time.time(), self._counter, record)
             heapq.heappush(self._queue, entry)
             self._not_empty.notify()
 
@@ -210,7 +212,7 @@ class PrioritizedInspectionQueue:
                 if not self._is_running:
                     break
 
-                priority, ts, record = heapq.heappop(self._queue)
+                priority, ts, _, record = heapq.heappop(self._queue)
 
                 if record.cancelled:
                     continue
@@ -248,8 +250,9 @@ class PrioritizedInspectionQueue:
                     if record.retries_attempted <= record.max_retries and self._is_running:
                         record.status = TaskStatus.QUEUED
                         record.progress_percent = 0
+                        self._counter += 1
                         # Re-enqueue with slight delay penalty
-                        entry = (int(record.priority), time.time() + 1.0, record)
+                        entry = (int(record.priority), time.time() + 1.0, self._counter, record)
                         heapq.heappush(self._queue, entry)
                         self._not_empty.notify()
                     else:

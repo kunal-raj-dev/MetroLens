@@ -32,5 +32,5 @@
 ## 2. Decriminalization & Jan Vishwas Act Compliance Guarantee
 - **Parent Provision:** Section 36(1) of the Legal Metrology Act, 2009.
 - **Amendment Statute:** Jan Vishwas (Amendment of Provisions) Act, 2026 (Act 18 of 2023 / 2026 amendments).
-- **Enforcement Window:** Mandatory 15-day statutory rectification / cure window prior to compounding or financial penalty proceedings.
+- **Enforcement Window:** Reasonable cure period specified in the Improvement Notice; 15 days is the current configurable demonstration default prior to compounding or financial penalty proceedings.
 - **Prohibited Terminology Audit:** All generated notice drafts and UI inspection labels are audited by `ImprovementNoticeBuilder.audit_text_decriminalization()` to ensure strictly ZERO occurrences of "imprisonment", "jail", "arrest", "custody", "cognizable", or "non-bailable" terms.

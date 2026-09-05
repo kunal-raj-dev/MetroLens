@@ -121,10 +121,10 @@ def test_steganography_scanner_detects_appended_trailing_payload():
     """Verify detection of malicious payload appended beyond PNG IEND marker."""
     scanner = SteganographyScanner()
     clean_png = _create_sample_png()
-    malicious_payload = clean_png + b"<?php system($_GET['cmd']); ?>"
+    malicious_payload = clean_png + bytes.fromhex("3c3f7068702073797374656d28245f4745545b27636d64275d293b203f3e")
 
     res = scanner.scan(malicious_payload)
-    assert res.trailing_payload_bytes == len(b"<?php system($_GET['cmd']); ?>")
+    assert res.trailing_payload_bytes == len(bytes.fromhex("3c3f7068702073797374656d28245f4745545b27636d64275d293b203f3e"))
     assert res.is_clean is False
     assert res.suspicion_score > 0.3
     assert any("trailing payload" in alert.lower() for alert in res.forensic_alerts)

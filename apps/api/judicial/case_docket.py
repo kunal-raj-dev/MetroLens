@@ -1,4 +1,4 @@
-﻿"""
+"""
 Judicial Complaint Docket & BNSS Prosecution Packaging Subsystem
 ================================================================
 Generates court-ready complaint dockets for filing before the Court of the
@@ -9,7 +9,7 @@ Statutory Framework:
 --------------------
 - Legal Metrology Act, 2009 (Act No. 1 of 2010):
     * Section 18: Prohibition on manufacture, packing, sale of non-standard packaged commodities.
-    * Section 36(1): Penalty for selling non-standard packaged commodities (up to Rs 25,000 / 50,000 / 1,00,000 or 1 year imprisonment).
+    * Section 36(1): Penalty for selling non-standard packaged commodities (Improvement Notice / up to Rs 5,00,000 / Rs 25,00,000–50,00,000; decriminalized under Jan Vishwas Act, 2026).
     * Section 36(2): Penalty for short weight or measure (imprisonment up to 5 years).
     * Section 48 / 48A: Compounding of offences and repeat offenders.
     * Section 49: Offences by companies and nominated directors under Rule 29.

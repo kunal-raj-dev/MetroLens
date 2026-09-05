@@ -209,8 +209,8 @@ packages/rules-engine/src/nirikshak_rules_engine/
 
 ### Buffer Task 2: Section 36(1) & 48/48A Multi-Year Recidivism & Penalty Auditor (VERIFIED)
 - **Module:** `packages/rules-engine/src/nirikshak_rules_engine/penalties.py`.
-- **Statutory Rules:** Section 36(1) fine escalation (1st: ₹10k–₹25k; 2nd: ₹25k–₹50k; 3rd: ₹50k–₹100k) with Section 48(2) 3-year lookback bar for compounding.
-- **Verification:** `tests/rules/test_penalties.py` (7 tests passed; 100% decriminalized terminology guarantee).
+- **Statutory Rules:** Section 36(1) substituted penalty schedule under Jan Vishwas Act, 2026 (1st: mandatory Improvement Notice with reasonable cure period specified in the Improvement Notice [15 days is the current configurable demonstration default], ₹0 fine; 2nd within 3 years: penalty up to ₹5,00,000 [₹5 Lakhs]; 3rd or subsequent within 3 years: penalty of not less than ₹25,00,000 [₹25 Lakhs] up to ₹50,00,000 [₹50 Lakhs]) with Section 48(2) 3-year lookback bar for compounding / recidivism escalation.
+- **Verification:** `tests/rules/test_penalties.py` (8 tests passed; 100% decriminalized terminology guarantee).
 
 
 
