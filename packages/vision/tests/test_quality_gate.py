@@ -15,14 +15,21 @@ import numpy as np
 import pytest
 
 from nirikshak_vision import check_image_quality
-from nirikshak_vision.types import QualityGateThresholds, QualityGateResult
+from nirikshak_vision.types import (
+    QualityGateThresholds,
+    QualityGateResult,
+    ImageQualityResult,
+    ImageQualityThresholds,
+)
 from nirikshak_vision.quality import (
     evaluate_image_quality,
     compute_laplacian_variance,
     compute_glare_candidate_ratio,
+    compute_contrast,
     compute_mean_luminance,
     convert_to_grayscale,
 )
+
 
 
 # ============================================================================
@@ -431,3 +438,252 @@ def test_legacy_check_image_quality_adapter():
     assert res_pos.laplacian_variance == res_kw.laplacian_variance
     assert res_pos.glare_ratio == res_kw.glare_ratio
     assert res_pos.details == res_kw.details
+
+
+# ============================================================================
+# Phase 2 — Comprehensive Image Quality Gate Tests
+# ============================================================================
+
+def test_phase2_sharp_image():
+    """Verifies that a high-contrast sharp image passes all quality checks."""
+    sharp = make_sharp_high_frequency_fixture()
+    res = evaluate_image_quality(sharp)
+    assert isinstance(res, ImageQualityResult)
+    assert res.is_valid_input is True
+    assert res.passed is True
+    assert res.is_blurry is False
+    assert res.is_glared is False
+    assert res.is_low_contrast is False
+    assert res.is_dark is False
+    assert res.is_over_exposed is False
+    assert res.blur_score > 100.0
+    assert res.contrast_score >= 20.0
+    assert len(res.failure_reasons) == 0
+
+
+def test_phase2_blurred_image():
+    """Verifies that a moderately blurred image is rejected with actionable reasons."""
+    sharp = make_sharp_high_frequency_fixture()
+    blurred = cv2.GaussianBlur(sharp, (15, 15), 4.0)
+    res = evaluate_image_quality(blurred)
+    assert res.is_valid_input is True
+    assert res.passed is False
+    assert res.is_blurry is True
+    assert res.blur_score < 100.0
+    assert any("blurry" in r.lower() for r in res.failure_reasons)
+
+
+def test_phase2_heavily_blurred_image():
+    """Verifies that heavily blurred images exhibit strictly lower scores than moderate blur."""
+    sharp = make_sharp_high_frequency_fixture()
+    blurred_mod = cv2.GaussianBlur(sharp, (15, 15), 4.0)
+    blurred_heavy = cv2.GaussianBlur(sharp, (45, 45), 15.0)
+
+    res_mod = evaluate_image_quality(blurred_mod)
+    res_heavy = evaluate_image_quality(blurred_heavy)
+
+    assert res_heavy.is_valid_input is True
+    assert res_heavy.passed is False
+    assert res_heavy.is_blurry is True
+    assert res_heavy.blur_score < res_mod.blur_score
+    assert any("blurry" in r.lower() for r in res_heavy.failure_reasons)
+
+
+def test_phase2_glare():
+    """Verifies that specular glare is detected and rejected with actionable advice."""
+    glared = make_specular_glare_fixture(width=400, height=400, glare_radius=95)
+    res = evaluate_image_quality(glared)
+    assert res.is_valid_input is True
+    assert res.passed is False
+    assert res.is_glared is True
+    assert res.glare_score > 0.15
+    assert any("glare" in r.lower() for r in res.failure_reasons)
+
+
+
+def test_phase2_low_contrast():
+    """Verifies that an image with washed-out, narrow dynamic range is detected as low contrast."""
+    low_contrast = np.full((200, 200, 3), 128, dtype=np.uint8)
+    low_contrast[::2, ::2, :] = 127
+    res = evaluate_image_quality(low_contrast)
+    assert res.is_valid_input is True
+    assert res.passed is False
+    assert res.is_low_contrast is True
+    assert res.contrast_score < 20.0
+    assert any("contrast" in r.lower() for r in res.failure_reasons)
+
+
+def test_phase2_dark_image():
+    """Verifies that an underexposed dark frame is flagged with actionable failure reasons."""
+    dark = np.full((200, 200, 3), 15, dtype=np.uint8)
+    res = evaluate_image_quality(dark)
+    assert res.is_valid_input is True
+    assert res.passed is False
+    assert res.is_dark is True
+    assert res.is_under_exposed is True
+    assert res.mean_luminance < 40.0
+    assert any("dark" in r.lower() or "underexposed" in r.lower() for r in res.failure_reasons)
+
+
+def test_phase2_grayscale_rgb_bgr_behavior():
+    """Verifies consistent quality evaluation across grayscale, BGR, RGB, and RGBA formats without array mutation."""
+    sharp = make_sharp_high_frequency_fixture()
+    sharp_copy = sharp.copy()
+
+    # BGR 3-channel
+    res_bgr = evaluate_image_quality(sharp, color_format="BGR")
+    assert res_bgr.is_valid_input is True
+    assert np.array_equal(sharp, sharp_copy)
+
+    # RGB 3-channel
+    sharp_rgb = cv2.cvtColor(sharp, cv2.COLOR_BGR2RGB)
+    res_rgb = evaluate_image_quality(sharp_rgb, color_format="RGB")
+    assert res_rgb.is_valid_input is True
+    assert abs(res_rgb.blur_score - res_bgr.blur_score) < 5.0
+
+    # Grayscale 2D
+    gray_2d = cv2.cvtColor(sharp, cv2.COLOR_BGR2GRAY)
+    res_gray = evaluate_image_quality(gray_2d)
+    assert res_gray.is_valid_input is True
+    assert res_gray.blur_score == res_bgr.blur_score
+
+    # Grayscale 3D (H, W, 1)
+    gray_3d = np.expand_dims(gray_2d, axis=2)
+    res_gray_3d = evaluate_image_quality(gray_3d)
+    assert res_gray_3d.is_valid_input is True
+    assert res_gray_3d.blur_score == res_gray.blur_score
+
+    # RGBA 4-channel
+    rgba = cv2.cvtColor(sharp, cv2.COLOR_BGR2BGRA)
+    res_rgba = evaluate_image_quality(rgba)
+    assert res_rgba.is_valid_input is True
+    assert abs(res_rgba.blur_score - res_bgr.blur_score) < 5.0
+
+
+@pytest.mark.parametrize(
+    "invalid_input,expected_error",
+    [
+        (np.zeros(100, dtype=np.uint8), "INVALID_DIMENSIONS"),
+        (np.zeros((10, 10, 3, 3), dtype=np.uint8), "INVALID_DIMENSIONS"),
+        (np.zeros((50, 50, 2), dtype=np.uint8), "INVALID_CHANNELS"),
+        (np.zeros((50, 50, 5), dtype=np.uint8), "INVALID_CHANNELS"),
+        (np.array([], dtype=np.uint8), "EMPTY_ARRAY"),
+        (np.array([[np.nan, 100.0], [100.0, 100.0]], dtype=np.float32), "NON_FINITE_VALUES"),
+        (np.array([[np.inf, 100.0], [100.0, 100.0]], dtype=np.float32), "NON_FINITE_VALUES"),
+        (np.array([[-np.inf, 100.0], [100.0, 100.0]], dtype=np.float32), "NON_FINITE_VALUES"),
+        ("invalid_string", "INVALID_TYPE"),
+        (12345, "INVALID_TYPE"),
+        ([1, 2, 3], "INVALID_TYPE"),
+    ],
+)
+def test_phase2_invalid_ndarray(invalid_input, expected_error):
+    """Verifies clear distinction between invalid input and poor-quality images."""
+    res = evaluate_image_quality(invalid_input)
+    assert res.is_valid_input is False
+    assert res.passed is False
+    assert res.is_blurry is False
+    assert res.is_glared is False
+    assert res.is_low_contrast is False
+    assert res.is_dark is False
+    assert res.is_over_exposed is False
+    assert res.details["error"] == expected_error
+    assert res.failure_reasons[0].startswith("INVALID_INPUT:")
+
+
+def test_phase2_none_input():
+    """Verifies that None input returns structured failure with is_valid_input=False."""
+    res = evaluate_image_quality(None)
+    assert res.is_valid_input is False
+    assert res.passed is False
+    assert res.is_blurry is False
+    assert res.details["error"] == "NULL_INPUT"
+    assert res.failure_reasons == ["INVALID_INPUT: Input image is None."]
+
+
+@pytest.mark.parametrize(
+    "tiny_shape",
+    [(1, 1), (1, 1, 3), (2, 2), (2, 2, 3), (2, 100), (100, 2)],
+)
+def test_phase2_tiny_image(tiny_shape):
+    """Verifies that images below minimum 3x3 resolution are rejected as invalid input."""
+    tiny = np.zeros(tiny_shape, dtype=np.uint8)
+    res = evaluate_image_quality(tiny)
+    assert res.is_valid_input is False
+    assert res.passed is False
+    assert res.details["error"] == "RESOLUTION_TOO_LOW"
+    assert any("too small" in r for r in res.failure_reasons)
+
+
+def test_phase2_extreme_aspect_ratio():
+    """Verifies that extreme aspect ratios are handled gracefully without exceptions."""
+    wide = np.full((10, 1000, 3), 120, dtype=np.uint8)
+    wide[:, ::2, :] = 40
+
+    # Without max_aspect_ratio threshold, evaluates purely on optical quality
+    res_no_cap = evaluate_image_quality(wide)
+    assert res_no_cap.is_valid_input is True
+    assert res_no_cap.details["aspect_ratio"] == 100.0
+
+    # With configured max_aspect_ratio threshold, rejects when ratio exceeded
+    thresholds = QualityGateThresholds(max_aspect_ratio=20.0)
+    res_capped = evaluate_image_quality(wide, thresholds=thresholds)
+    assert res_capped.is_valid_input is True
+    assert res_capped.passed is False
+    assert res_capped.details["is_extreme_aspect_ratio"] is True
+    assert any("Extreme image aspect ratio" in r for r in res_capped.failure_reasons)
+
+
+def test_phase2_distinction_invalid_vs_poor_quality():
+    """Explicitly tests the architectural boundary: invalid inputs vs poor-quality images."""
+    # 1. Invalid input: array with NaN
+    invalid_arr = np.full((100, 100), np.nan, dtype=np.float32)
+    res_invalid = evaluate_image_quality(invalid_arr)
+    assert res_invalid.is_valid_input is False
+    assert res_invalid.passed is False
+    assert res_invalid.is_blurry is False
+    assert res_invalid.is_dark is False
+    assert res_invalid.failure_reasons[0].startswith("INVALID_INPUT:")
+
+    # 2. Poor-quality image: valid array, but severely blurred
+    sharp = make_sharp_high_frequency_fixture()
+    blurred = cv2.GaussianBlur(sharp, (31, 31), 10.0)
+    res_poor = evaluate_image_quality(blurred)
+    assert res_poor.is_valid_input is True
+    assert res_poor.passed is False
+    assert res_poor.is_blurry is True
+    assert not res_poor.failure_reasons[0].startswith("INVALID_INPUT:")
+
+
+def test_phase2_canonical_package_imports():
+    """Verifies canonical imports from nirikshak_vision.quality and public exports from nirikshak_vision."""
+    # 1. Direct submodule imports from nirikshak_vision.quality
+    from nirikshak_vision.quality import (
+        ImageQualityResult,
+        QualityGateThresholds,
+        evaluate_image_quality,
+        compute_contrast,
+    )
+    sharp = make_sharp_high_frequency_fixture()
+    res = evaluate_image_quality(sharp)
+    assert isinstance(res, ImageQualityResult)
+    assert res.passed is True
+    assert compute_contrast(cv2.cvtColor(sharp, cv2.COLOR_BGR2GRAY)) > 0.0
+
+    # 2. Public package exports from top-level nirikshak_vision
+    from nirikshak_vision import (
+        ImageQualityResult as TopResult,
+        QualityGateResult as TopGateResult,
+        QualityGateThresholds as TopThresholds,
+        evaluate_image_quality as top_evaluate,
+        check_image_quality as top_check,
+        compute_contrast as top_contrast,
+        compute_laplacian_variance as top_blur,
+        compute_glare_candidate_ratio as top_glare,
+        compute_mean_luminance as top_luminance,
+        convert_to_grayscale as top_convert,
+    )
+    assert TopResult is ImageQualityResult
+    assert TopGateResult is ImageQualityResult
+    assert TopThresholds is QualityGateThresholds
+    assert top_evaluate is evaluate_image_quality
+    assert top_contrast is compute_contrast

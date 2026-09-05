@@ -2,28 +2,35 @@
 Nirikshak Vision Quality: Pure, deterministic optical pre-flight quality filters.
 
 Evaluates image sharpness (Laplacian variance), specular glare candidates (localized
-intensity saturation), and global illumination (mean luminance).
+intensity saturation), global illumination (mean luminance), and contrast (intensity std).
+Provides clear distinction between invalid input and poor-quality images.
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Dict, Any
 import cv2
 import numpy as np
 
-from .types import QualityGateResult, QualityGateThresholds
+from .types import (
+    ImageQualityResult,
+    QualityGateResult,
+    QualityGateThresholds,
+    ImageQualityThresholds,
+)
 
 
-def convert_to_grayscale(image: np.ndarray) -> np.ndarray:
+def convert_to_grayscale(
+    image: np.ndarray,
+    color_format: str = "BGR",
+) -> np.ndarray:
     """
     Converts 2D or 3D image array to single-channel uint8 grayscale without mutating input.
 
-    Assumes OpenCV standard BGR ordering for 3-channel images.
+    Supports BGR, RGB, BGRA, RGBA color formats and float/integer normalization.
     """
     if image.dtype != np.uint8:
-        # Normalize/clip float or other integer types safely without mutating caller array
         if np.issubdtype(image.dtype, np.floating):
             if np.isnan(image).any() or np.isinf(image).any():
                 raise ValueError("Floating-point image array contains NaN or Inf values.")
-            # If float in [0.0, 1.0], scale to [0, 255]
             max_val = float(np.max(image)) if image.size > 0 else 1.0
             if max_val <= 1.0:
                 clipped = np.clip(image * 255.0, 0, 255).astype(np.uint8)
@@ -39,12 +46,17 @@ def convert_to_grayscale(image: np.ndarray) -> np.ndarray:
 
     if clipped.ndim == 3:
         channels = clipped.shape[2]
-        if channels == 3:
-            return cv2.cvtColor(clipped, cv2.COLOR_BGR2GRAY)
-        if channels == 4:
-            return cv2.cvtColor(clipped, cv2.COLOR_BGRA2GRAY)
+        fmt = color_format.upper()
         if channels == 1:
             return np.squeeze(clipped, axis=2).copy()
+        if channels == 3:
+            if fmt == "RGB":
+                return cv2.cvtColor(clipped, cv2.COLOR_RGB2GRAY)
+            return cv2.cvtColor(clipped, cv2.COLOR_BGR2GRAY)
+        if channels == 4:
+            if fmt == "RGBA":
+                return cv2.cvtColor(clipped, cv2.COLOR_RGBA2GRAY)
+            return cv2.cvtColor(clipped, cv2.COLOR_BGRA2GRAY)
 
     raise ValueError(f"Unsupported image array shape for grayscale conversion: {clipped.shape}")
 
@@ -120,7 +132,6 @@ def compute_glare_candidate_ratio(
     hotspot_edges = candidates & (local_contrast >= thresholds.local_contrast_threshold)
 
     if np.count_nonzero(hotspot_edges) == 0:
-        # Saturated pixels exist, but they are uniformly diffuse without steep specular roll-off
         return 0.0
 
     # Connect contiguous saturated regions that contain specular contrast edges
@@ -135,6 +146,18 @@ def compute_glare_candidate_ratio(
     return float(min(1.0, max(0.0, specular_pixels / total_pixels)))
 
 
+def compute_contrast(gray: np.ndarray) -> float:
+    """
+    Computes RMS contrast (standard deviation of grayscale pixel intensities).
+
+    Returns 0.0 for completely uniform images; higher values correspond to greater
+    contrast between packaging text and background.
+    """
+    if gray.size == 0:
+        return 0.0
+    return float(np.std(gray))
+
+
 def compute_mean_luminance(gray: np.ndarray) -> float:
     """Computes global average grayscale intensity across the image (0.0 to 255.0)."""
     if gray.size == 0:
@@ -145,189 +168,249 @@ def compute_mean_luminance(gray: np.ndarray) -> float:
 def evaluate_image_quality(
     image: Optional[np.ndarray],
     thresholds: Optional[QualityGateThresholds] = None,
-) -> QualityGateResult:
+    color_format: str = "BGR",
+) -> ImageQualityResult:
     """
     Evaluates pre-flight packaging frame quality deterministically.
 
     Validates:
-    1. Input array integrity (non-null, valid dimensions, minimum 3x3 resolution).
+    1. Input array integrity (non-null, numpy ndarray, non-empty, finite values, valid dimensions).
     2. Blur via Laplacian variance against configurable threshold.
     3. Specular glare via localized saturation clipping ratio against configurable threshold.
-    4. Exposure via mean luminance against under/over-exposure bounds.
+    4. Contrast via intensity standard deviation against configurable threshold.
+    5. Illumination via mean luminance against under/over-exposure bounds.
+    6. Optional aspect ratio check against configurable threshold.
 
-    Returns an immutable QualityGateResult with plain-language remediation cues.
+    Provides a strict distinction between invalid inputs (is_valid_input=False) and
+    poor-quality images (is_valid_input=True, passed=False).
     """
     if thresholds is None:
         thresholds = QualityGateThresholds()
 
-    # Input validation
+    # Input validation: Distinct from poor-quality image evaluation
     if image is None:
-        return QualityGateResult(
+        return ImageQualityResult(
             passed=False,
+            is_valid_input=False,
             blur_score=0.0,
-            glare_candidate_ratio=0.0,
+            glare_score=0.0,
+            contrast_score=0.0,
             mean_luminance=0.0,
-            is_blurry=True,
+            is_blurry=False,
             is_glared=False,
-            is_under_exposed=False,
+            is_low_contrast=False,
+            is_dark=False,
             is_over_exposed=False,
-            remediation_cues=["Input image is None."],
+            failure_reasons=["INVALID_INPUT: Input image is None."],
             details={"error": "NULL_INPUT"},
         )
 
     if not isinstance(image, np.ndarray):
-        return QualityGateResult(
+        return ImageQualityResult(
             passed=False,
+            is_valid_input=False,
             blur_score=0.0,
-            glare_candidate_ratio=0.0,
+            glare_score=0.0,
+            contrast_score=0.0,
             mean_luminance=0.0,
-            is_blurry=True,
+            is_blurry=False,
             is_glared=False,
-            is_under_exposed=False,
+            is_low_contrast=False,
+            is_dark=False,
             is_over_exposed=False,
-            remediation_cues=["Input must be a numpy.ndarray."],
+            failure_reasons=[f"INVALID_INPUT: Input must be a numpy.ndarray, got {type(image).__name__}."],
             details={"error": "INVALID_TYPE", "type": type(image).__name__},
         )
 
     if image.size == 0:
-        return QualityGateResult(
+        return ImageQualityResult(
             passed=False,
+            is_valid_input=False,
             blur_score=0.0,
-            glare_candidate_ratio=0.0,
+            glare_score=0.0,
+            contrast_score=0.0,
             mean_luminance=0.0,
-            is_blurry=True,
+            is_blurry=False,
             is_glared=False,
-            is_under_exposed=False,
+            is_low_contrast=False,
+            is_dark=False,
             is_over_exposed=False,
-            remediation_cues=["Input image array is empty (0 pixels)."],
+            failure_reasons=["INVALID_INPUT: Input image array is empty (0 pixels)."],
             details={"error": "EMPTY_ARRAY"},
         )
 
     if np.issubdtype(image.dtype, np.floating):
         if np.isnan(image).any() or np.isinf(image).any():
-            return QualityGateResult(
+            return ImageQualityResult(
                 passed=False,
+                is_valid_input=False,
                 blur_score=0.0,
-                glare_candidate_ratio=0.0,
+                glare_score=0.0,
+                contrast_score=0.0,
                 mean_luminance=0.0,
-                is_blurry=True,
+                is_blurry=False,
                 is_glared=False,
-                is_under_exposed=False,
+                is_low_contrast=False,
+                is_dark=False,
                 is_over_exposed=False,
-                remediation_cues=["Input image contains non-finite values (NaN or Inf)."],
+                failure_reasons=["INVALID_INPUT: Input image contains non-finite values (NaN or Inf)."],
                 details={"error": "NON_FINITE_VALUES"},
             )
 
     if image.ndim not in (2, 3):
-        return QualityGateResult(
+        return ImageQualityResult(
             passed=False,
+            is_valid_input=False,
             blur_score=0.0,
-            glare_candidate_ratio=0.0,
+            glare_score=0.0,
+            contrast_score=0.0,
             mean_luminance=0.0,
-            is_blurry=True,
+            is_blurry=False,
             is_glared=False,
-            is_under_exposed=False,
+            is_low_contrast=False,
+            is_dark=False,
             is_over_exposed=False,
-            remediation_cues=[f"Invalid image dimensions: {image.ndim}D. Expected 2D or 3D array."],
+            failure_reasons=[f"INVALID_INPUT: Invalid image dimensions: {image.ndim}D. Expected 2D or 3D array."],
             details={"error": "INVALID_DIMENSIONS", "ndim": image.ndim},
         )
 
     if image.shape[0] < 3 or image.shape[1] < 3:
-        return QualityGateResult(
+        return ImageQualityResult(
             passed=False,
+            is_valid_input=False,
             blur_score=0.0,
-            glare_candidate_ratio=0.0,
+            glare_score=0.0,
+            contrast_score=0.0,
             mean_luminance=0.0,
-            is_blurry=True,
+            is_blurry=False,
             is_glared=False,
-            is_under_exposed=False,
+            is_low_contrast=False,
+            is_dark=False,
             is_over_exposed=False,
-            remediation_cues=[f"Image resolution too small ({image.shape[0]}x{image.shape[1]}). Minimum 3x3 required."],
+            failure_reasons=[f"INVALID_INPUT: Image resolution too small ({image.shape[0]}x{image.shape[1]}). Minimum 3x3 required."],
             details={"error": "RESOLUTION_TOO_LOW", "shape": list(image.shape)},
         )
 
     if image.ndim == 3 and image.shape[2] not in (1, 3, 4):
-        return QualityGateResult(
+        return ImageQualityResult(
             passed=False,
+            is_valid_input=False,
             blur_score=0.0,
-            glare_candidate_ratio=0.0,
+            glare_score=0.0,
+            contrast_score=0.0,
             mean_luminance=0.0,
-            is_blurry=True,
+            is_blurry=False,
             is_glared=False,
-            is_under_exposed=False,
+            is_low_contrast=False,
+            is_dark=False,
             is_over_exposed=False,
-            remediation_cues=[f"Unsupported number of color channels: {image.shape[2]}. Expected 1, 3, or 4."],
+            failure_reasons=[f"INVALID_INPUT: Unsupported number of color channels: {image.shape[2]}. Expected 1, 3, or 4."],
             details={"error": "INVALID_CHANNELS", "channels": image.shape[2]},
         )
 
-    # Convert to grayscale
+    # Grayscale conversion
     try:
-        gray = convert_to_grayscale(image)
+        gray = convert_to_grayscale(image, color_format=color_format)
     except Exception as exc:
-        return QualityGateResult(
+        return ImageQualityResult(
             passed=False,
+            is_valid_input=False,
             blur_score=0.0,
-            glare_candidate_ratio=0.0,
+            glare_score=0.0,
+            contrast_score=0.0,
             mean_luminance=0.0,
-            is_blurry=True,
+            is_blurry=False,
             is_glared=False,
-            is_under_exposed=False,
+            is_low_contrast=False,
+            is_dark=False,
             is_over_exposed=False,
-            remediation_cues=[f"Failed to process image array: {str(exc)}"],
+            failure_reasons=[f"INVALID_INPUT: Failed to convert image to grayscale: {str(exc)}"],
             details={"error": "CONVERSION_ERROR", "exception": str(exc)},
         )
 
-    # Compute metrics
+    # Compute quality metrics
     blur_score = compute_laplacian_variance(gray)
-    glare_candidate_ratio = compute_glare_candidate_ratio(image, gray, thresholds)
+    glare_score = compute_glare_candidate_ratio(image, gray, thresholds)
+    contrast_score = compute_contrast(gray)
     mean_luminance = compute_mean_luminance(gray)
 
-    # Evaluate flags
-    is_blurry = blur_score < thresholds.min_blur_score
-    is_glared = glare_candidate_ratio > thresholds.max_glare_candidate_ratio
-    is_under_exposed = mean_luminance < thresholds.min_mean_luminance
-    is_over_exposed = mean_luminance > thresholds.max_mean_luminance
+    h, w = gray.shape[:2]
+    aspect_ratio = float(max(w / h, h / w))
 
-    # Construct remediation cues
-    cues: List[str] = []
+    # Evaluate quality flags
+    is_blurry = blur_score < thresholds.min_blur_score
+    is_glared = glare_score > thresholds.max_glare_candidate_ratio
+    is_low_contrast = contrast_score < thresholds.min_contrast_score
+    is_dark = mean_luminance < thresholds.min_mean_luminance
+    is_over_exposed = mean_luminance > thresholds.max_mean_luminance
+    is_extreme_aspect_ratio = bool(
+        thresholds.max_aspect_ratio is not None and aspect_ratio > thresholds.max_aspect_ratio
+    )
+
+    # Construct actionable failure reasons
+    reasons: List[str] = []
     if is_blurry:
-        cues.append(
-            f"Image is blurry (score: {blur_score:.1f} < threshold {thresholds.min_blur_score:.1f}). "
-            "Please hold the camera steady and re-focus on the packaging."
+        reasons.append(
+            f"Image is blurry (blur score: {blur_score:.1f} < threshold {thresholds.min_blur_score:.1f}). "
+            "Please hold the camera steady and tap to focus on packaging text."
         )
     if is_glared:
-        cues.append(
-            f"Specular glare detected ({glare_candidate_ratio * 100:.1f}% > threshold {thresholds.max_glare_candidate_ratio * 100:.1f}%). "
+        reasons.append(
+            f"Specular glare detected ({glare_score * 100:.1f}% > threshold {thresholds.max_glare_candidate_ratio * 100:.1f}%). "
             "Please angle the light source away from shiny packaging foil or tilt the package."
         )
-    if is_under_exposed:
-        cues.append(
-            f"Image is underexposed (luminance: {mean_luminance:.1f} < threshold {thresholds.min_mean_luminance:.1f}). "
-            "Please increase ambient lighting."
+    if is_low_contrast:
+        reasons.append(
+            f"Low image contrast detected (contrast score: {contrast_score:.1f} < threshold {thresholds.min_contrast_score:.1f}). "
+            "Please ensure distinct contrast between packaging text and background."
+        )
+    if is_dark:
+        reasons.append(
+            f"Image is underexposed/dark (mean luminance: {mean_luminance:.1f} < threshold {thresholds.min_mean_luminance:.1f}). "
+            "Please increase ambient illumination."
         )
     if is_over_exposed:
-        cues.append(
-            f"Image is overexposed (luminance: {mean_luminance:.1f} > threshold {thresholds.max_mean_luminance:.1f}). "
-            "Please reduce direct light or harsh glare."
+        reasons.append(
+            f"Image is overexposed (mean luminance: {mean_luminance:.1f} > threshold {thresholds.max_mean_luminance:.1f}). "
+            "Please reduce direct light or harsh flash reflection."
+        )
+    if is_extreme_aspect_ratio:
+        reasons.append(
+            f"Extreme image aspect ratio ({aspect_ratio:.1f}:1 > threshold {thresholds.max_aspect_ratio:.1f}:1). "
+            "Please capture the full product packaging within standard camera framing."
         )
 
-    passed = not (is_blurry or is_glared or is_under_exposed or is_over_exposed)
+    passed = not (
+        is_blurry
+        or is_glared
+        or is_low_contrast
+        or is_dark
+        or is_over_exposed
+        or is_extreme_aspect_ratio
+    )
 
-    return QualityGateResult(
+    return ImageQualityResult(
         passed=passed,
+        is_valid_input=True,
         blur_score=round(blur_score, 2),
-        glare_candidate_ratio=round(glare_candidate_ratio, 4),
+        glare_score=round(glare_score, 4),
+        contrast_score=round(contrast_score, 2),
         mean_luminance=round(mean_luminance, 2),
         is_blurry=is_blurry,
         is_glared=is_glared,
-        is_under_exposed=is_under_exposed,
+        is_low_contrast=is_low_contrast,
+        is_dark=is_dark,
         is_over_exposed=is_over_exposed,
-        remediation_cues=cues,
+        failure_reasons=reasons,
         details={
             "min_blur_threshold": thresholds.min_blur_score,
             "max_glare_threshold": thresholds.max_glare_candidate_ratio,
+            "min_contrast_threshold": thresholds.min_contrast_score,
             "min_luminance_threshold": thresholds.min_mean_luminance,
             "max_luminance_threshold": thresholds.max_mean_luminance,
+            "max_aspect_ratio_threshold": thresholds.max_aspect_ratio,
+            "aspect_ratio": round(aspect_ratio, 2),
+            "is_extreme_aspect_ratio": is_extreme_aspect_ratio,
             "global_blowout_ratio": thresholds.global_blowout_ratio,
             "local_neighborhood_ksize": thresholds.local_neighborhood_ksize,
             "image_shape": list(image.shape),
