@@ -36,6 +36,7 @@ yarn-error.log*
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # Large binaries, models, raw datasets (tracked via manifests)
 data/raw/*

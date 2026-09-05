@@ -6,7 +6,8 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "npx tsx src/__tests__/m5_4_declaration_review.test.ts"
   },
   "dependencies": {
     "lucide-react": "^0.400.0",

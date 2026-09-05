@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --canvas: #F3F0EE;
+    --canvas-lifted: #FCFBFA;
+    --ink: #141413;
+    --ink-slate: #696969;
+    --signal-orange: #CF4500;
+    --light-orange: #F37338;
+    --focus-ring: #141413;
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--ink);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-weight: 450;
+    line-height: 1.4;
+  }
+
+  /* Headlines: tight -2% letter spacing */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+/* Warm Putty Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F3F0EE;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1CDC7;
+  border-radius: 999px;
+  border: 2px solid #F3F0EE;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B8B3AC;
+}
+
+/* Mastercard Orbital Trajectory SVG line animation */
+@keyframes orbitalPulse {
+  0%, 100% {
+    stroke-opacity: 0.7;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-opacity: 1;
+    stroke-dashoffset: 12;
+  }
+}
+
+.orbital-arc {
+  stroke: #F37338;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+  stroke-dasharray: 6 6;
+  animation: orbitalPulse 6s ease-in-out infinite;
+}
+
+/* Satellite CTA hover micro-interaction */
+.satellite-cta {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+.satellite-cta:hover {
+  transform: translate(2px, -2px) scale(1.06);
+  box-shadow: 0px 12px 28px rgba(20, 20, 19, 0.14);
+}

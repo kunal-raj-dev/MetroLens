@@ -60,8 +60,10 @@ AI_CONTEXT/
 │       ├── 08_VALIDATION/       # Requirements validation matrix and limitations doc
 │       ├── 09_DOCUMENTATION/    # Final M1 architecture blueprint and flowcharts
 │       └── 11_FREEZE/           # Changelog, freeze manifest, and 31-section report
+├── MEMBER_5_WEB_FRONTEND/       # Member 5 Web Frontend Subsystem (Audit, Plan, Boundaries, Contracts)
 ├── EVIDENCE/                    # Raw test outputs, execution logs, and benchmark traces
 ├── RUN_LOGS/                    # Chronological record of AI actions and experiments
 └── HANDOFFS/                    # Inter-chunk and inter-member interface handoffs
 ```
+
 
