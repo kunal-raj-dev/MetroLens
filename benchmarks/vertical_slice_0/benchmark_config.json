@@ -1,0 +1,20 @@
+{
+  "benchmark_name": "vertical_slice_0_end_to_end",
+  "pipeline_mode": "Synchronous Web MVP",
+  "target_sla_ms": 2000.0,
+  "iterations": {
+    "warmup": 3,
+    "measured": 15
+  },
+  "runtime": {
+    "execution_provider": "CPUExecutionProvider",
+    "intra_op_threads": 4,
+    "ocr_engine": "PP-OCRv3-ROUTED",
+    "opencv_backend": "OpenCV-Python"
+  },
+  "hardware": {
+    "platform": "Windows",
+    "architecture": "AMD64",
+    "python_version": "3.14.3"
+  }
+}

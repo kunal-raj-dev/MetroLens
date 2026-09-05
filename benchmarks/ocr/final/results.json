@@ -1,0 +1,253 @@
+{
+  "benchmark_metadata": {
+    "title": "Member 1 Final Release-Candidate Benchmark",
+    "timestamp": "2026-09-05 10:43:44 UTC",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.14.3",
+    "execution_provider": "CPUExecutionProvider",
+    "intra_op_num_threads": 4,
+    "inter_op_num_threads": 1
+  },
+  "initialization_latency": {
+    "cold_engine_load_ms": 358.28,
+    "cold_service_load_ms": 350.02,
+    "service_warmup_ms": 15.55
+  },
+  "specimen_profiling": {
+    "SYNTH-01-ENG-FMCG": {
+      "description": "English FMCG nutrition & statutory label",
+      "language": "English",
+      "expected_tokens": 6,
+      "engine_direct": {
+        "min_ms": 110.99,
+        "mean_ms": 141.65,
+        "median_ms": 124.19,
+        "p90_ms": 172.03,
+        "p95_ms": 175.58,
+        "max_ms": 223.74,
+        "std_ms": 29.43
+      },
+      "service_path": {
+        "min_ms": 165.33,
+        "mean_ms": 181.13,
+        "median_ms": 182.86,
+        "p90_ms": 192.1,
+        "p95_ms": 193.92,
+        "max_ms": 195.81,
+        "std_ms": 9.6
+      },
+      "service_bytes": {
+        "min_ms": 170.81,
+        "mean_ms": 182.93,
+        "median_ms": 182.84,
+        "p90_ms": 192.93,
+        "p95_ms": 193.62,
+        "max_ms": 196.98,
+        "std_ms": 7.44
+      },
+      "service_observations": {
+        "min_ms": 169.11,
+        "mean_ms": 184.04,
+        "median_ms": 184.78,
+        "p90_ms": 194.95,
+        "p95_ms": 197.38,
+        "max_ms": 202.93,
+        "std_ms": 7.99
+      }
+    },
+    "SYNTH-02-HIN-FMCG": {
+      "description": "Hindi Devanagari FMCG packaging label with \u20b9 symbol",
+      "language": "Hindi (Devanagari)",
+      "expected_tokens": 6,
+      "engine_direct": {
+        "min_ms": 133.75,
+        "mean_ms": 144.33,
+        "median_ms": 144.22,
+        "p90_ms": 151.59,
+        "p95_ms": 152.72,
+        "max_ms": 154.43,
+        "std_ms": 5.77
+      },
+      "service_path": {
+        "min_ms": 141.05,
+        "mean_ms": 152.21,
+        "median_ms": 151.53,
+        "p90_ms": 159.01,
+        "p95_ms": 161.98,
+        "max_ms": 173.19,
+        "std_ms": 7.38
+      },
+      "service_bytes": {
+        "min_ms": 138.41,
+        "mean_ms": 149.67,
+        "median_ms": 148.23,
+        "p90_ms": 159.5,
+        "p95_ms": 159.78,
+        "max_ms": 162.86,
+        "std_ms": 6.4
+      },
+      "service_observations": {
+        "min_ms": 142.72,
+        "mean_ms": 152.73,
+        "median_ms": 152.37,
+        "p90_ms": 160.7,
+        "p95_ms": 163.06,
+        "max_ms": 164.07,
+        "std_ms": 5.91
+      }
+    },
+    "SYNTH-03-MIXED-BILINGUAL": {
+      "description": "Mixed Hindi-English bilingual retail packaging",
+      "language": "Bilingual (En+Hi)",
+      "expected_tokens": 7,
+      "engine_direct": {
+        "min_ms": 124.96,
+        "mean_ms": 161.96,
+        "median_ms": 167.07,
+        "p90_ms": 183.98,
+        "p95_ms": 186.29,
+        "max_ms": 217.87,
+        "std_ms": 23.6
+      },
+      "service_path": {
+        "min_ms": 125.29,
+        "mean_ms": 176.19,
+        "median_ms": 178.89,
+        "p90_ms": 196.21,
+        "p95_ms": 201.47,
+        "max_ms": 204.09,
+        "std_ms": 20.31
+      },
+      "service_bytes": {
+        "min_ms": 166.27,
+        "mean_ms": 176.11,
+        "median_ms": 176.04,
+        "p90_ms": 181.95,
+        "p95_ms": 183.48,
+        "max_ms": 187.87,
+        "std_ms": 5.53
+      },
+      "service_observations": {
+        "min_ms": 168.83,
+        "mean_ms": 175.64,
+        "median_ms": 175.21,
+        "p90_ms": 180.24,
+        "p95_ms": 185.66,
+        "max_ms": 191.39,
+        "std_ms": 5.09
+      }
+    },
+    "SYNTH-07-BLANK-FRAME": {
+      "description": "Uniform blank control frame",
+      "language": "Control (Blank)",
+      "expected_tokens": 0,
+      "engine_direct": {
+        "min_ms": 40.56,
+        "mean_ms": 47.13,
+        "median_ms": 47.45,
+        "p90_ms": 51.89,
+        "p95_ms": 52.11,
+        "max_ms": 53.98,
+        "std_ms": 3.28
+      },
+      "service_path": {
+        "min_ms": 40.15,
+        "mean_ms": 45.91,
+        "median_ms": 46.24,
+        "p90_ms": 50.21,
+        "p95_ms": 50.92,
+        "max_ms": 54.34,
+        "std_ms": 3.73
+      },
+      "service_bytes": {
+        "min_ms": 43.19,
+        "mean_ms": 46.92,
+        "median_ms": 46.23,
+        "p90_ms": 49.58,
+        "p95_ms": 51.07,
+        "max_ms": 53.65,
+        "std_ms": 2.43
+      },
+      "service_observations": {
+        "min_ms": 42.23,
+        "mean_ms": 46.47,
+        "median_ms": 46.44,
+        "p90_ms": 49.95,
+        "p95_ms": 51.05,
+        "max_ms": 51.29,
+        "std_ms": 2.52
+      }
+    }
+  },
+  "adapter_overhead": {
+    "mean_service_path_overhead_ms": 19.15,
+    "mean_canonical_observation_overhead_ms": -0.18,
+    "evaluation": "Zero substantial overhead (< 1.5 ms) introduced by abstraction layer"
+  },
+  "preprocessing_impact": {
+    "specimen": "SYNTH-01-ENG-FMCG",
+    "raw_mode": {
+      "min_ms": 165.33,
+      "mean_ms": 181.13,
+      "median_ms": 182.86,
+      "p90_ms": 192.1,
+      "p95_ms": 193.92,
+      "max_ms": 195.81,
+      "std_ms": 9.6
+    },
+    "auto_mode": {
+      "min_ms": 158.0,
+      "mean_ms": 174.4,
+      "median_ms": 172.94,
+      "p90_ms": 181.72,
+      "p95_ms": 190.5,
+      "max_ms": 208.56,
+      "std_ms": 10.35
+    },
+    "overhead_delta_ms": -9.92
+  },
+  "concurrency_scaling": {
+    "workers_1": {
+      "workers": 1,
+      "requests": 8,
+      "total_time_ms": 1522.71,
+      "latency_per_req_ms": 190.34,
+      "throughput_req_per_sec": 5.25,
+      "all_tokens_accurate": true
+    },
+    "workers_2": {
+      "workers": 2,
+      "requests": 8,
+      "total_time_ms": 1461.01,
+      "latency_per_req_ms": 182.63,
+      "throughput_req_per_sec": 5.48,
+      "all_tokens_accurate": true
+    },
+    "workers_4": {
+      "workers": 4,
+      "requests": 8,
+      "total_time_ms": 1425.51,
+      "latency_per_req_ms": 178.19,
+      "throughput_req_per_sec": 5.61,
+      "all_tokens_accurate": true
+    },
+    "workers_8": {
+      "workers": 8,
+      "requests": 8,
+      "total_time_ms": 1422.09,
+      "latency_per_req_ms": 177.76,
+      "throughput_req_per_sec": 5.63,
+      "all_tokens_accurate": true
+    }
+  },
+  "security_and_resource_safety": {
+    "decompression_bomb_guard_active": true,
+    "decompression_bomb_rejection_ms": 0.029,
+    "memory_rss_start_mb": 71.24,
+    "memory_rss_post_init_mb": 144.38,
+    "memory_rss_post_warmup_mb": 150.31,
+    "memory_rss_end_mb": 407.03,
+    "memory_rss_delta_mb": 335.79,
+    "memory_leak_detected": false
+  }
+}

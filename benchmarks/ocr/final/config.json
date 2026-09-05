@@ -1,0 +1,42 @@
+{
+  "benchmark_name": "Member 1 Final Release-Candidate Benchmark (Combined Chunk 6 + 7)",
+  "benchmark_version": "1.0.0",
+  "engine_architecture": "PP-OCRv3-ROUTED (Direct ONNX Runtime CPU)",
+  "specimens": [
+    {
+      "id": "SYNTH-01-ENG-FMCG",
+      "description": "English FMCG nutrition & statutory label",
+      "expected_token_count": 6
+    },
+    {
+      "id": "SYNTH-02-HIN-FMCG",
+      "description": "Hindi Devanagari FMCG packaging label with ₹ symbol",
+      "expected_token_count": 6
+    },
+    {
+      "id": "SYNTH-03-MIXED-BILINGUAL",
+      "description": "Mixed Hindi-English bilingual retail packaging",
+      "expected_token_count": 7
+    },
+    {
+      "id": "SYNTH-07-BLANK-FRAME",
+      "description": "Uniform blank control frame",
+      "expected_token_count": 0
+    }
+  ],
+  "iterations_per_specimen": 20,
+  "concurrency_sweep_workers": [1, 2, 4, 8],
+  "concurrency_requests_multiplier": 2,
+  "preprocessing_modes": ["raw", "auto"],
+  "profiling_targets": [
+    "OCREngine (Direct core)",
+    "OCRService.extract (file path)",
+    "OCRService.extract_dict (raw bytes)",
+    "OCRService.extract_observations (canonical contract)"
+  ],
+  "guards": [
+    "Decompression bomb guard (64 Megapixels)",
+    "Socket network guard (strictly offline edge execution)",
+    "Input immutability guard"
+  ]
+}

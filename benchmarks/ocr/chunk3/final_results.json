@@ -1,0 +1,125 @@
+{
+  "date": "2026-09-05",
+  "benchmark_type": "SYNTHETIC_REGRESSION_EVALUATION",
+  "real_data_status": "BLOCKED_AWAITING_PHYSICAL_DATA_COLLECTION",
+  "execution_summary": {
+    "total_configurations": 8,
+    "specimens_per_config": 8,
+    "evaluated_passes": 64,
+    "warmup_passes": 8,
+    "total_inference_passes": 72
+  },
+  "engine_defaults": {
+    "canonical_default_configuration": "B0_BASELINE_RAW",
+    "provisional_experimental_candidate": "P_ADAPTIVE_CROP",
+    "rationale": "B0_BASELINE_RAW achieved superior aggregate Macro CER (0.2124) and WER (0.6038) vs P_ADAPTIVE_CROP (CER 0.2184, WER 0.6446). P_ADAPTIVE_CROP is retained as provisional experimental candidate for low-contrast/degraded packaging."
+  },
+  "rss_memory": {
+    "start_mb": 70.77,
+    "end_mb": 99.11,
+    "delta_mb": 28.34,
+    "assessment": "Bounded memory usage. No unbounded memory growth observed across 72 total passes."
+  },
+  "baseline_summary": {
+    "name": "B0_BASELINE_RAW",
+    "macro_cer": 0.2124,
+    "macro_wer": 0.6038,
+    "field_accuracy": 0.7586,
+    "numeric_accuracy": 0.4286,
+    "routing_accuracy": 0.8378,
+    "median_latency_ms": 88.7
+  },
+  "comparisons": {
+    "P2_CLAHE_CROP": {
+      "macro_cer": 0.225,
+      "delta_cer": 0.0126,
+      "macro_wer": 0.6504,
+      "delta_wer": 0.0466,
+      "field_accuracy": 0.7586,
+      "numeric_accuracy": 0.4286,
+      "routing_accuracy": 0.8378,
+      "median_latency_ms": 100.97,
+      "delta_latency_ms": 12.27,
+      "decision": "BENEFICIAL_FOR_LOW_CONTRAST",
+      "reconciliation_note": null
+    },
+    "P3_BILATERAL_CROP": {
+      "macro_cer": 0.2304,
+      "delta_cer": 0.018,
+      "macro_wer": 0.6446,
+      "delta_wer": 0.0408,
+      "field_accuracy": 0.7586,
+      "numeric_accuracy": 0.4286,
+      "routing_accuracy": 0.8649,
+      "median_latency_ms": 101.84,
+      "delta_latency_ms": 13.14,
+      "decision": "OPTIONAL_DOMAIN_FILTER",
+      "reconciliation_note": null
+    },
+    "P4_UNSHARP_CROP": {
+      "macro_cer": 0.2173,
+      "delta_cer": 0.0049,
+      "macro_wer": 0.6089,
+      "delta_wer": 0.0051,
+      "field_accuracy": 0.7586,
+      "numeric_accuracy": 0.4286,
+      "routing_accuracy": 0.8378,
+      "median_latency_ms": 94.4,
+      "delta_latency_ms": 5.7,
+      "decision": "OPTIONAL_DOMAIN_FILTER",
+      "reconciliation_note": null
+    },
+    "P5_DILATION_CROP": {
+      "macro_cer": 0.2288,
+      "delta_cer": 0.0164,
+      "macro_wer": 0.6446,
+      "delta_wer": 0.0408,
+      "field_accuracy": 0.7586,
+      "numeric_accuracy": 0.4286,
+      "routing_accuracy": 0.8649,
+      "median_latency_ms": 94.28,
+      "delta_latency_ms": 5.58,
+      "decision": "OPTIONAL_DOMAIN_FILTER",
+      "reconciliation_note": null
+    },
+    "P6_COMBO_CLAHE_DILATE": {
+      "macro_cer": 0.2443,
+      "delta_cer": 0.0319,
+      "macro_wer": 0.6587,
+      "delta_wer": 0.0549,
+      "field_accuracy": 0.7241,
+      "numeric_accuracy": 0.4286,
+      "routing_accuracy": 0.8919,
+      "median_latency_ms": 96.69,
+      "delta_latency_ms": 7.99,
+      "decision": "OPTIONAL_DOMAIN_FILTER",
+      "reconciliation_note": null
+    },
+    "P_ADAPTIVE_CROP": {
+      "macro_cer": 0.2184,
+      "delta_cer": 0.006,
+      "macro_wer": 0.6446,
+      "delta_wer": 0.0408,
+      "field_accuracy": 0.7586,
+      "numeric_accuracy": 0.4286,
+      "routing_accuracy": 0.8378,
+      "median_latency_ms": 90.14,
+      "delta_latency_ms": 1.44,
+      "decision": "PROVISIONAL_EXPERIMENTAL",
+      "reconciliation_note": "Provisional experimental candidate: beneficial on low-contrast synthetic specimen SYNTH-08, but aggregate CER (+0.0060) and WER (+0.0408) slightly regressed vs B0 Raw. Production default remains B0_BASELINE_RAW."
+    },
+    "P_IMAGE_CLAHE": {
+      "macro_cer": 0.2157,
+      "delta_cer": 0.0033,
+      "macro_wer": 0.6242,
+      "delta_wer": 0.0204,
+      "field_accuracy": 0.7586,
+      "numeric_accuracy": 0.4286,
+      "routing_accuracy": 0.8378,
+      "median_latency_ms": 100.99,
+      "delta_latency_ms": 12.29,
+      "decision": "REJECTED_BLANKET_OVERHEAD",
+      "reconciliation_note": null
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "engine": "PP-OCRv3-ROUTED",
+  "runtime": "Direct ONNX Runtime (CPUExecutionProvider)",
+  "intra_op_threads": 4,
+  "default_preprocessing": "B0_BASELINE_RAW (preprocessing_mode='raw')",
+  "hardware": {
+    "platform": "Windows",
+    "machine": "AMD64",
+    "python_version": "3.14.3"
+  }
+}
