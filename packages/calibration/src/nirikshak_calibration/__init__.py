@@ -1,5 +1,6 @@
 """
-Nirikshak Calibration: Optical reference fiducial detection and metric scale calculation.
+Nirikshak Calibration: Optical reference fiducial detection, planar rectification,
+physical font measurement, and constrained cylindrical packaging measurement.
 """
 
 from typing import Optional, Dict, Any
@@ -63,6 +64,7 @@ def compute_scale_factor(
     )
 
 
+# Phase 4 Exports
 from .types import (
     AnchorType,
     AnchorDetectionStatus,
@@ -78,10 +80,40 @@ from .anchor_detector import (
     compute_algebraic_ellipse_residual,
 )
 
+# Phase 5 Exports
+from .homography import (
+    RectificationStatus,
+    HomographyConfig,
+    RectificationResult,
+    rectify_planar_quadrilateral,
+    validate_quadrilateral_geometry,
+)
+
+# Phase 6 Exports
+from .font_measurer import (
+    FontMeasurementType,
+    FontMeasurementStatus,
+    FontMeasurementConfig,
+    FontMeasurementResult,
+    measure_font_height,
+    measure_font_height_batch,
+)
+
+# Phase 7 Exports
+from .cylinder import (
+    CylinderGeometryState,
+    CylinderMeasurementStatus,
+    CylinderModelConfig,
+    CylinderMeasurementResult,
+    measure_cylindrical_feature,
+)
+
 __all__ = [
+    # Baseline
     "CalibrationOutcome",
     "compute_scale_factor",
     "CalibrationStatus",
+    # Phase 4
     "AnchorType",
     "AnchorDetectionStatus",
     "EllipseGeometry",
@@ -92,4 +124,23 @@ __all__ = [
     "detect_anchor",
     "order_quadrilateral_corners",
     "compute_algebraic_ellipse_residual",
+    # Phase 5
+    "RectificationStatus",
+    "HomographyConfig",
+    "RectificationResult",
+    "rectify_planar_quadrilateral",
+    "validate_quadrilateral_geometry",
+    # Phase 6
+    "FontMeasurementType",
+    "FontMeasurementStatus",
+    "FontMeasurementConfig",
+    "FontMeasurementResult",
+    "measure_font_height",
+    "measure_font_height_batch",
+    # Phase 7
+    "CylinderGeometryState",
+    "CylinderMeasurementStatus",
+    "CylinderModelConfig",
+    "CylinderMeasurementResult",
+    "measure_cylindrical_feature",
 ]
