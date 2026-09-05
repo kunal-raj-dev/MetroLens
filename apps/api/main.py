@@ -13,11 +13,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from apps.api.errors import register_error_handlers
 from apps.api.middleware.headers import SecurityHeadersMiddleware
 from apps.api.middleware.rate_limit import RateLimitMiddleware
+from apps.api.middleware.audit_middleware import AuditTelemetryMiddleware
 from apps.api.routes import (
     inspect_router,
     report_router,
     emaap_router,
     health_router,
+    metrics_router,
+    auth_router,
+    audit_router,
 )
 from apps.api.services.spool_service import spool_service
 
@@ -58,13 +62,16 @@ app = FastAPI(
 # 1. Register canonical error handlers (HTTP 400, 413, 415, 422, 429, 500, 504)
 register_error_handlers(app)
 
-# 2. Register enterprise security response headers (CSP, HSTS, X-Frame-Options)
+# 2. Register enterprise audit & telemetry tracking middleware
+app.add_middleware(AuditTelemetryMiddleware)
+
+# 3. Register enterprise security response headers (CSP, HSTS, X-Frame-Options)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# 3. Register leaky-bucket rate limiting middleware (10 req/min per IP)
+# 4. Register leaky-bucket rate limiting middleware (10 req/min per IP)
 app.add_middleware(RateLimitMiddleware)
 
-# 4. Register CORS middleware
+# 5. Register CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -73,11 +80,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 4. Mount API v1 route blueprints
+# 6. Mount API v1 route blueprints
 app.include_router(inspect_router)
 app.include_router(report_router)
 app.include_router(emaap_router)
 app.include_router(health_router)
+app.include_router(metrics_router)
+app.include_router(auth_router)
+app.include_router(audit_router)
 
 
 # =========================================================================

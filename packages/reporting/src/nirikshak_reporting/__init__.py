@@ -1,6 +1,7 @@
 """
 Nirikshak Reporting Package.
-Provides statutory inspection dossier generation and ReportLab PDF compilation.
+Provides statutory inspection dossier generation, court-admissible ReportLab PDF compilation,
+Section 63 BSA 2023 legal affidavits, bilingual Devanagari typography, and multi-format exports.
 """
 
 from .pdf_compiler import (
@@ -9,6 +10,26 @@ from .pdf_compiler import (
     compile_inspection_pdf,
     pdf_compiler,
 )
+from .legal_affidavit import (
+    LegalAffidavitCompiler,
+    CertifyingOfficerInfo,
+    ElectronicRecordEvidenceDetails,
+)
+from .bilingual_typography import (
+    BilingualTypographyEngine,
+    BilingualTerm,
+)
+from .multi_page_dossier import (
+    MultiPageDossierCompiler,
+    MultiPageDossierPayload,
+    DossierEvidenceExhibit,
+)
+from .digital_signature import (
+    DigitalSignatureManager,
+    DigitalSignatureSeal,
+    TimestampToken,
+)
+from .export_formats import ComplianceDossierExporter
 
 # Legacy compatibility
 from nirikshak_shared.models.contracts import InspectionResult
@@ -72,4 +93,16 @@ __all__ = [
     "NumberedCanvas",
     "compile_inspection_pdf",
     "pdf_compiler",
+    "LegalAffidavitCompiler",
+    "CertifyingOfficerInfo",
+    "ElectronicRecordEvidenceDetails",
+    "BilingualTypographyEngine",
+    "BilingualTerm",
+    "MultiPageDossierCompiler",
+    "MultiPageDossierPayload",
+    "DossierEvidenceExhibit",
+    "DigitalSignatureManager",
+    "DigitalSignatureSeal",
+    "TimestampToken",
+    "ComplianceDossierExporter",
 ]

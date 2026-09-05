@@ -1,6 +1,6 @@
 """
 Nirikshak API Middleware Package.
-Provides ingestion security, HTTP security headers, and rate limiting.
+Provides ingestion security, HTTP security headers, rate limiting, and audit telemetry.
 """
 
 from .security import (
@@ -15,6 +15,7 @@ from .rate_limit import (
     RateLimitMiddleware,
     rate_limiter,
 )
+from .audit_middleware import AuditTelemetryMiddleware
 
 __all__ = [
     "ImageSecurityValidator",
@@ -25,4 +26,5 @@ __all__ = [
     "InMemoryRateLimiter",
     "RateLimitMiddleware",
     "rate_limiter",
+    "AuditTelemetryMiddleware",
 ]
