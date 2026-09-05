@@ -148,6 +148,9 @@ def _validate_box_coords(box: Any) -> Tuple[bool, str, Optional[Tuple[float, flo
     if box is None:
         return False, "Feature bounding box cannot be None.", None
 
+    if isinstance(box, (str, bytes)):
+        return False, "Feature bounding box cannot be a string or bytes.", None
+
     if isinstance(box, BoundingBox):
         coords = (box.x_min, box.y_min, box.x_max, box.y_max)
     elif hasattr(box, "__len__") and len(box) == 4:
@@ -321,24 +324,32 @@ def measure_cylindrical_feature(
         )
 
     # 4. For CYLINDRICAL state: validate cylinder parameters
-    if cylinder_center_x is None or not math.isfinite(cylinder_center_x):
+    try:
+        if cylinder_center_x is None:
+            raise ValueError()
+        center_x = float(cylinder_center_x)
+        if not math.isfinite(center_x):
+            raise ValueError()
+    except (TypeError, ValueError):
         return CylinderMeasurementResult(
             status=CylinderMeasurementStatus.INVALID_INPUT,
             geometry_state=CylinderGeometryState.CYLINDRICAL,
             measured_axial_pixels=axial_px,
-            message="cylinder_center_x must be a finite numeric coordinate.",
+            message=f"cylinder_center_x must be a finite numeric coordinate (received {cylinder_center_x}).",
         )
 
-    if (
-        cylinder_radius_px is None
-        or not math.isfinite(cylinder_radius_px)
-        or cylinder_radius_px < cfg.min_cylinder_radius_px
-    ):
+    try:
+        if cylinder_radius_px is None:
+            raise ValueError()
+        radius_px = float(cylinder_radius_px)
+        if not math.isfinite(radius_px) or radius_px < cfg.min_cylinder_radius_px:
+            raise ValueError()
+    except (TypeError, ValueError):
         return CylinderMeasurementResult(
             status=CylinderMeasurementStatus.INVALID_INPUT,
             geometry_state=CylinderGeometryState.CYLINDRICAL,
             measured_axial_pixels=axial_px,
-            message=f"cylinder_radius_px must be >= {cfg.min_cylinder_radius_px}px (received {cylinder_radius_px}).",
+            message=f"cylinder_radius_px must be a finite number >= {cfg.min_cylinder_radius_px}px (received {cylinder_radius_px}).",
         )
 
     # 5. Check axis alignment condition
@@ -355,8 +366,8 @@ def measure_cylindrical_feature(
 
     # 6. Evaluate angular displacement phi
     feature_center_x = 0.5 * (xmin + xmax)
-    delta_x = feature_center_x - float(cylinder_center_x)
-    norm_sin = delta_x / float(cylinder_radius_px)
+    delta_x = feature_center_x - center_x
+    norm_sin = delta_x / radius_px
 
     if abs(norm_sin) > 1.0:
         return CylinderMeasurementResult(
@@ -366,7 +377,7 @@ def measure_cylindrical_feature(
             scale_factor_mm_per_pixel=scale_val,
             calibration_status=cal_status,
             is_axis_aligned=True,
-            message=f"Feature center ({feature_center_x:.1f}) lies outside cylinder silhouette (center={cylinder_center_x}, R={cylinder_radius_px}).",
+            message=f"Feature center ({feature_center_x:.1f}) lies outside cylinder silhouette (center={center_x}, R={radius_px}).",
         )
 
     phi_rad = math.asin(norm_sin)

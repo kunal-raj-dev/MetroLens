@@ -377,11 +377,11 @@ def rectify_planar_quadrilateral(
                 success=False,
                 message="Supplied image must be a numpy.ndarray.",
             )
-        if image.size == 0 or image.ndim < 2:
+        if image.size == 0 or image.ndim not in (2, 3):
             return RectificationResult(
                 status=RectificationStatus.INVALID_INPUT,
                 success=False,
-                message="Supplied image array is empty or has invalid dimension.",
+                message="Supplied image array must be a non-empty 2D or 3D numpy array.",
             )
         image_shape = image.shape
 

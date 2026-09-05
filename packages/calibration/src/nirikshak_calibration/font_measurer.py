@@ -154,6 +154,9 @@ def _parse_bounding_box(
     if box is None:
         return False, FontMeasurementStatus.INVALID_BOUNDING_BOX, "Bounding box input cannot be None.", None
 
+    if isinstance(box, (str, bytes)):
+        return False, FontMeasurementStatus.INVALID_BOUNDING_BOX, "Bounding box cannot be a string or bytes.", None
+
     if isinstance(box, BoundingBox):
         xmin, ymin, xmax, ymax = box.x_min, box.y_min, box.x_max, box.y_max
     elif hasattr(box, "__len__") and len(box) == 4:
@@ -260,8 +263,12 @@ def _compute_ink_profile_height(
 
     # Convert to grayscale
     if image_crop.ndim == 3:
-        # Standard luminance weights
-        gray = np.dot(image_crop[..., :3], [0.114, 0.587, 0.299]).astype(np.uint8)
+        if image_crop.shape[2] >= 3:
+            gray = np.dot(image_crop[..., :3], [0.114, 0.587, 0.299]).astype(np.uint8)
+        elif image_crop.shape[2] == 1:
+            gray = np.squeeze(image_crop, axis=2).astype(np.uint8)
+        else:
+            gray = image_crop[..., 0].astype(np.uint8)
     else:
         gray = image_crop.astype(np.uint8)
 
@@ -397,6 +404,18 @@ def measure_font_height(
                 is_clipped=is_clipped,
                 bbox_height_px=bbox_h_px,
                 message="INK_PROFILE_HEIGHT requires an image array to extract the glyph ink crop.",
+            )
+
+        if not isinstance(image, np.ndarray) or image.size == 0 or image.ndim not in (2, 3):
+            return FontMeasurementResult(
+                status=FontMeasurementStatus.FAILED_PROCESSING,
+                measurement_type=measurement_type,
+                measured_pixels=bbox_h_px,
+                bounding_box=clipped_box,
+                original_bounding_box=orig_box if is_clipped else None,
+                is_clipped=is_clipped,
+                bbox_height_px=bbox_h_px,
+                message="INK_PROFILE_HEIGHT requires a valid non-empty 2D or 3D numpy image array.",
             )
 
         # Extract integer crop window

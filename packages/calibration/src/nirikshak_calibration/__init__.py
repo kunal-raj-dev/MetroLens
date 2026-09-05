@@ -108,6 +108,16 @@ from .cylinder import (
     measure_cylindrical_feature,
 )
 
+# Phase 9 Exports
+from .evaluation import (
+    BenchmarkStatus,
+    GroundTruthSample,
+    EvaluationConfig,
+    SampleEvaluation,
+    CalibrationEvaluationResult,
+    evaluate_calibration,
+)
+
 __all__ = [
     # Baseline
     "CalibrationOutcome",
@@ -143,4 +153,11 @@ __all__ = [
     "CylinderModelConfig",
     "CylinderMeasurementResult",
     "measure_cylindrical_feature",
+    # Phase 9
+    "BenchmarkStatus",
+    "GroundTruthSample",
+    "EvaluationConfig",
+    "SampleEvaluation",
+    "CalibrationEvaluationResult",
+    "evaluate_calibration",
 ]
