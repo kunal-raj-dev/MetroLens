@@ -1,10 +1,10 @@
 # CURRENT STATE: MEMBER 2 STATUS DOSSIER
-**Generated:** 2026-09-05T17:00:00+05:30
+**Generated:** 2026-09-05T17:40:00+05:30
 **Role:** Member 2 — Computer Vision, Optical Calibration & Physical Measurement Lead
 **Project:** MetroLens AI / Nirikshak (SIH26034)
 **Branch:** `member-2`
-**Latest Commit:** `0dcd49f` (`feat(calibration): implement deterministic metric anchor detection`)
-**Overall Monorepo Status:** 119/119 unit tests passing across all packages
+**Latest Phase Delivery:** Phases 5, 6, and 7 Complete (Homography, Font Measurer, Cylinder)
+**Overall Monorepo Status:** 168/168 unit tests passing across all packages (83 in calibration)
 
 ---
 
@@ -83,6 +83,41 @@ Member 2 is personally responsible for:
   7. **Testing Evidence:** 32 passing unit tests in `test_anchor_detector.py` covering geometry, tilt, glare, clutter, non-convex shapes, invalid inputs, non-finite floats, and latency ($<50\text{ms}$).
 - **Git Commit:** `0dcd49f`
 
+### Phase 5: Planar Homography & Perspective Rectification (`homography.py`)
+- **Objective:** Compute projective transformation matrix $H$ and rectify quadrilateral packaging crops to top-down perspective.
+- **Deliverables:**
+  - `packages/calibration/src/nirikshak_calibration/homography.py`
+  - `packages/calibration/tests/test_homography.py` (19 passing unit tests)
+- **Architectural & Algorithmic Highlights:**
+  1. **Strict Geometric Pre-Validation:** Finite coordinates, non-duplicates ($> 2\text{px}$), non-zero area ($> 400\text{px}^2$), collinearity rejection, strict Shoelace cross-product convexity, and image domain bounds.
+  2. **Correspondence & Destination Mapping:** $TL \to (0, 0), TR \to (W-1, 0), BR \to (W-1, H-1), BL \to (0, H-1)$.
+  3. **Reprojection Error Gating:** Evaluates $\epsilon_{\text{reproj}} = \frac{1}{4}\sum \|\tilde{p}'_i - p_{\text{dst}, i}\|$; aborts with `TRANSFORMATION_FAILED` if error exceeds `max_reprojection_error_px` (default $5.0\text{px}$).
+  4. **Derived Dimensions:** Deterministically computes crop width/height from average edge lengths if explicit target dimensions are omitted.
+
+### Phase 6: Physical Font Height Measurement (`font_measurer.py`)
+- **Objective:** Convert OCR text token bounding boxes into physical metric millimeters for Rule 7 verification.
+- **Deliverables:**
+  - `packages/calibration/src/nirikshak_calibration/font_measurer.py`
+  - `packages/calibration/tests/test_font_measurer.py` (14 passing unit tests)
+- **Architectural Highlights:**
+  1. **Bounding Box vs Ink Height:** Strict distinction between raw bounding box height ($h_{\text{bbox}} = (y_{\max} - y_{\min}) \times S$) and true foreground glyph ink height ($h_{\text{ink}}$) via Otsu thresholding and vertical projection profiling $P(y) = \sum_x M(y, x)$.
+  2. **Zero Scale Fabrication:** Returns explicit `UNCALIBRATED` status if optical calibration is missing, invalid, or $\le 0$. Never fabricates scale.
+  3. **Zero Manufactured Uncertainty:** Uncertainty is propagated ($\Delta h = h_{\text{px}} \times \Delta S$) ONLY when explicitly provided by calibration; returns `None` if unavailable.
+  4. **Contract Adapter:** Directly outputs canonical `nirikshak_shared.models.contracts.MeasurementResult`.
+
+### Phase 7: Constrained Cylindrical Packaging Measurement (`cylinder.py`)
+- **Objective:** Compensate for geometric foreshortening on curved packaging surfaces (cans, bottles).
+- **Deliverables:**
+  - `packages/calibration/src/nirikshak_calibration/cylinder.py`
+  - `packages/calibration/tests/test_cylinder.py` (16 passing unit tests)
+- **Architectural Highlights:**
+  1. **Surface Geometry State Machine:** `PLANAR` receives no correction (factor = 1.0); `CYLINDRICAL` executes constrained generator measurement; `UNSUPPORTED_TAPERED` and `UNKNOWN` route to `MANUAL_REVIEW_REQUIRED`.
+  2. **Right-Cylinder Vertical Generator Invariance:** For an axis-aligned cylinder, axial distance along the vertical generator is preserved: $h_{\text{axial\_mm}} = h_{\text{vertical\_px}} \times S$.
+  3. **Circumferential Foreshortening:** Horizontal features foreshortened by $\cos\phi$; correction factor $1 / \cos\phi$. Reclassified as an analytical **mathematical property** with automated test verification.
+  4. **Central Vertical Strip Constraint:** Proposed heuristic threshold $|\phi| \le 20.0^\circ$ ($\cos\phi \ge 0.9397$, distortion $\le 6.42\%$). Exceeding $20^\circ$ flags `EXCEEDS_ANGULAR_THRESHOLD`.
+  5. **Conditional Failures:** Enforces calibration requirement (returns `UNCALIBRATED` when scale missing), axis alignment (`MISALIGNED_AXIS`), and silhouette bounds (`OUT_OF_CYLINDER_BOUNDS`).
+  6. **Contract Adapter:** Bridges to canonical `nirikshak_shared.models.contracts.MeasurementResult`.
+
 ---
 
 ## 3. Metric & Testing Status
@@ -91,10 +126,10 @@ Member 2 is personally responsible for:
 |:---|:---|:---|:---:|
 | **Quality Gate Latency** | $< 50\text{ ms}$ CPU | $\approx 22\text{ ms}$ | ✅ PASS |
 | **Anchor Detector Latency** | $< 50\text{ ms}$ CPU | $\approx 28\text{ ms}$ | ✅ PASS |
-| **Monorepo Unit Tests** | 100% passing | 119 / 119 passing | ✅ PASS |
-| **Calibration Unit Tests** | 100% passing | 32 / 32 passing | ✅ PASS |
+| **Monorepo Unit Tests** | 100% passing | 168 / 168 passing | ✅ PASS |
+| **Calibration Unit Tests** | 100% passing | 83 / 83 passing | ✅ PASS |
 | **Diff Hygiene Check** | 0 errors | `git diff --check` clean | ✅ PASS |
-| **Working Tree State** | Clean | `git status` clean | ✅ PASS |
+| **Working Tree State** | Controlled | Scoped to Phase 5–7 files | ✅ PASS |
 
 ---
 
@@ -102,18 +137,15 @@ Member 2 is personally responsible for:
 
 > [!IMPORTANT]
 > **Anti-Hallucination Architectural Policy**:
-> - The 32 deterministic automated tests verify software behavior, numerical stability, coordinate transforms, and edge-case handling against synthetic geometric test frames.
+> - The 83 deterministic automated tests verify software behavior, numerical stability, coordinate transforms, and edge-case handling against synthetic geometric test frames.
 > - They do **NOT** certify real-world physical calibration accuracy under uncontrolled smartphone optical distortion.
 > - Real-world physical accuracy remains strictly **PENDING** until Member 6 (QA Lead) acquires physical packaging specimens and 1200 DPI flatbed optical scans for ground-truth verification.
 
 ---
 
-## 5. Next Steps: Phase 5 Roadmap
+## 5. Handoff & Inter-Workstream Readiness
 
-- **Phase 5 Target:** Planar Homography & Perspective Rectification (`packages/calibration/homography.py`).
-- **Input:** `AnchorDetectionResult` from Phase 4.
-- **Core Responsibilities:**
-  1. Compute $3 \times 3$ planar homography matrix $H$ using card 4-corner correspondences or circular coin projection.
-  2. Compute perspective-corrected metric scale factor $S = \text{mm/pixel}$.
-  3. Generate top-down orthorectified declaration panel image crop for Member 1 OCR.
-- **Phase Boundary:** Do **NOT** measure font heights or evaluate statutory rules in Phase 5.
+- **Downstream Consumers:**
+  - **Member 1 (OCR):** Ingests rectified planar panel crops from `rectify_planar_quadrilateral()` for high-accuracy text extraction.
+  - **Member 3 (Rules Engine):** Consumes `MeasurementResult` objects from `font_measurer.py` and `cylinder.py` to evaluate Rule 7 minimum numeral height compliance.
+- **Evidentiary Integrity:** All physical packaging claims remain marked **PENDING** physical laboratory validation.
