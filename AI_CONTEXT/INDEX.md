@@ -1,5 +1,5 @@
 # AI CONTEXT MANAGEMENT INDEX
-**Project:** MetroLens AI (SIH26034)  
+**Project:** MetroLens AI (SIH26034)
 **Purpose:** Persistent repository of AI research, decisions, experiments, benchmark runs, and cross-session handoffs.
 
 ```text
@@ -21,4 +21,15 @@ AI_CONTEXT/
 ├── EVIDENCE/                    # Raw test outputs, execution logs, and benchmark traces
 ├── RUN_LOGS/                    # Chronological record of AI actions and experiments
 └── HANDOFFS/                    # Inter-chunk and inter-member interface handoffs
+    ├── CHUNK_1_TO_CHUNK_2.md             # Member 1 OCR Spike -> Chunk 2 Pipeline Handoff
+    └── MEMBER_2_PHASE_4_TO_PHASE_5.md    # Member 2 Anchor Detection -> Planar Homography Handoff
 ```
+
+## Workstream Index Links
+- **Member 1 (OCR Lead):** `AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/` & `CURRENT_STATE/CHUNK_1_STATUS.md`
+- **Member 2 (CV & Optical Calibration Lead):**
+  - Current Status: [`CURRENT_STATE/MEMBER_2_STATUS.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/CURRENT_STATE/MEMBER_2_STATUS.md)
+  - Work Plan: [`docs/team/MEMBER_2_WORK_PLAN.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/docs/team/MEMBER_2_WORK_PLAN.md)
+  - Phase 3 Calibration Spike Report: [`benchmarks/reports/spike_calibration_report.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/benchmarks/reports/spike_calibration_report.md)
+  - Phase 4 Anchor Detector: [`packages/calibration/README.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/packages/calibration/README.md)
+  - Phase 4 &rarr; Phase 5 Handoff: [`AI_CONTEXT/HANDOFFS/MEMBER_2_PHASE_4_TO_PHASE_5.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/AI_CONTEXT/HANDOFFS/MEMBER_2_PHASE_4_TO_PHASE_5.md)
