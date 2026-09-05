@@ -51,8 +51,8 @@ The detector supports two physical reference targets:
 import cv2
 from nirikshak_calibration import (
     AnchorType,
-    DetectionMode,
-    DetectionStatus,
+    AnchorDetectionStatus,
+    AnchorDetectorConfig,
     detect_anchor,
 )
 
@@ -60,23 +60,23 @@ from nirikshak_calibration import (
 image = cv2.imread("tests/fixtures/package_with_coin.jpg")
 
 # 1. Automatic detection mode (evaluates both anchors, selects top candidate)
-result = detect_anchor(image, anchor_type=DetectionMode.AUTO)
+result = detect_anchor(image, anchor_type=None)
 
-if result.detected and result.status == DetectionStatus.SUCCESS:
+if result.detected and result.status == AnchorDetectionStatus.SUCCESS:
     print(f"Detected anchor: {result.anchor_type.value}")
     print(f"Confidence score: {result.confidence:.3f}")
     if result.anchor_type == AnchorType.COIN_INR_10:
         geom = result.geometry
-        print(f"Coin center: ({geom.center.x:.1f}, {geom.center.y:.1f})")
+        print(f"Coin center: ({geom.center[0]:.1f}, {geom.center[1]:.1f})")
         print(f"Major axis: {geom.major_axis_px:.1f} px, Minor axis: {geom.minor_axis_px:.1f} px")
         print(f"Orientation: {geom.angle_deg:.1f} deg")
     elif result.anchor_type == AnchorType.ID1_CARD:
         geom = result.geometry
         print(f"Card corners (TL, TR, BR, BL): {geom.corners}")
-elif result.status == DetectionStatus.AMBIGUOUS_ANCHOR:
+elif result.status == AnchorDetectionStatus.AMBIGUOUS_ANCHOR:
     print("Multiple competing anchors detected with indistinguishable scores.")
-elif result.status == DetectionStatus.LOW_CONFIDENCE:
-    print("Candidates found but failed the 0.50 confidence threshold.")
+elif result.status == AnchorDetectionStatus.LOW_CONFIDENCE:
+    print("Candidates found but failed the confidence threshold.")
 else:
     print(f"Detection failed: {result.status.value}")
 ```
@@ -87,21 +87,21 @@ else:
 
 All data structures in `packages/calibration/src/nirikshak_calibration/types.py` are minimal, immutable, strongly typed, and free of untyped dictionary dumping grounds:
 
-- **`Point2D`**: Immutable named tuple `(x: float, y: float)`.
-- **`CircleGeometry`**: `center: Point2D`, `major_axis_px: float`, `minor_axis_px: float`, `angle_deg: float`.
+- **`EllipseGeometry`**: `center: Tuple[float, float]`, `major_axis_px: float`, `minor_axis_px: float`, `angle_deg: float`, `aspect_ratio: float`.
   - *Invariant:* `major_axis_px >= minor_axis_px` is strictly guaranteed.
   - *Invariant:* `angle_deg` strictly corresponds to the orientation of the major axis.
-- **`CardGeometry`**: `corners: Tuple[Point2D, Point2D, Point2D, Point2D]`, `aspect_ratio: float`.
+- **`CardGeometry`**: `corners: Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float], Tuple[float, float]]`, `width_px: float`, `height_px: float`, `aspect_ratio: float`.
   - *Invariant:* Ordered top-left, top-right, bottom-right, bottom-left.
-- **`ConcentricRingInfo`**: `inner_major_axis_px: float`, `inner_minor_axis_px: float`, `inner_ratio: float`.
+- **`ConcentricRingInfo`**: `outer_major_px: float`, `inner_major_px: float`, `diameter_ratio: float`, `has_concentric_ring: bool`.
 - **`AnchorDetectionResult`**:
   - `detected: bool`
   - `anchor_type: Optional[AnchorType]`
-  - `status: DetectionStatus`
+  - `status: AnchorDetectionStatus`
   - `confidence: float` (bounded to $[0.0, 1.0]$)
-  - `geometry: Optional[Union[CircleGeometry, CardGeometry]]`
+  - `geometry: Optional[Union[EllipseGeometry, CardGeometry]]`
   - `fit_quality: float` (ellipse/polygon residual metric)
   - `ring_information: Optional[ConcentricRingInfo]`
+  - `message: Optional[str]`
 
 ---
 
@@ -246,12 +246,11 @@ Output artifacts:
 from nirikshak_calibration import (
     # Phase 4: Anchor Detection
     detect_anchor,
-    DetectionMode,
     AnchorType,
-    DetectionStatus,
+    AnchorDetectionStatus,
+    AnchorDetectorConfig,
     AnchorDetectionResult,
-    Point2D,
-    CircleGeometry,
+    EllipseGeometry,
     CardGeometry,
     ConcentricRingInfo,
     # Phase 5: Homography & Rectification
@@ -259,11 +258,13 @@ from nirikshak_calibration import (
     RectificationStatus,
     RectificationResult,
     HomographyConfig,
+    validate_quadrilateral_geometry,
     # Phase 6: Font Measurement
     measure_font_height,
-    batch_measure_font_height,
+    measure_font_height_batch,
     FontMeasurementType,
     FontMeasurementStatus,
+    FontMeasurementConfig,
     FontMeasurementResult,
     # Phase 7: Cylindrical Measurement
     measure_cylindrical_feature,
@@ -272,19 +273,18 @@ from nirikshak_calibration import (
     CylinderMeasurementResult,
     CylinderModelConfig,
     # Phase 9: Calibration Evaluation Engine
+    BenchmarkStatus,
     GroundTruthSample,
-    CalibrationEvaluationSampleResult,
-    CalibrationEvaluationMetrics,
-    evaluate_calibration_dataset,
-    export_evaluation_metrics_json,
-    generate_evaluation_markdown_report,
+    EvaluationConfig,
+    SampleEvaluation,
+    CalibrationEvaluationResult,
+    evaluate_calibration,
     # Core Scale Model & Helpers
     compute_scale_factor,
     CalibrationOutcome,
     CalibrationStatus,
-    convert_to_grayscale,
     order_quadrilateral_corners,
-    calculate_polygon_area,
+    compute_algebraic_ellipse_residual,
 )
 ```
 
