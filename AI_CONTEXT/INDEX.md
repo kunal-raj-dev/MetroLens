@@ -37,15 +37,31 @@ AI_CONTEXT/
 │   │   ├── 06_ANALYSIS/         # Empirical comparison, CER/WER, latency & memory
 │   │   ├── 07_DECISION/         # Final Chunk 3 report & adaptive policy selection
 │   │   └── 08_HANDOFF/          # Engineering handoffs to Chunk 4, Member 2 & Member 6
-│   └── CHUNK_4_OCR_INTEGRATION/
-│       ├── 01_PLAN/             # Chunk 4 execution plan and monorepo packaging
-│       ├── 02_AUDIT/            # Monorepo repository audit & scope boundaries
-│       ├── 03_DESIGN/           # Service adapter specification (OCRService facade)
-│       ├── 04_IMPLEMENTATION/   # Packaging, path independence, error taxonomy & service
-│       ├── 05_TESTS/            # 16-test integration suite & full 89-test matrix
-│       ├── 06_RESULTS/          # Integration benchmark, adapter overhead & concurrency
-│       └── 07_REVIEW/           # Final 24-section Chunk 4 integration report
+│   ├── CHUNK_4_OCR_INTEGRATION/
+│   │   ├── 01_PLAN/             # Chunk 4 execution plan and monorepo packaging
+│   │   ├── 02_AUDIT/            # Monorepo repository audit & scope boundaries
+│   │   ├── 03_DESIGN/           # Service adapter specification (OCRService facade)
+│   │   ├── 04_IMPLEMENTATION/   # Packaging, path independence, error taxonomy & service
+│   │   ├── 05_TESTS/            # 16-test integration suite & full 89-test matrix
+│   │   ├── 06_RESULTS/          # Integration benchmark, adapter overhead & concurrency
+│   │   └── 07_REVIEW/           # Final 24-section Chunk 4 integration report
+│   ├── CHUNK_5_VERTICAL_SLICE/
+│   │   ├── 01_PLAN/             # Chunk 5 execution plan and scope boundaries
+│   │   ├── 02_AUDIT/            # Actual vs Documented & Target vs Actual analysis
+│   │   ├── 05_TESTS/            # 9-test end-to-end integration suite & 98-test matrix
+│   │   ├── 06_RESULTS/          # Vertical Slice 0 benchmark & stage latency profile
+│   │   └── 07_REVIEW/           # Final 24-section Chunk 5 integration report
+│   └── CHUNK_6_7_MEMBER_1_FINAL/
+│       ├── 01_PLAN/             # Member 1 final plan and microstep protocol
+│       ├── 02_BASELINE/         # Baseline environment snapshot and asset inventory
+│       ├── 05_TESTS/            # Definitive M1-001–M1-018 test matrix and hardening tests
+│       ├── 06_AUDIT/            # 35-question independent forensic audit report
+│       ├── 07_DEBUG/            # Historical defect register & forensic resolution log
+│       ├── 08_VALIDATION/       # Requirements validation matrix and limitations doc
+│       ├── 09_DOCUMENTATION/    # Final M1 architecture blueprint and flowcharts
+│       └── 11_FREEZE/           # Changelog, freeze manifest, and 31-section report
 ├── EVIDENCE/                    # Raw test outputs, execution logs, and benchmark traces
 ├── RUN_LOGS/                    # Chronological record of AI actions and experiments
 └── HANDOFFS/                    # Inter-chunk and inter-member interface handoffs
 ```
+

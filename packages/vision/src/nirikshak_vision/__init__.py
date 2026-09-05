@@ -48,8 +48,12 @@ def check_image_quality(
     else:
         gray = image
 
-    # Fast Laplacian approximation kernel
-    laplacian_var = float(np.var(gray))
+    # Edge sharpness via Laplacian variance (or fallback to pixel variance)
+    try:
+        import cv2
+        laplacian_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    except Exception:
+        laplacian_var = float(np.var(gray))
     glare_pixels = int(np.sum(gray >= 250))
     total_pixels = gray.size
     glare_ratio = float(glare_pixels / total_pixels) if total_pixels > 0 else 1.0

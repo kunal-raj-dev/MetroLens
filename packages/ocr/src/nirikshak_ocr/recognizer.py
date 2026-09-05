@@ -20,10 +20,13 @@ class CTCLabelDecoder:
     Converts model logits into transcribed text and character confidences.
     """
 
-    def __init__(self, character_list: List[str]):
+    def __init__(self, character_list: List[str], expected_classes: Optional[int] = None):
         # CTC blank token is index 0
         self.character_list = ["blank"] + list(character_list)
-        if " " not in self.character_list:
+        if expected_classes is not None and len(self.character_list) < expected_classes:
+            while len(self.character_list) < expected_classes:
+                self.character_list.append(" ")
+        elif " " not in self.character_list:
             self.character_list.append(" ")
         self.num_classes = len(self.character_list)
 
@@ -97,7 +100,9 @@ class SVTRRecognizer:
 
         # Load character dictionary
         char_list = self._load_characters(dict_path)
-        self.decoder = CTCLabelDecoder(char_list)
+        out_shape = self.session.get_outputs()[0].shape
+        expected_classes = int(out_shape[-1]) if len(out_shape) >= 3 and isinstance(out_shape[-1], int) else None
+        self.decoder = CTCLabelDecoder(char_list, expected_classes=expected_classes)
 
         if cfg.enable_warmup:
             self._warmup(cfg.rec_img_h, cfg.rec_img_w)

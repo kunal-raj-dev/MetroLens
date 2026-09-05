@@ -1,29 +1,31 @@
 # CURRENT STATE: PROJECT SNAPSHOT
 **Project:** MetroLens AI™ / MetroSetu (SIH26034)  
-**Snapshot Date:** 2026-09-05T05:36:00+05:30  
-**Phase:** Chunk 4 Completed — OCR Monorepo Integration, Service Adapter & Contract Verification Active  
+**Snapshot Date:** 2026-09-05T15:52:00+05:30  
+**Phase:** Chunk 5 Completed — Vertical Slice 0 Core Inspection Pipeline Integration Active  
 **Governing Architecture:** Online Web Application MVP (ADR-011 through ADR-017)  
 
 ## 1. High-Level Status
 - **Legal Source Base:** 74 authentic government legal documents cataloged and verified under `METROLENS_LEGAL_SOURCE_PACK/`.
 - **Legal Rule Matrix:** PCR 2011 (Rules 6, 6(11), 7, 8, 9, 26) and Jan Vishwas Act 2026 Section 36(1) codified in documentation.
 - **System Architecture:** Decoupled Web Delivery (React/Next.js + FastAPI) from Deterministic Processing Engine (Local CPU execution, zero cloud AI APIs, zero Celery/Redis).
-- **OCR Subsystem Status:** **INTEGRATED, ADAPTER-WRAPPED & CONTRACT-VERIFIED (Chunk 4)**.
-  - Production-ready Direct ONNX Runtime engine (`PP-OCRv3-ROUTED`) packaged as `nirikshak-ocr` via pip editable install.
-  - High-level production service adapter: `nirikshak_ocr.OCRService`.
-  - Canonical Default Baseline: `B0_BASELINE_RAW` (`preprocessing_mode="raw"`), median latency 109.64 ms, adapter overhead 3.04 ms.
-  - Provisional Experimental Candidate: `P_ADAPTIVE_CROP` (`preprocessing_mode="adaptive"`).
-  - Multi-threaded Concurrency: 8.81 req/sec throughput under 4 worker threads; serialized engine lock ensures zero race conditions.
-  - Memory Profile: 71.11 MB start $\rightarrow$ 150.17 MB warm $\rightarrow$ 296.85 MB peak concurrency (comfortably under 400 MB budget).
-  - Standardized Contracts: Transforms output directly to `nirikshak_shared.schemas.OCRObservation`.
-  - Geometric Integrity: 4-point clockwise quadrilateral polygon coordinates in original image pixel space.
-  - Multilingual Unicode: Devanagari Hindi text and Indian Rupee symbol (`₹`) survive in-memory serialization and JSON roundtrips.
-  - 89 unit, integration, hardening, and offline isolation tests passing (100% repository pass rate).
-- **Real-Data Status:** **PATH B ENFORCED (REAL DATA BLOCKED)**. Zero real images fabricated. Real-world validation remains formally blocked awaiting physical retail specimen collection by Member 6.
-- **Application Code Status:** Monorepo package layout configured. `packages/ocr/` fully hardened and integrated; `packages/shared/` schemas aligned; `packages/calibration/`, `packages/rules/`, and `apps/api/` scaffolding active.
-- **Team Workstreams:** 6 distinct outcome-based work plans defined in `docs/team/` (M1: OCR, M2: Calibration/Pre-flight, M3: Rules, M4: API/PDF, M5: Web UX, M6: QA/Release).
+- **Vertical Slice 0 Status:** **COMPLETE, VERIFIED & BENCHMARKED (Chunk 5)**.
+  - Full 8-stage synchronous inspection pipeline running end-to-end on actual code components: `Image -> Digest -> Quality Gate -> Calibration -> Multilingual OCR -> Semantic Extraction -> Font Measurement -> Rules Engine -> Evidence DAG`.
+  - All 9 monorepo packages (`nirikshak_*`) installed in editable development mode and verified.
+  - Optical Quality Gate: Real `cv2.Laplacian` edge variance ($\ge 50.0$) and high-luminance specular glare calculation ($\le 15.0\%$).
+  - Optical Calibration Gate: Reference coin (INR coin via HoughCircles) and ArUco marker detection; strictly UNCALIBRATED without fabricating mm.
+  - Statutory Semantic Extraction: Extracts Rule 6 mandatory declarations (MRP, Net Qty, Mfg Date, Consumer Care, Origin) with contextual numeric normalization and token lineage.
+  - Metrological Measurement: Numeral height calculation with formal uncertainty interval.
+  - Legal Rules Engine: Deterministic Rule 6 presence validation and Rule 7 Table-I minimum numeral font height evaluation.
+  - Cryptographic Evidence DAG: Immutable `EvidenceItem` records linking pixel bounding boxes to statutory verdicts and root SHA-256 image digest.
+  - Synchronous Worker: `InspectionPipelineWorker` orchestrating in-process execution with granular stage telemetry.
+  - REST API Gateway: `POST /api/v1/inspect` consuming multipart form images and returning `InspectionResult`.
+  - Latency & SLA: Mean total latency **214.19 ms** (P95: **230.26 ms**), 8.7x faster than the **2000.0 ms** Web MVP SLA limit.
+  - Test Suite: 98 tests passing monorepo-wide (100% pass rate).
+- **Real-Data Status:** **PATH B ENFORCED (REAL DATA BLOCKED)**. Zero real images fabricated. Synthetic packaging specimens used exclusively for pipeline plumbing and interface verification.
+- **Team Workstreams:** 6 distinct outcome-based work plans defined in `docs/team/`.
 
 ## 2. Immediate Active Objective
-- Complete **Chunk 4 to Chunk 5 Handoff**.
-- Execute **Chunk 5: Inspection Pipeline Orchestration, Route Mounting & Deployment Hardening**.
-- Member 6 to deliver 35-SKU physical retail packaging dataset and ground-truth annotations under Path B protocol.
+- Execute **Chunk 6: Inspector Review UI & Evidence Viewer Integration** (Member 4 / Frontend Lead).
+- Mount React frontend to `POST /api/v1/inspect` and display side-by-side evidence bounding box overlays.
+- Prepare for **Chunk 7: Cryptographically Signed PDF Dossier Generation** (Member 5).
+

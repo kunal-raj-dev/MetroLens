@@ -354,3 +354,17 @@ def test_offline_execution_socket_guard(monkeypatch):
     service = OCRService()
     result = service.extract(str(img_path))
     assert len(result.tokens) == 6
+
+
+def test_decompression_bomb_guard():
+    """Verify that images exceeding 64MP threshold raise UnsupportedImageError (ADR-014)."""
+    service = OCRService()
+    # Mock huge array dimensions using a custom object or ndarray with zero memory allocation via broadcast
+    # Broadcast a 1x1 array to shape (8193, 8193, 3) -> 67.1 Megapixels with zero extra memory usage
+    small = np.zeros((1, 1, 3), dtype=np.uint8)
+    huge_mock = np.broadcast_to(small, (8193, 8193, 3))
+
+    with pytest.raises(UnsupportedImageError) as exc_info:
+        service.convert_image_input(huge_mock)
+    assert "decompression bomb" in str(exc_info.value).lower()
+

@@ -1,0 +1,41 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "architecture": "AMD64",
+  "cpu_model": "AMD Ryzen Processor (8 physical cores, 16 logical cores)",
+  "cpu_count_physical": 8,
+  "cpu_count_logical": 16,
+  "system_memory_gb": 15.31,
+  "python_version": "3.14.3",
+  "onnxruntime_version": "1.29.0",
+  "execution_provider": "CPUExecutionProvider",
+  "intra_op_num_threads": 4,
+  "inter_op_num_threads": 1,
+  "git_commit_baseline": "f25d15a",
+  "model_manifest": "models/manifest.yaml",
+  "model_weights": [
+    {
+      "role": "text_detection",
+      "filename": "models/weights/ocr/det/ch_PP-OCRv3_det_infer.onnx",
+      "size_bytes": 2432880,
+      "sha256": "3439588c030faea393a54515f51e983d8e155b19a2e8aba7891934c1cf0de526"
+    },
+    {
+      "role": "latin_recognition",
+      "filename": "models/weights/ocr/rec_en/ch_PP-OCRv3_rec_infer.onnx",
+      "size_bytes": 10690752,
+      "sha256": "897a3ededb38fee0dae2c1ccee38241f37df202c9509e3abca02e9217c5ee615"
+    },
+    {
+      "role": "devanagari_recognition",
+      "filename": "models/weights/ocr/rec_hi/rec.onnx",
+      "size_bytes": 8980224,
+      "sha256": "43df175fa3c877fbf7bcc4e5bd1e203e24ec450cd3ea96c9e802c86e39a4d4cf"
+    },
+    {
+      "role": "devanagari_dictionary",
+      "filename": "models/weights/ocr/rec_hi/dict.txt",
+      "size_bytes": 508,
+      "sha256": "b5f1be6d8bbff1a19fb96c5d4ca96a423380234bb7d2ce0e07b5838adb4d18ea"
+    }
+  ]
+}
