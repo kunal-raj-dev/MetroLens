@@ -119,6 +119,10 @@ class OCRService:
                 raise UnsupportedImageError(
                     "Failed to decode image from binary bytes. Unsupported or corrupted format."
                 )
+            if (decoded.shape[0] * decoded.shape[1]) > (64 * 1024 * 1024):
+                raise UnsupportedImageError(
+                    f"Image resolution ({decoded.shape[1]}x{decoded.shape[0]}) exceeds 64MP decompression bomb threshold (ADR-014)."
+                )
             return decoded
 
         # 2. Filesystem path (str or Path)
@@ -130,6 +134,10 @@ class OCRService:
             decoded = cv2.imread(str(p), cv2.IMREAD_COLOR)
             if decoded is None or decoded.size == 0:
                 raise UnsupportedImageError(f"Failed to read or decode image file: {p}")
+            if (decoded.shape[0] * decoded.shape[1]) > (64 * 1024 * 1024):
+                raise UnsupportedImageError(
+                    f"Image resolution ({decoded.shape[1]}x{decoded.shape[0]}) exceeds 64MP decompression bomb threshold (ADR-014)."
+                )
             return decoded
 
         # 3. Existing Numpy ndarray
@@ -144,9 +152,14 @@ class OCRService:
                 raise InvalidImageError(
                     f"Image dimensions too small ({image.shape[1]}x{image.shape[0]}). Minimum supported is 4x4."
                 )
+            if (image.shape[0] * image.shape[1]) > (64 * 1024 * 1024):
+                raise UnsupportedImageError(
+                    f"Image resolution ({image.shape[1]}x{image.shape[0]}) exceeds 64MP decompression bomb threshold (ADR-014)."
+                )
 
             # Defensive copy to ensure caller's array is never mutated in-place
             copied = image.copy()
+
             if copied.ndim == 2:
                 copied = cv2.cvtColor(copied, cv2.COLOR_GRAY2BGR)
             elif copied.ndim == 3 and copied.shape[2] == 4:

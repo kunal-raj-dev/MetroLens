@@ -157,4 +157,8 @@ class InspectionResult(BaseModel):
         default_factory=list, description="Non-fatal warnings or fatal pipeline execution errors"
     )
     dossier_pdf_path: Optional[str] = Field(None, description="Path to generated signed inspection dossier PDF")
+    telemetry: Dict[str, float] = Field(
+        default_factory=dict, description="Pipeline stage latency timings in milliseconds"
+    )
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Completion timestamp")
+
