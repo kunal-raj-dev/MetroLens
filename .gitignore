@@ -80,3 +80,7 @@ htmlcov/
 benchmarks/runs/*
 !benchmarks/runs/.gitkeep
 experiments/*/artifacts/
+
+# AI Agent Context & Monitoring (Member 3)
+AI_CONTEXT/MEMBER_3*
+CURRENT_STATE/MEMBER_3*
