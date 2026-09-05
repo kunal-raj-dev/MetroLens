@@ -9,6 +9,25 @@ from .pipeline_orchestrator import (
     pipeline_orchestrator,
     orchestrate_inspection,
 )
+from .leader_election import (
+    LeaderElectionCoordinator,
+    LeaseRecord,
+    NodeRole,
+    ElectionDiagnostics,
+)
+from .event_sourcing import (
+    EventStore,
+    InspectionAggregate,
+    DomainEvent,
+    InspectionState,
+    ConcurrencyError,
+)
+from .adaptive_rate_limiter import (
+    AdaptiveRateLimiter,
+    ClientTier,
+    RateLimitDecision,
+    TierPolicy,
+)
 
 __all__ = [
     "SpoolService",
@@ -17,4 +36,18 @@ __all__ = [
     "PipelineOrchestrator",
     "pipeline_orchestrator",
     "orchestrate_inspection",
+    "LeaderElectionCoordinator",
+    "LeaseRecord",
+    "NodeRole",
+    "ElectionDiagnostics",
+    "EventStore",
+    "InspectionAggregate",
+    "DomainEvent",
+    "InspectionState",
+    "ConcurrencyError",
+    "AdaptiveRateLimiter",
+    "ClientTier",
+    "RateLimitDecision",
+    "TierPolicy",
 ]
+

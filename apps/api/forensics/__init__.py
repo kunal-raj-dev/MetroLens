@@ -14,6 +14,10 @@ from .steganography import (
 )
 from .icc_sanitizer import ICCProfileSanitizer, ICCSanitizationResult
 from .perceptual_hash import PerceptualHasher, PerceptualHashResult
+from .copy_move import CopyMoveDetector, CopyMoveDetectionResult
+from .cfa_artifacts import CFADemosaicAnalyzer, CFADemosaicingResult, BayerPatternType
+from .double_compression import DoubleCompressionDetector, DoubleCompressionResult
+from .sensor_prnu import PRNUSensorFingerprintVerifier, PRNUCrossCorrelationResult
 
 __all__ = [
     "ErrorLevelAnalyzer",
@@ -25,4 +29,14 @@ __all__ = [
     "ICCSanitizationResult",
     "PerceptualHasher",
     "PerceptualHashResult",
+    "CopyMoveDetector",
+    "CopyMoveDetectionResult",
+    "CFADemosaicAnalyzer",
+    "CFADemosaicingResult",
+    "BayerPatternType",
+    "DoubleCompressionDetector",
+    "DoubleCompressionResult",
+    "PRNUSensorFingerprintVerifier",
+    "PRNUCrossCorrelationResult",
 ]
+

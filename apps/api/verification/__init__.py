@@ -17,6 +17,31 @@ from .font_geometry import (
     FontGeometryMetrics,
     NumeralGeometryAuditResult,
 )
+from .geometric_unwrapping import (
+    GeometricUnwrapper,
+    CylinderParameters,
+    ConicalParameters,
+    UnwrapResult,
+    SurfaceType,
+    InterpolationMethod,
+    RectificationMetrics,
+)
+from .stroke_profile import (
+    StrokeProfiler,
+    StrokeVerdict,
+    Rule7ComplianceReport,
+    GlyphMeasurement,
+    TextLineProfile,
+)
+from .barcode_verifier import (
+    BarcodeVerifier,
+    BarcodeVerificationResult,
+    ISO15416Parameters,
+    ISOGrade,
+    SymbologyType,
+    DeclarationDiscrepancy,
+    GS1ParsedData,
+)
 
 __all__ = [
     "StandardQuantitiesValidator",
@@ -26,4 +51,24 @@ __all__ = [
     "FontGeometryAnalyzer",
     "FontGeometryMetrics",
     "NumeralGeometryAuditResult",
+    "GeometricUnwrapper",
+    "CylinderParameters",
+    "ConicalParameters",
+    "UnwrapResult",
+    "SurfaceType",
+    "InterpolationMethod",
+    "RectificationMetrics",
+    "StrokeProfiler",
+    "StrokeVerdict",
+    "Rule7ComplianceReport",
+    "GlyphMeasurement",
+    "TextLineProfile",
+    "BarcodeVerifier",
+    "BarcodeVerificationResult",
+    "ISO15416Parameters",
+    "ISOGrade",
+    "SymbologyType",
+    "DeclarationDiscrepancy",
+    "GS1ParsedData",
 ]
+

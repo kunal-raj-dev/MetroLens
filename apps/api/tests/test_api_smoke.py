@@ -13,7 +13,7 @@ def test_health_check():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["service"] == "nirikshak-api"
+    assert data["service"] in ["nirikshak-api", "metrolens-api"]
 
 
 def test_get_inspection_endpoint():

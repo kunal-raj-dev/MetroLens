@@ -30,6 +30,21 @@ from .digital_signature import (
     TimestampToken,
 )
 from .export_formats import ComplianceDossierExporter
+from .compounding_agreement import (
+    CompoundingAgreementCompiler,
+    CompoundingOrderData,
+)
+from .seizure_memo import (
+    SeizureMemoCompiler,
+    SeizureMemoPayload,
+    SeizedStockItem,
+)
+from .district_enforcement_report import (
+    DistrictEnforcementReportCompiler,
+    DistrictEnforcementPayload,
+    SectorMetric,
+    RecidivistEntityRecord,
+)
 
 # Legacy compatibility
 from nirikshak_shared.models.contracts import InspectionResult
@@ -105,4 +120,13 @@ __all__ = [
     "DigitalSignatureSeal",
     "TimestampToken",
     "ComplianceDossierExporter",
+    "CompoundingAgreementCompiler",
+    "CompoundingOrderData",
+    "SeizureMemoCompiler",
+    "SeizureMemoPayload",
+    "SeizedStockItem",
+    "DistrictEnforcementReportCompiler",
+    "DistrictEnforcementPayload",
+    "SectorMetric",
+    "RecidivistEntityRecord",
 ]
