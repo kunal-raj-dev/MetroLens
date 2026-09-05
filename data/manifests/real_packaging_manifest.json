@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MetroLens Real Packaging Dataset Manifest",
+  "version": "1.0.0",
+  "dataset_id": "DS-RETAIL-PILOT-001",
+  "collection_target": 35,
+  "target_reconciliation_note": "Canonical target is 35 authentic retail SKUs for Web MVP (25 dev / 10 holdout). Historical 50-SKU mention in early draft manifest.yaml has been standardized to 35 across Member 1 and Member 6.",
+  "status": "BLOCKED_AWAITING_PHYSICAL_DATA_COLLECTION",
+  "disk_images_present": 0,
+  "blocker_description": "Repository audit confirms data/raw/ contains 0 authentic packaging images. Physical collection and annotation pending Member 6 delivery.",
+  "split_policy": {
+    "strategy": "SKU_DISJOINT",
+    "development_ratio": 0.70,
+    "holdout_ratio": 0.30,
+    "leakage_rule": "Images belonging to the same SKU ID must strictly reside in either development or holdout; never split across both."
+  },
+  "supported_categories": [
+    "snacks",
+    "beverages",
+    "personal_care",
+    "household_products",
+    "packaged_staples"
+  ],
+  "supported_surface_types": [
+    "flat_carton",
+    "flexible_pouch",
+    "glossy_foil",
+    "curved_can",
+    "curved_bottle",
+    "blister_pack"
+  ],
+  "supported_special_conditions": [
+    "clean",
+    "dot_matrix_inkjet",
+    "low_contrast_foil",
+    "glare_reflection",
+    "micro_font_below_1mm",
+    "creased_pouch",
+    "curved_distortion"
+  ],
+  "record_schema": {
+    "image_id": "string (e.g. REAL-01-SNACK-POUCH)",
+    "sku_id": "string (e.g. SKU-HALDIRAM-BHUJIA-200G)",
+    "product_category": "string (enum in supported_categories)",
+    "brand": "string",
+    "capture_source": "string (e.g. physical_store_ncr)",
+    "capture_method": "string (e.g. handheld_mobile_12mp)",
+    "capture_date": "string (YYYY-MM-DD)",
+    "image_resolution": [1920, 1080],
+    "surface_type": "string (enum in supported_surface_types)",
+    "language_script": "latin | devanagari | mixed",
+    "special_conditions": "array of strings (from supported_special_conditions)",
+    "dataset_split": "development | holdout",
+    "relative_image_path": "data/raw/real/<filename>.jpg",
+    "annotation_path": "data/annotations/ocr/<image_id>.json"
+  },
+  "records": []
+}

@@ -1,0 +1,525 @@
+{
+  "config_name": "B0_BASELINE_RAW",
+  "preprocessing_mode": "raw",
+  "preprocess_target": "crop",
+  "median_latency_ms": 88.7,
+  "p95_latency_ms": 116.8,
+  "macro_cer": 0.2124,
+  "macro_wer": 0.6038,
+  "field_accuracy": 0.7586,
+  "numeric_accuracy": 0.4286,
+  "routing_accuracy": 0.8378,
+  "routing_stats": {
+    "total_routed": 37,
+    "correct_routed": 31,
+    "incorrect_routed": 6
+  },
+  "script_stratified_cer": {
+    "en": 0.1582,
+    "hi": 0.4296,
+    "mixed": 0.2663
+  },
+  "specimens": [
+    {
+      "specimen_id": "SYNTH-01-ENG-FMCG",
+      "language": "en",
+      "special_condition": "clean",
+      "token_count": 6,
+      "latency_ms": 119.24,
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 38.77,
+        "recognition_ms": 78.54,
+        "reading_order_ms": 0.06,
+        "total_ms": 119.15
+      },
+      "routing_summary": {
+        "latin": 4,
+        "devanagari": 2,
+        "unknown": 0
+      },
+      "routing_accuracy": 0.6667,
+      "routing_decisions": [
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "devanagari",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "devanagari",
+          "latin"
+        ]
+      ],
+      "cer": 0.2935,
+      "wer": 0.5625,
+      "field_matches": {
+        "mrp": false,
+        "net_quantity": true,
+        "usp": true,
+        "date": true,
+        "contact": false
+      },
+      "numeric_exact_match": false,
+      "digit_cer": 0.5,
+      "confusions_detected": [
+        "0_confused_with_O",
+        "1_confused_with_I_or_l",
+        "5_confused_with_S",
+        "6_confused_with_G"
+      ],
+      "error_class": "NUMERIC_CONFUSION",
+      "predicted_text": [
+        "SYNTHETICTESTNOTREALPACKAGG",
+        "MRPRs.20incusiveoalaes",
+        "Net Qty: 65 g",
+        "Unit Sale Price: Rs. 0.31 / g",
+        "Mfg Date: 08/2026",
+        "ConsumeCaeoozsadcaeobseain"
+      ]
+    },
+    {
+      "specimen_id": "SYNTH-02-HIN-FMCG",
+      "language": "hi",
+      "special_condition": "clean",
+      "token_count": 5,
+      "latency_ms": 95.8,
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 33.77,
+        "recognition_ms": 60.24,
+        "reading_order_ms": 0.03,
+        "total_ms": 95.72
+      },
+      "routing_summary": {
+        "latin": 4,
+        "devanagari": 1,
+        "unknown": 0
+      },
+      "routing_accuracy": 0.2,
+      "routing_decisions": [
+        [
+          "latin",
+          "devanagari"
+        ],
+        [
+          "latin",
+          "devanagari"
+        ],
+        [
+          "devanagari",
+          "devanagari"
+        ],
+        [
+          "latin",
+          "devanagari"
+        ],
+        [
+          "latin",
+          "devanagari"
+        ]
+      ],
+      "cer": 0.4296,
+      "wer": 0.9048,
+      "field_matches": {
+        "mrp": true,
+        "net_quantity": false,
+        "date": true,
+        "contact": false
+      },
+      "numeric_exact_match": false,
+      "digit_cer": 0.5,
+      "confusions_detected": [
+        "0_confused_with_O",
+        "5_confused_with_S",
+        "6_confused_with_G"
+      ],
+      "error_class": "NUMERIC_CONFUSION",
+      "predicted_text": [
+        "SYNTHETICTESTNOTREALPACKAGNG",
+        ": 245.00",
+        "\u0928\u093f\u0935\u0932\u092e\u093e\u0924\u094d\u0930\u093e\u0903\u091c\u0915\u093f\u0917\u094d\u0930\u093e",
+        ": 05/2026",
+        "00000:care@ata.in"
+      ]
+    },
+    {
+      "specimen_id": "SYNTH-03-MIXED-BILINGUAL",
+      "language": "mixed",
+      "special_condition": "clean",
+      "token_count": 6,
+      "latency_ms": 112.26,
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 38.52,
+        "recognition_ms": 71.1,
+        "reading_order_ms": 0.03,
+        "total_ms": 112.01
+      },
+      "routing_summary": {
+        "latin": 5,
+        "devanagari": 1,
+        "unknown": 0
+      },
+      "routing_accuracy": 1.0,
+      "routing_decisions": [
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "devanagari",
+          "devanagari"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ]
+      ],
+      "cer": 0.2663,
+      "wer": 0.6,
+      "field_matches": {
+        "mrp": false,
+        "net_quantity": true,
+        "usp": true,
+        "date": true,
+        "contact": false
+      },
+      "numeric_exact_match": false,
+      "digit_cer": 0.1875,
+      "confusions_detected": [
+        "0_confused_with_O",
+        "1_confused_with_I_or_l",
+        "5_confused_with_S",
+        "6_confused_with_G"
+      ],
+      "error_class": "NUMERIC_CONFUSION",
+      "predicted_text": [
+        "SYNTHETICTESTNOTREALPACKAGG",
+        "MRPI3e\u0915\u09247\u0926!Hu.RS.500",
+        "Net Qty /fa HaRT: 150 g",
+        "USP: Rs. 0.33 per g",
+        "Best Before: 12/2026",
+        "CustomerCaresuppo@nack.com"
+      ]
+    },
+    {
+      "specimen_id": "SYNTH-04-MICRO-FONT",
+      "language": "en",
+      "special_condition": "clean",
+      "token_count": 5,
+      "latency_ms": 82.57,
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 30.04,
+        "recognition_ms": 49.82,
+        "reading_order_ms": 0.03,
+        "total_ms": 82.47
+      },
+      "routing_summary": {
+        "latin": 5,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "routing_accuracy": 1.0,
+      "routing_decisions": [
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ]
+      ],
+      "cer": 0.1339,
+      "wer": 0.64,
+      "field_matches": {
+        "mrp": true,
+        "net_quantity": true,
+        "usp": true,
+        "date": true
+      },
+      "numeric_exact_match": true,
+      "digit_cer": 0.0,
+      "confusions_detected": [
+        "0_confused_with_O",
+        "1_confused_with_I_or_l",
+        "5_confused_with_S",
+        "6_confused_with_G"
+      ],
+      "error_class": "NUMERIC_CONFUSION",
+      "predicted_text": [
+        "SYTHETICTESTNOTREALPACKAGG",
+        "MRPRs.10.00incl.ofall axes",
+        "Net Weight: 35g",
+        "Unit Sale Price: Rs. 0.28/g",
+        "Mfg: 07/2026"
+      ]
+    },
+    {
+      "specimen_id": "SYNTH-05-LIQUID-VOLUME",
+      "language": "en",
+      "special_condition": "clean",
+      "token_count": 6,
+      "latency_ms": 94.83,
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 31.54,
+        "recognition_ms": 61.1,
+        "reading_order_ms": 0.05,
+        "total_ms": 94.75
+      },
+      "routing_summary": {
+        "latin": 6,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "routing_accuracy": 1.0,
+      "routing_decisions": [
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ]
+      ],
+      "cer": 0.1059,
+      "wer": 0.5,
+      "field_matches": {
+        "mrp": false,
+        "net_quantity": true,
+        "usp": true,
+        "date": true,
+        "contact": true
+      },
+      "numeric_exact_match": false,
+      "digit_cer": 0.0323,
+      "confusions_detected": [
+        "0_confused_with_O",
+        "1_confused_with_I_or_l",
+        "5_confused_with_S",
+        "8_confused_with_B"
+      ],
+      "error_class": "NUMERIC_CONFUSION",
+      "predicted_text": [
+        "SYNTHETICTESTNOTREALPACKAGG",
+        "MaximumRetailPrice R1200",
+        "Net Volume: 250 ml",
+        "Unit Sale Price: Rs. 0.50/ml",
+        "Expiry: 04/2028 Batch B-902",
+        "Helpline: 1800-100-9999"
+      ]
+    },
+    {
+      "specimen_id": "SYNTH-06-PROHIBITED-UNITS",
+      "language": "en",
+      "special_condition": "clean",
+      "token_count": 5,
+      "latency_ms": 73.3,
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 25.68,
+        "recognition_ms": 46.04,
+        "reading_order_ms": 0.03,
+        "total_ms": 73.24
+      },
+      "routing_summary": {
+        "latin": 5,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "routing_accuracy": 1.0,
+      "routing_decisions": [
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ]
+      ],
+      "cer": 0.1593,
+      "wer": 0.5909,
+      "field_matches": {
+        "mrp": true,
+        "net_quantity": true,
+        "date": true
+      },
+      "numeric_exact_match": true,
+      "digit_cer": 0.0,
+      "confusions_detected": [
+        "0_confused_with_O",
+        "1_confused_with_I_or_l",
+        "5_confused_with_S",
+        "6_confused_with_G",
+        "missing_decimal_point"
+      ],
+      "error_class": "NUMERIC_CONFUSION",
+      "predicted_text": [
+        "SYNTHETICTESTNOTREALPACKAGNG",
+        "MRPR85-(inclusivealltax)",
+        "Net Wt: 500 Gms",
+        "Vol: 1000 ML",
+        "Mfg: 01/2026"
+      ]
+    },
+    {
+      "specimen_id": "SYNTH-07-BLANK-FRAME",
+      "language": "none",
+      "special_condition": "blank",
+      "token_count": 0,
+      "latency_ms": 31.25,
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 29.66,
+        "recognition_ms": 0.0,
+        "reading_order_ms": 0.0,
+        "total_ms": 31.15
+      },
+      "routing_summary": {
+        "latin": 0,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "routing_accuracy": 1.0,
+      "routing_decisions": [],
+      "cer": 0.0,
+      "wer": 0.0,
+      "field_matches": {},
+      "numeric_exact_match": true,
+      "digit_cer": 0.0,
+      "confusions_detected": [],
+      "error_class": "PERFECT_MATCH",
+      "predicted_text": []
+    },
+    {
+      "specimen_id": "SYNTH-08-LOW-CONTRAST-FADED",
+      "language": "en",
+      "special_condition": "low_contrast",
+      "token_count": 4,
+      "latency_ms": 60.46,
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 23.09,
+        "recognition_ms": 35.42,
+        "reading_order_ms": 0.03,
+        "total_ms": 60.38
+      },
+      "routing_summary": {
+        "latin": 4,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "routing_accuracy": 1.0,
+      "routing_decisions": [
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ],
+        [
+          "latin",
+          "latin"
+        ]
+      ],
+      "cer": 0.0986,
+      "wer": 0.4286,
+      "field_matches": {
+        "mrp": true,
+        "net_quantity": true,
+        "date": true
+      },
+      "numeric_exact_match": true,
+      "digit_cer": 0.0,
+      "confusions_detected": [
+        "0_confused_with_O",
+        "1_confused_with_I_or_l",
+        "6_confused_with_G"
+      ],
+      "error_class": "NUMERIC_CONFUSION",
+      "predicted_text": [
+        "SYNTHETICTESTNOTREALPACKAGNG",
+        "MRP Rs. 30.00",
+        "NET: 40 g",
+        "EXP 11/2026"
+      ]
+    }
+  ]
+}

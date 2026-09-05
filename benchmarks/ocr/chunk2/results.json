@@ -1,0 +1,249 @@
+{
+  "run_id": "CH2-BENCH-1788562941",
+  "timestamp": "2026-09-05T04:32:21+05:30",
+  "environment": {
+    "os": "Windows 11 (10.0.26200)",
+    "cpu": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "physical_cores": 8,
+    "logical_cores": 16,
+    "ram_total_gb": 15.31,
+    "python": "3.14.3",
+    "onnxruntime_version": "1.29.0",
+    "provider": "CPUExecutionProvider"
+  },
+  "thread_sweep": [
+    {
+      "intra_op_num_threads": 1,
+      "cold_load_ms": 242.63,
+      "median_latency_ms": 168.22,
+      "p95_latency_ms": 173.01,
+      "memory_rss_mb": 188.81
+    },
+    {
+      "intra_op_num_threads": 2,
+      "cold_load_ms": 272.18,
+      "median_latency_ms": 122.51,
+      "p95_latency_ms": 126.94,
+      "memory_rss_mb": 198.99
+    },
+    {
+      "intra_op_num_threads": 4,
+      "cold_load_ms": 283.66,
+      "median_latency_ms": 107.29,
+      "p95_latency_ms": 113.91,
+      "memory_rss_mb": 201.98
+    },
+    {
+      "intra_op_num_threads": 8,
+      "cold_load_ms": 305.45,
+      "median_latency_ms": 167.85,
+      "p95_latency_ms": 185.04,
+      "memory_rss_mb": 205.58
+    }
+  ],
+  "memory_stability": {
+    "initial_rss_mb": 70.98,
+    "pre_load_rss_mb": 205.58,
+    "post_load_rss_mb": 232.74,
+    "final_rss_mb": 308.96,
+    "trace": [
+      {
+        "step": 0,
+        "event": "post_model_load",
+        "rss_mb": 232.74
+      },
+      {
+        "step": 1,
+        "event": "inference_1",
+        "rss_mb": 275.58
+      },
+      {
+        "step": 5,
+        "event": "inference_5",
+        "rss_mb": 305.04
+      },
+      {
+        "step": 10,
+        "event": "inference_10",
+        "rss_mb": 305.04
+      },
+      {
+        "step": 15,
+        "event": "inference_15",
+        "rss_mb": 305.04
+      },
+      {
+        "step": 20,
+        "event": "inference_20",
+        "rss_mb": 305.04
+      },
+      {
+        "step": 25,
+        "event": "inference_25",
+        "rss_mb": 305.06
+      }
+    ]
+  },
+  "specimen_benchmark": [
+    {
+      "filename": "SYNTH-01-ENG-FMCG.png",
+      "width": 640,
+      "height": 360,
+      "median_latency_ms": 95.96,
+      "p95_latency_ms": 111.35,
+      "token_count": 6,
+      "routing_summary": {
+        "latin": 4,
+        "devanagari": 2,
+        "unknown": 0
+      },
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 29.93,
+        "recognition_ms": 64.85,
+        "reading_order_ms": 0.03,
+        "total_ms": 94.82
+      }
+    },
+    {
+      "filename": "SYNTH-02-HIN-FMCG.png",
+      "width": 640,
+      "height": 360,
+      "median_latency_ms": 79.52,
+      "p95_latency_ms": 87.17,
+      "token_count": 5,
+      "routing_summary": {
+        "latin": 4,
+        "devanagari": 1,
+        "unknown": 0
+      },
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 27.26,
+        "recognition_ms": 52.07,
+        "reading_order_ms": 0.07,
+        "total_ms": 79.41
+      }
+    },
+    {
+      "filename": "SYNTH-03-MIXED-BILINGUAL.png",
+      "width": 640,
+      "height": 380,
+      "median_latency_ms": 93.13,
+      "p95_latency_ms": 99.58,
+      "token_count": 6,
+      "routing_summary": {
+        "latin": 5,
+        "devanagari": 1,
+        "unknown": 0
+      },
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 34.23,
+        "recognition_ms": 61.87,
+        "reading_order_ms": 0.04,
+        "total_ms": 96.15
+      }
+    },
+    {
+      "filename": "SYNTH-04-MICRO-FONT.png",
+      "width": 640,
+      "height": 320,
+      "median_latency_ms": 67.7,
+      "p95_latency_ms": 72.5,
+      "token_count": 5,
+      "routing_summary": {
+        "latin": 5,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 26.57,
+        "recognition_ms": 41.04,
+        "reading_order_ms": 0.03,
+        "total_ms": 67.65
+      }
+    },
+    {
+      "filename": "SYNTH-05-LIQUID-VOLUME.png",
+      "width": 640,
+      "height": 360,
+      "median_latency_ms": 78.03,
+      "p95_latency_ms": 81.77,
+      "token_count": 6,
+      "routing_summary": {
+        "latin": 6,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 24.19,
+        "recognition_ms": 50.82,
+        "reading_order_ms": 0.03,
+        "total_ms": 75.06
+      }
+    },
+    {
+      "filename": "SYNTH-06-PROHIBITED-UNITS.png",
+      "width": 640,
+      "height": 320,
+      "median_latency_ms": 69.15,
+      "p95_latency_ms": 75.91,
+      "token_count": 5,
+      "routing_summary": {
+        "latin": 5,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 29.17,
+        "recognition_ms": 48.21,
+        "reading_order_ms": 0.04,
+        "total_ms": 77.44
+      }
+    },
+    {
+      "filename": "SYNTH-07-BLANK-FRAME.png",
+      "width": 640,
+      "height": 320,
+      "median_latency_ms": 21.93,
+      "p95_latency_ms": 25.65,
+      "token_count": 0,
+      "routing_summary": {
+        "latin": 0,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 25.8,
+        "recognition_ms": 0.01,
+        "reading_order_ms": 0.0,
+        "total_ms": 25.82
+      }
+    },
+    {
+      "filename": "SYNTH-08-LOW-CONTRAST-FADED.png",
+      "width": 640,
+      "height": 320,
+      "median_latency_ms": 62.69,
+      "p95_latency_ms": 65.04,
+      "token_count": 4,
+      "routing_summary": {
+        "latin": 4,
+        "devanagari": 0,
+        "unknown": 0
+      },
+      "stage_timings": {
+        "preprocessing_ms": 0.0,
+        "detection_ms": 31.16,
+        "recognition_ms": 34.18,
+        "reading_order_ms": 0.03,
+        "total_ms": 65.37
+      }
+    }
+  ]
+}
