@@ -284,12 +284,15 @@ To eliminate interface drift, handoffs between teammates are strictly governed b
 ### Contract 1: OCR Tokens (`M1` $\longrightarrow$ `M3/M4`)
 ```python
 class OCRToken(BaseModel):
-    token_id: int
+    token_id: str = Field(description="Unique token identifier e.g. 'tok_001'")
     text: str
     confidence: float = Field(ge=0.0, le=1.0)
-    bbox: List[int] = Field(description="[x, y, width, height] in original pixel space")
-    char_height_px: float
-    polygon: Optional[List[List[int]]] = None
+    polygon: List[List[float]] = Field(description="Clockwise 4-point quad [[x1,y1],[x2,y2],[x3,y3],[x4,y4]] in original image pixels")
+    bbox: List[float] = Field(description="Derived axis-aligned bbox: [xmin, ymin, xmax, ymax]")
+    script: ScriptType = ScriptType.UNKNOWN
+    line_id: int = 0
+    raw_pixel_height: Optional[float] = Field(None, description="Average quad height in original image pixels. NOTE: THIS IS NOT LEGAL FONT HEIGHT. Physical font height in mm is computed exclusively by Member 2.")
+    model_name: str = ""
 ```
 
 ### Contract 2: Metric Calibration (`M2` $\longrightarrow$ `M3/M4`)

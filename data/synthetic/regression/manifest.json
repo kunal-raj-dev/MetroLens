@@ -1,0 +1,162 @@
+[
+  {
+    "id": "SYNTH-01-ENG-FMCG",
+    "title": "Standard English Biscuit Packaging",
+    "language": "en",
+    "package_type": "biscuit_pouch",
+    "file_path": "AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/03_DATASET\\images\\SYNTH-01-ENG-FMCG.png",
+    "resolution": [
+      640,
+      360
+    ],
+    "is_synthetic": true,
+    "disclaimer": "SYNTHETIC TEST — NOT REAL PACKAGING",
+    "ground_truth": {
+      "mrp": "20.00",
+      "net_quantity": "65 g",
+      "usp": "0.31 / g",
+      "date": "08/2026",
+      "contact": "1800-222-4444"
+    }
+  },
+  {
+    "id": "SYNTH-02-HIN-FMCG",
+    "title": "Pure Hindi Packaging Label",
+    "language": "hi",
+    "package_type": "atta_bag",
+    "file_path": "AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/03_DATASET\\images\\SYNTH-02-HIN-FMCG.png",
+    "resolution": [
+      640,
+      360
+    ],
+    "is_synthetic": true,
+    "disclaimer": "SYNTHETIC TEST — NOT REAL PACKAGING",
+    "ground_truth": {
+      "mrp": "245.00",
+      "net_quantity": "5 किग्रा",
+      "usp": null,
+      "date": "05/2026",
+      "contact": "care@atta.in"
+    }
+  },
+  {
+    "id": "SYNTH-03-MIXED-BILINGUAL",
+    "title": "Bilingual FMCG Packaging (English + Hindi)",
+    "language": "mixed",
+    "package_type": "snack_carton",
+    "file_path": "AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/03_DATASET\\images\\SYNTH-03-MIXED-BILINGUAL.png",
+    "resolution": [
+      640,
+      380
+    ],
+    "is_synthetic": true,
+    "disclaimer": "SYNTHETIC TEST — NOT REAL PACKAGING",
+    "ground_truth": {
+      "mrp": "50.00",
+      "net_quantity": "150 g",
+      "usp": "0.33 per g",
+      "date": "12/2026",
+      "contact": "support@snack.com"
+    }
+  },
+  {
+    "id": "SYNTH-04-MICRO-FONT",
+    "title": "Shrinkflation Microscopic Numeral Deficit",
+    "language": "en",
+    "package_type": "confectionery_pouch",
+    "file_path": "AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/03_DATASET\\images\\SYNTH-04-MICRO-FONT.png",
+    "resolution": [
+      640,
+      320
+    ],
+    "is_synthetic": true,
+    "disclaimer": "SYNTHETIC TEST — NOT REAL PACKAGING",
+    "ground_truth": {
+      "mrp": "10.00",
+      "net_quantity": "35g",
+      "usp": "0.28/g",
+      "date": "07/2026",
+      "contact": null
+    }
+  },
+  {
+    "id": "SYNTH-05-LIQUID-VOLUME",
+    "title": "Personal Care Bottle (Liquid Volume in ml)",
+    "language": "en",
+    "package_type": "handwash_bottle",
+    "file_path": "AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/03_DATASET\\images\\SYNTH-05-LIQUID-VOLUME.png",
+    "resolution": [
+      640,
+      360
+    ],
+    "is_synthetic": true,
+    "disclaimer": "SYNTHETIC TEST — NOT REAL PACKAGING",
+    "ground_truth": {
+      "mrp": "125.00",
+      "net_quantity": "250 ml",
+      "usp": "0.50/ml",
+      "date": "04/2028",
+      "contact": "1800-100-9999"
+    }
+  },
+  {
+    "id": "SYNTH-06-PROHIBITED-UNITS",
+    "title": "Packaging with Prohibited Pluralized Units (Gms, ML)",
+    "language": "en",
+    "package_type": "detergent_pouch",
+    "file_path": "AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/03_DATASET\\images\\SYNTH-06-PROHIBITED-UNITS.png",
+    "resolution": [
+      640,
+      320
+    ],
+    "is_synthetic": true,
+    "disclaimer": "SYNTHETIC TEST — NOT REAL PACKAGING",
+    "ground_truth": {
+      "mrp": "85",
+      "net_quantity": "500 Gms",
+      "usp": null,
+      "date": "01/2026",
+      "contact": null
+    }
+  },
+  {
+    "id": "SYNTH-07-BLANK-FRAME",
+    "title": "Blank / Texture-Only Failure Mode Frame",
+    "language": "none",
+    "package_type": "blank_cardboard",
+    "file_path": "AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/03_DATASET\\images\\SYNTH-07-BLANK-FRAME.png",
+    "resolution": [
+      640,
+      320
+    ],
+    "is_synthetic": true,
+    "disclaimer": "SYNTHETIC TEST — NOT REAL PACKAGING",
+    "ground_truth": {
+      "mrp": null,
+      "net_quantity": null,
+      "usp": null,
+      "date": null,
+      "contact": null
+    }
+  },
+  {
+    "id": "SYNTH-08-LOW-CONTRAST-FADED",
+    "title": "Low-Contrast Faded Expiry Stamp",
+    "language": "en",
+    "package_type": "foil_crimp",
+    "file_path": "AI_CONTEXT/EXPERIMENTS/CHUNK_1_OCR_MODEL_SELECTION/03_DATASET\\images\\SYNTH-08-LOW-CONTRAST-FADED.png",
+    "resolution": [
+      640,
+      320
+    ],
+    "is_synthetic": true,
+    "disclaimer": "SYNTHETIC TEST — NOT REAL PACKAGING",
+    "ground_truth": {
+      "mrp": "30.00",
+      "net_quantity": "40 g",
+      "usp": null,
+      "date": "11/2026",
+      "contact": null
+    }
+  }
+]

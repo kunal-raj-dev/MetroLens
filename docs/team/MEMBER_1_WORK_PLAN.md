@@ -12,34 +12,37 @@
 ---
 
 ## 2. Mission
-Deliver an ultra-reliable, high-accuracy scene text extraction engine running entirely on server CPU using quantized ONNX neural models (PaddleOCR v4 Mobile). Member 1 is personally responsible for detecting text polygons, isolating character bounding boxes, performing multilingual recognition (English alphanumeric + Devanagari Hindi), filtering low-confidence predictions, and emitting standardized character-level tokens in $< 800\text{ms}$ with a Character Error Rate (CER) $< 6.0\%$ across the 35-SKU benchmark dataset, with zero dependence on external cloud AI APIs.
+Deliver an ultra-reliable, high-accuracy scene text extraction engine running entirely on server CPU using Direct ONNX Runtime (`onnxruntime==1.29.0`) with `PP-OCRv3-ROUTED` architecture. Member 1 is personally responsible for detecting text polygons, isolating character bounding boxes, performing multilingual recognition (English alphanumeric + Devanagari Hindi via script routing), filtering low-confidence predictions, and emitting standardized character-level tokens in $< 800\text{ms}$ with a Character Error Rate (CER) target $< 6.0\%$ across the upcoming 35-SKU benchmark dataset, with zero dependence on external cloud AI APIs or unsupported third-party wrappers.
 
 ---
 
 ## 3. Ownership
 
 ### Primary Ownership:
-- `packages/ocr/engine.py`: PaddleOCR v4 Mobile ONNX runtime execution on CPU.
-- `packages/ocr/preprocessor.py`: Text ROI cropping, contrast stretching, and unsharp masking for packaging labels.
-- `packages/ocr/tokenizer.py`: Bounding box normalization, character stroke height computation ($h_{\text{px}}$), and token confidence filtering.
-- `packages/ocr/multilingual.py`: English and Devanagari script routing and vocabulary mapping.
-- `tests/unit/test_ocr_engine.py`: OCR unit tests and synthetic packaging text assertions.
-- `tests/benchmarks/test_ocr_benchmark.py`: Automated CER/WER evaluation harness.
+- `packages/ocr/src/nirikshak_ocr/engine.py`: `OCREngine` facade and stage timing orchestration.
+- `packages/ocr/src/nirikshak_ocr/detector.py`: DBNet++ text detector running direct ONNX inference (`ch_PP-OCRv3_det_infer.onnx`).
+- `packages/ocr/src/nirikshak_ocr/recognizer.py`: SVTR text recognizer with greedy CTC decoding for Latin (`ch_PP-OCRv3_rec_infer.onnx`) and Devanagari (`rec.onnx`).
+- `packages/ocr/src/nirikshak_ocr/router.py`: `ScriptRouter` heuristic confidence-gated script routing.
+- `packages/ocr/src/nirikshak_ocr/preprocessing.py`: Multiples-of-32 resizing, ImageNet normalization, coordinate unscaling, and `ImagePreprocessHook`.
+- `packages/ocr/src/nirikshak_ocr/types.py`: `OCRToken`, `OCRResult`, and `to_observation()` adapter.
+- `packages/ocr/src/nirikshak_ocr/utils.py`: Perspective cropping, clockwise quadrilateral ordering, and reading-order sorting.
+- `tests/unit/test_ocr_*.py`: OCR unit tests, offline execution validation, and synthetic fixture tests.
+- `benchmarks/ocr/chunk2/`: Multi-thread CPU sweep, latency profiling, and memory stability harness.
 
 ### Secondary Support:
 - Support **Member 4 (Backend)** in integrating the OCR engine into `apps/api/services/ocr_service.py`.
-- Support **Member 3 (Rule Engine)** with raw text token bounding boxes and text normalization edge cases.
+- Support **Member 3 (Rule Engine)** with raw text token bounding boxes and observations.
 
 ---
 
 ## 4. Concrete Responsibilities
-1. Download, verify, and quantize pre-trained PaddleOCR v4 Mobile models (`ch_PP-OCRv4_det_infer.onnx`, `ch_PP-OCRv4_rec_infer.onnx`) for CPU ONNX Runtime.
-2. Implement optimized single-image batch inference with OpenMP / intra-op thread tuning (`intra_op_num_threads=4`) to enforce a sub-800ms CPU execution cap.
-3. Extract rotated bounding boxes and calculate vertical pixel height ($h_{\text{px}}$) for every extracted numeral.
-4. Filter background packaging noise by enforcing a strict token confidence threshold ($c \ge 0.60$).
-5. Normalize character text strings: map Hindi numeral glyphs (`१, २, ३...`) to Arabic numbers (`1, 2, 3...`) and normalize statutory keywords (`MRP`, `Net Qty`, `Best Before`).
-6. Handle dot-matrix inkjet expiration stamps using morphological dilation preprocessing.
-7. Benchmark Character Error Rate (CER) across ground-truth crops provided by Member 6.
+1. Maintain and execute pre-trained PP-OCRv3 models (`ch_PP-OCRv3_det_infer.onnx`, `ch_PP-OCRv3_rec_infer.onnx`, `rec.onnx`) via direct `onnxruntime==1.29.0` with `CPUExecutionProvider`.
+2. Implement optimized single-image batch inference with OpenMP / intra-op thread tuning (`intra_op_num_threads=4`) to enforce a sub-800ms CPU execution cap (empirically measured median ~107ms).
+3. Extract rotated 4-point bounding polygons and calculate raw quadrilateral pixel height (`raw_pixel_height`) for every extracted numeral (explicitly decoupled from physical mm legal font height).
+4. Filter background packaging noise by enforcing a strict token confidence review threshold ($c \ge 0.60$).
+5. Route text crops to specialized Latin or Devanagari recognizers via confidence-gated routing.
+6. Support future domain preprocessing hooks (`ImagePreprocessHook`) for dot-matrix inkjet expiration stamps.
+7. Benchmark Character Error Rate (CER) across ground-truth crops when provided by Member 6.
 
 ---
 

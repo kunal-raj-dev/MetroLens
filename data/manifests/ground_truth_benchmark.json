@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MetroLens Ground Truth OCR Benchmark Specification",
+  "version": "1.0.0",
+  "dataset_id": "DS-RETAIL-PILOT-001",
+  "status": "BLOCKED_AWAITING_PHYSICAL_DATA_COLLECTION",
+  "description": "Machine-readable ground truth specification for authentic retail packaging text extraction benchmark. Field class is an evaluation taxonomy and does not imply semantic parsing inside the OCR engine.",
+  "supported_field_classes": [
+    "mrp",
+    "net_quantity",
+    "date",
+    "usp",
+    "contact",
+    "manufacturer",
+    "country_of_origin",
+    "other_declaration"
+  ],
+  "annotation_schema": {
+    "image_id": "string",
+    "region_id": "string (e.g. reg_001)",
+    "expected_text": "string (raw Unicode text with verbatim punctuation and spacing)",
+    "script": "latin | devanagari | mixed | unknown",
+    "field_class": "string (one of supported_field_classes)",
+    "is_numeric": "boolean",
+    "expected_polygon": "[[x1,y1],[x2,y2],[x3,y3],[x4,y4]] in original image pixels (optional)",
+    "expected_bbox": "[xmin, ymin, xmax, ymax] in original image pixels (optional)",
+    "source": "single_annotator_manual | dual_annotator_consensus"
+  },
+  "benchmark_entries": []
+}
