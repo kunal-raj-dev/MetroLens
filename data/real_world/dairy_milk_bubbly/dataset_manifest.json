@@ -1,0 +1,87 @@
+{
+  "dataset_id": "DS-REAL-PILOT-CADBURY-01",
+  "title": "Cadbury Dairy Milk Silk Bubbly Real-World Robustness and Calibration Evaluation Set",
+  "version": "1.0.0",
+  "created_at": "2026-09-05",
+  "specimen": {
+    "brand": "Cadbury",
+    "product_name": "Dairy Milk Silk Bubbly",
+    "packaging_type": "Flexible foil chocolate pouch with crimped borders",
+    "net_quantity_declaration": "50 g / 120 g class"
+  },
+  "fiducial_standard": {
+    "type": "COIN_INR_10",
+    "description": "RBI Standard ₹10 Bimetallic Coin",
+    "nominal_outer_diameter_mm": 27.0,
+    "source": "Configured RBI specification (not locally fabricated)"
+  },
+  "metrological_status": {
+    "physical_ground_truth_available": false,
+    "benchmark_status": "BENCHMARK_BLOCKED",
+    "rationale": "Calibrated vernier caliper measurements and 1200 DPI flatbed optical comparator scans for physical text/package dimensions are not yet recorded on disk. Pipeline-derived scales are image-derived estimates and must not be treated as ground truth."
+  },
+  "core_images": [
+    {
+      "filename": "front_near_01.jpg",
+      "panel": "front",
+      "pose": "orthogonal_near",
+      "description": "Front panel, fairly close orthogonal framing, coin beside package"
+    },
+    {
+      "filename": "front_medium_01.jpg",
+      "panel": "front",
+      "pose": "tilt_medium",
+      "description": "Front panel, medium distance with slight tilt"
+    },
+    {
+      "filename": "front_far_01.jpg",
+      "panel": "front",
+      "pose": "wide_far",
+      "description": "Front panel, far wide shot showing surrounding desk"
+    },
+    {
+      "filename": "back_flat_01.jpg",
+      "panel": "back",
+      "pose": "orthogonal_flat",
+      "description": "Back panel (statutory declarations), horizontal fairly flat view"
+    },
+    {
+      "filename": "back_diagonal_01.jpg",
+      "panel": "back",
+      "pose": "tilt_diagonal",
+      "description": "Back panel, diagonal oblique tilt view"
+    },
+    {
+      "filename": "back_far_01.jpg",
+      "panel": "back",
+      "pose": "wide_far",
+      "description": "Back panel, far wide shot with specular sheen"
+    }
+  ],
+  "excluded_images": [
+    {
+      "filename": "front_near_02.jpg",
+      "original_pose": "front_closer_crop",
+      "exclusion_reason": "Near-duplicate of front_near_01.jpg without significant geometric variation",
+      "audit_role": "Duplicate candidate stability & ranking tests"
+    },
+    {
+      "filename": "back_diagonal_02.jpg",
+      "original_pose": "back_steep_angle",
+      "exclusion_reason": "Redundant diagonal shot with extreme foreshortening",
+      "audit_role": "Steep perspective edge-case testing"
+    },
+    {
+      "filename": "back_close_01.jpg",
+      "original_pose": "back_macro_framing",
+      "exclusion_reason": "Edge defocus (Laplacian variance 94.06 < 100.0) and slight framing occlusion",
+      "audit_role": "Quality-gate defocus rejection verification"
+    },
+    {
+      "filename": "back_adverse_shadow_01.jpg",
+      "original_pose": "back_heavy_shadow",
+      "exclusion_reason": "Severe underexposure and motion blur (Laplacian variance 17.69 < 100.0)",
+      "audit_role": "Severe adverse illumination rejection verification"
+    }
+  ]
+}
