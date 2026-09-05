@@ -31,5 +31,5 @@ datasets:
     geography: "National Capital Region (NCR), India"
     annotation_method: "Dual-annotator cross-validated manual labeling (Planned protocol)"
     ground_truth_method: "Physical vernier caliper measurement for font heights and calibrated ruler reference"
-    known_limitations: "Artifact status: DECLARED_BUT_MISSING. Target 50 retail SKU samples across dry food and personal care categories. Currently 0 images, 0 annotation files, and 0 physical measurement sheets exist on disk."
+    known_limitations: "Artifact status: DECLARED_BUT_MISSING. Target 35 authentic retail SKU samples (standardized canonical target across Member 1 and Member 6; historically planned 50 SKUs in early draft) across dry food, personal care, and household categories. Currently 0 images, 0 annotation files, and 0 physical measurement sheets exist on disk."
 

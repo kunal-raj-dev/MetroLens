@@ -54,12 +54,15 @@
 - **Contract Schema (`OCRToken`):**
   ```python
   class OCRToken(BaseModel):
-      token_id: int
-      text: str
-      confidence: float          # 0.0 to 1.0
-      bbox: List[int]            # [x, y, width, height] in pixel coordinates
-      char_height_px: float      # Measured character stroke pixel height
-      polygon: Optional[List[List[int]]] = None
+      token_id: str              # Unique token identifier (e.g. 'tok_001')
+      text: str                  # Transcribed character sequence
+      confidence: float          # 0.0 to 1.0 (CTC / decoder confidence)
+      polygon: List[List[float]] # Clockwise 4-point quad [[x1,y1],[x2,y2],[x3,y3],[x4,y4]] in original image pixels
+      bbox: List[float]          # Derived axis-aligned bbox: [xmin, ymin, xmax, ymax]
+      script: ScriptType         # 'latin' | 'devanagari' | 'unknown'
+      line_id: int               # Reading order line index
+      raw_pixel_height: Optional[float] = None  # Raw pixel geometry only; NOT legal font height (owned by Member 2)
+      model_name: str = ""
   ```
 - **Environment Requirements:** ONNX Runtime (`onnxruntime`), PaddleOCR quantized weights.
 - **Test Evidence:** `pytest tests/unit/test_ocr_engine.py` passes; Character Error Rate $< 6.0\%$.

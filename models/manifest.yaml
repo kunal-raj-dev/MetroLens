@@ -1,0 +1,42 @@
+manifest_version: 1.0.0
+updated_at: '2026-09-05T04:10:00+05:30'
+runtime_target: CPUExecutionProvider
+models:
+- model_id: ch_PP-OCRv3_det_infer
+  model_family: PP-OCR
+  model_version: v3-mobile
+  task: text_detection
+  file: models/weights/ocr/det/ch_PP-OCRv3_det_infer.onnx
+  script: multilingual
+  source: PaddleOCR official / RapidOCR model hub
+  license: Apache-2.0
+  runtime: onnxruntime>=1.29.0
+  notes: DBNet++ lightweight scene text detector
+  sha256: 3439588c030faea393a54515f51e983d8e155b19a2e8aba7891934c1cf0de526
+  size_bytes: 2432880
+- model_id: ch_PP-OCRv3_rec_infer
+  model_family: PP-OCR
+  model_version: v3-mobile
+  task: text_recognition
+  file: models/weights/ocr/rec_en/ch_PP-OCRv3_rec_infer.onnx
+  script: latin
+  source: PaddleOCR official / RapidOCR model hub
+  license: Apache-2.0
+  runtime: onnxruntime>=1.29.0
+  notes: SVTR-LCNet alphanumeric CTC recognizer with embedded character dictionary
+  sha256: 897a3ededb38fee0dae2c1ccee38241f37df202c9509e3abca02e9217c5ee615
+  size_bytes: 10690752
+- model_id: hindi_PP-OCRv3_rec_infer
+  model_family: PP-OCR
+  model_version: v3-mobile
+  task: text_recognition
+  file: models/weights/ocr/rec_hi/rec.onnx
+  dict_file: models/weights/ocr/rec_hi/dict.txt
+  script: devanagari
+  source: Hugging Face monkt/paddleocr-onnx (PaddleOCR Devanagari port)
+  license: Apache-2.0
+  runtime: onnxruntime>=1.29.0
+  notes: Dedicated Devanagari SVTR recognizer with 167-character Hindi dictionary
+  sha256: 43df175fa3c877fbf7bcc4e5bd1e203e24ec450cd3ea96c9e802c86e39a4d4cf
+  size_bytes: 8980224
+  dict_sha256: b5f1be6d8bbff1a19fb96c5d4ca96a423380234bb7d2ce0e07b5838adb4d18ea

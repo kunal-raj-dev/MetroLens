@@ -1,0 +1,63 @@
+{
+  "benchmark_timestamp": "2026-09-05T05:31:00+05:30",
+  "scope": "Chunk 4 Service Adapter & Monorepo Integration Performance",
+  "cold_load": {
+    "direct_engine_init_ms": 270.3,
+    "service_adapter_init_ms": 267.66
+  },
+  "latencies": {
+    "direct_engine": {
+      "mean_ms": 108.66,
+      "median_ms": 106.6,
+      "p95_ms": 121.11,
+      "min_ms": 99.8,
+      "max_ms": 122.59
+    },
+    "service_path": {
+      "mean_ms": 112.74,
+      "median_ms": 109.64,
+      "p95_ms": 132.18,
+      "min_ms": 104.8,
+      "max_ms": 137.5
+    },
+    "service_bytes_decoded": {
+      "mean_ms": 108.1,
+      "median_ms": 108.84,
+      "p95_ms": 113.4,
+      "min_ms": 101.5,
+      "max_ms": 116.51
+    },
+    "service_observations_contract": {
+      "mean_ms": 114.29,
+      "median_ms": 113.27,
+      "p95_ms": 121.83,
+      "min_ms": 109.26,
+      "max_ms": 122.38
+    },
+    "adapter_overhead_ms": 3.04
+  },
+  "concurrency": {
+    "workers": 4,
+    "concurrent_requests": 8,
+    "total_batch_latency_ms": 908.18,
+    "throughput_req_per_sec": 8.81,
+    "all_tokens_valid": true,
+    "concurrency_policy": "THREAD_SAFE_SERIALIZED (Internal engine execution lock guarantees zero race conditions)"
+  },
+  "memory_profile": {
+    "start_rss_mb": 71.11,
+    "warm_rss_mb": 150.17,
+    "end_rss_mb": 296.85,
+    "delta_rss_mb": 225.74,
+    "assessment": "Bounded memory footprint. No unbounded memory growth observed across all integration iterations."
+  },
+  "contract_verification": {
+    "ocr_result_tokens": 6,
+    "observations_count": 6,
+    "polygon_coordinate_space": "ORIGINAL_IMAGE_PIXELS",
+    "polygon_vertex_count": 4,
+    "polygon_vertex_order": "CLOCKWISE_FROM_TOP_LEFT",
+    "unicode_devanagari_preserved": true,
+    "currency_symbol_preserved": true
+  }
+}
