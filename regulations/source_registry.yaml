@@ -1,0 +1,98 @@
+# Canonical Legal Source Registry for Nirikshak
+# Repository of Authoritative Source Artifacts and Provenance Metadata
+# DO NOT treat this YAML as legal authority; authority resides exclusively in sovereign instruments.
+
+version: "1.2.0"
+last_updated: "2026-09-04"
+maintained_by: "Nirikshak Legal Information Systems Team"
+
+sources:
+  - source_id: "IN-ACT-2009-01"
+    title: "The Legal Metrology Act, 2009 (Act No. 1 of 2010)"
+    issuing_authority: "Parliament of India / Department of Consumer Affairs"
+    source_type: "primary_government"
+    publication_date: "2010-01-14"
+    effective_from: "2011-04-01"
+    effective_to: null
+    instrument_status: "UNKNOWN"
+    official_url: "https://consumeraffairs.nic.in/acts-and-rules/legal-metrology/acts"
+    retrieval_date: "2026-09-04"
+    document_sha256: "PRIMARY_SOURCE_REQUIRED"
+    local_artifact: "regulations/current/legal_metrology_act_2009/legal_metrology_act_2009.pdf"
+    verification_status: "PARTIALLY_VERIFIED"
+    verified_by: "LEGAL_ENGINEERING_LEAD"
+    verification_date: null
+    last_reviewed: "2026-09-04"
+    notes: "Base statutory enactment. instrument_status set to UNKNOWN pending primary source PDF retrieval and SHA-256 verification on disk."
+
+  - source_id: "IN-LMPC-2011-GSR202E"
+    title: "The Legal Metrology (Packaged Commodities) Rules, 2011"
+    issuing_authority: "Department of Consumer Affairs, Ministry of Consumer Affairs, Food & Public Distribution"
+    source_type: "primary_government"
+    publication_date: "2011-03-07"
+    effective_from: "2011-04-01"
+    effective_to: null
+    instrument_status: "UNKNOWN"
+    official_url: "https://consumeraffairs.nic.in/acts-and-rules/legal-metrology/rules"
+    retrieval_date: "2026-09-04"
+    document_sha256: "PRIMARY_SOURCE_REQUIRED"
+    local_artifact: "regulations/current/packaged_commodities_rules/rules_2011_base.pdf"
+    verification_status: "PARTIALLY_VERIFIED"
+    verified_by: "LEGAL_ENGINEERING_LEAD"
+    verification_date: null
+    last_reviewed: "2026-09-04"
+    notes: "Principal regulatory instrument. instrument_status set to UNKNOWN pending primary source PDF retrieval and SHA-256 verification on disk."
+
+  - source_id: "IN-LMPC-2017-GSR629E"
+    title: "Legal Metrology (Packaged Commodities) Amendment Rules, 2017"
+    issuing_authority: "Department of Consumer Affairs, Ministry of Consumer Affairs, Food & Public Distribution"
+    source_type: "primary_government"
+    publication_date: "2017-06-23"
+    effective_from: "2018-01-01"
+    effective_to: null
+    instrument_status: "UNKNOWN"
+    official_url: "https://consumeraffairs.nic.in/acts-and-rules/legal-metrology/amendments"
+    retrieval_date: "2026-09-04"
+    document_sha256: "PRIMARY_SOURCE_REQUIRED"
+    local_artifact: "regulations/amendments/packaged_commodities/gsr_629_e_2017.pdf"
+    verification_status: "PARTIALLY_VERIFIED"
+    verified_by: "LEGAL_ENGINEERING_LEAD"
+    verification_date: null
+    last_reviewed: "2026-09-04"
+    notes: "Key amendment introducing e-commerce declarations. instrument_status set to UNKNOWN pending primary source PDF retrieval on disk."
+
+  - source_id: "IN-LMPC-2021-GSR779E"
+    title: "Legal Metrology (Packaged Commodities) Amendment Rules, 2021"
+    issuing_authority: "Department of Consumer Affairs, Ministry of Consumer Affairs, Food & Public Distribution"
+    source_type: "primary_government"
+    publication_date: "2021-11-02"
+    effective_from: "2022-12-01"
+    effective_to: null
+    instrument_status: "UNKNOWN"
+    official_url: "https://consumeraffairs.nic.in/acts-and-rules/legal-metrology/amendments"
+    retrieval_date: "2026-09-04"
+    document_sha256: "PRIMARY_SOURCE_REQUIRED"
+    local_artifact: "regulations/amendments/packaged_commodities/gsr_779_e_2021.pdf"
+    verification_status: "PARTIALLY_VERIFIED"
+    verified_by: "LEGAL_ENGINEERING_LEAD"
+    verification_date: null
+    last_reviewed: "2026-09-04"
+    notes: "Unit sale price amendment. instrument_status set to UNKNOWN pending primary source PDF retrieval on disk."
+
+  - source_id: "IN-LMPC-2024-DRAFT-R3"
+    title: "Draft Amendment to Rule 3 of the Legal Metrology (Packaged Commodities) Rules, 2011"
+    issuing_authority: "Department of Consumer Affairs, Ministry of Consumer Affairs, Food & Public Distribution"
+    source_type: "primary_government"
+    publication_date: "2024-06-15"
+    effective_from: "PRIMARY_SOURCE_REQUIRED"
+    effective_to: null
+    instrument_status: "PROPOSED"
+    official_url: "https://consumeraffairs.nic.in/acts-and-rules/legal-metrology/draft-rules"
+    retrieval_date: "2026-09-04"
+    document_sha256: "PRIMARY_SOURCE_REQUIRED"
+    local_artifact: "regulations/proposed/draft_amendment_rule3_2024.pdf"
+    verification_status: "PRIMARY_SOURCE_REQUIRED"
+    verified_by: "LEGAL_ENGINEERING_LEAD"
+    verification_date: null
+    last_reviewed: "2026-09-04"
+    notes: "Public consultation draft regarding applicability thresholds. Status is PROPOSED; explicitly blocked from active evaluation."

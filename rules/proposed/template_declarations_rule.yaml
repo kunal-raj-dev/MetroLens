@@ -1,0 +1,49 @@
+# Rule Record Candidate - Mandatory Declarations on Retail Package
+# STATUS: PRIMARY_SOURCE_REQUIRED. DO NOT MOVE TO CURRENT/ UNTIL PRIMARY SOURCE ON DISK IS VERIFIED.
+
+rule_id: "LMPC-R6-DECLARATIONS-TEMPLATE"
+title: "Mandatory Declarations on Retail Packaged Commodities (Candidate/Placeholder)"
+status: "PRIMARY_SOURCE_REQUIRED"
+source_id: "IN-LMPC-2011-GSR202E"
+source_document_sha256: "PRIMARY_SOURCE_REQUIRED"
+source_page: "PRIMARY_SOURCE_REQUIRED"
+source_section: "Rule 6"
+source_rule: "Rule 6"
+source_subrule: "6(1)"
+source_table: "N/A"
+effective_from: "2011-04-01"
+effective_to: null
+
+applicability:
+  package_types: ["retail_package"]
+  commodity_categories: ["all_commodities_except_exempt"]
+
+requirements:
+  mandatory_fields:
+    - "name_and_address_of_manufacturer_or_packer_or_importer"
+    - "country_of_origin"
+    - "common_or_generic_name_of_commodity"
+    - "net_quantity_standard_units"
+    - "month_and_year_of_manufacture_or_prepacking_or_import"
+    - "maximum_retail_price_inclusive_of_all_taxes"
+    - "consumer_care_contact_details"
+
+exceptions:
+  - "packages_net_weight_under_10g_or_10ml"
+  - "fast_food_items_packed_by_restaurant"
+
+evidence_required:
+  - "raw_package_images_all_panels"
+  - "ocr_extracted_tokens"
+  - "pdp_boundary_polygon"
+
+uncertainty_policy:
+  if_uncalibrated: "REVIEW"
+  if_low_confidence: "REVIEW"
+  if_ambiguous_text: "REVIEW"
+  if_borderline_measurement: "HUMAN_REVIEW_REQUIRED"
+
+executable: false
+verification_status: "PRIMARY_SOURCE_REQUIRED"
+last_verified: null
+last_reviewed: "2026-09-04"

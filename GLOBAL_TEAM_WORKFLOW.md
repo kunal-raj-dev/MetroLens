@@ -46,7 +46,7 @@ The MetroLens AI development lifecycle enforces a disciplined, traceable, and re
   4. Local Branch Created (`git checkout -b <type>/<description>`)
          │
          ▼
-  5. Local Implementation (Modular, Clean, Offline-Compatible)
+  5. Local Implementation (Modular, Clean, Deterministic Core)
          │
          ▼
   6. Local Quality Verification (Unit Tests, Lint, Type Check, Diffs)
@@ -82,7 +82,7 @@ The MetroLens AI development lifecycle enforces a disciplined, traceable, and re
 3. **Assignment & DoR:** The developer verifies the issue is ready to start (clear requirements, test strategy understood) before accepting assignment.
 4. **Local Branch:** Developer creates an isolated short-lived feature branch branched off latest `origin/main`.
 5. **Local Implementation:** Code is developed incrementally following the Four Pillars (AI Perceives, Math Validates, Rules Decide, Humans Govern).
-6. **Local Quality Verification:** Developer executes local test suites (`pytest`, `npm test`) and confirms offline execution.
+6. **Local Quality Verification:** Developer executes local test suites (`pytest`, `npm test`) and confirms unit and integration test pass rates.
 7. **Conventional Commits:** Changes are committed in logical, descriptive chunks using standard conventional commit formatting.
 8. **Push to Origin:** Branch is published to the remote GitHub repository.
 9. **Open Pull Request:** Developer opens a PR, fills out the mandatory checklist, and links the issue (`Closes #12`).
@@ -103,7 +103,7 @@ MetroLens AI is built by a focused 6-member team (M1 through M6) operating under
 | **M1** | **AI & OCR Lead** | Backend API Support | Owns PaddleOCR v4 ONNX runtime, CPU int8 quantization, Devanagari translation mappings, and bounding box cropping. |
 | **M2** | **Calibration & Geometry Lead** | Physical Data Collection | Owns optical metric scale recovery ($S = 27.0\text{mm} / d_{\text{major}}$), coin/card contour detection, right-cylinder invariance logic, and font stroke height measurement. |
 | **M3** | **Backend & Rule Engine Lead** | Architecture Governance | Owns FastAPI server, Pydantic schemas, deterministic Legal Metrology state machine (Rules 6, 7, 8, 26), and Unit Sale Price (USP) arithmetic auditing. |
-| **M4** | **Frontend & UX Lead** | Demo Stagecraft Support | Owns responsive Vite/React PWA, camera WebRTC viewfinder, 5-state compliance badges, evidence side-by-side viewer, and offline PWA caching. |
+| **M4** | **Frontend & UX Lead** | Demo Stagecraft Support | Owns responsive Vite/React web app, upload dropzone (drag & drop, file, camera), 5-state compliance badges, evidence side-by-side viewer, and web accessibility. |
 | **M5** | **Data & Benchmark Lead** | Calibration Support | Owns physical packaging dataset curation (35+ SKUs), 1200 DPI ground-truth optical flatbed scanning, automated CER/WER evaluation, and benchmark documentation. |
 | **M6** | **Product, DevOps & Presentation Lead** | QA & Compliance Audit | Owns repository governance, GitHub CI/CD workflows, cryptographic SHA-256 PDF report generation, eMaap mock sync adapter, and presentation rehearsal. |
 
@@ -115,7 +115,7 @@ To eliminate bottlenecks and clarify authority:
 * **Who reviews PRs?** Any teammate MAY review. At least one cross-support lead MUST review code touching their subsystem (e.g., M3 reviews M1's API integrations).
 * **Who can merge PRs?** Only Repository Maintainers (M3, M6). Developers MUST NOT merge their own pull requests.
 * **Who handles production/demo failures?** M6 (Stagecraft/DevOps) paired with the subsystem lead (M1-M4) whose module triggered the issue.
-* **Who has final stability authority?** The Project Lead (M6) and Backend Lead (M3) have unilateral veto authority over any merge that compromises demo stability or offline operation.
+* **Who has final stability authority?** The Project Lead (M6) and Backend Lead (M3) have unilateral veto authority over any merge that compromises demo stability, web security, or deterministic rule evaluation.
 
 ---
 
@@ -201,29 +201,27 @@ Work is tracked visibly on the GitHub Issue Tracker. No work occurs in isolation
 └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-### Standard Issue Template
-Every created issue SHOULD provide the following structure:
-```markdown
-### Summary
-Brief description of the feature, bug, or research task.
+### Standard Issue Intake & Forms
+To enforce the Definition of Ready and eliminate informal task ambiguity ("Bro, make the OCR work"), all tasks MUST be created using the official GitHub Issue Forms in `.github/ISSUE_TEMPLATE/`:
+* [**Feature / Enhancement**](.github/ISSUE_TEMPLATE/feature.yml) — New user-facing or backend capability.
+* [**Bug / Defect Report**](.github/ISSUE_TEMPLATE/bug.yml) — Reproducible defect with step-by-step reproduction and environment data.
+* [**Legal / Regulatory Update**](.github/ISSUE_TEMPLATE/legal-update.yml) — Gazette amendments with primary source traceability to `METROLENS_LEGAL_SOURCE_PACK/`.
+* [**Research / Spike**](.github/ISSUE_TEMPLATE/research.yml) — Timeboxed technical feasibility spikes with concrete decision deliverables.
+* [**Chore / Engineering Task**](.github/ISSUE_TEMPLATE/chore.yml) — CI/CD, dependency, or repository hygiene tasks.
+* [**Documentation Task**](.github/ISSUE_TEMPLATE/documentation.yml) — System specs, architecture records, or onboarding guides.
 
-### Technical Context & Scope
-Which subsystem is affected? (`backend/modules/rules/`, `frontend/components/`, etc.)
+*(Note: Blank issues are disabled via `.github/ISSUE_TEMPLATE/config.yml` to ensure every task captures mandatory DoR fields).*
 
-### Statutory / Architectural Reference
-Reference to Legal Metrology Rule, Master Blueprint v0.3, or ADR.
-
-### Acceptance Criteria
-- [ ] Criterion 1 (e.g., Handles missing Net Qty by returning POTENTIAL_NON_COMPLIANCE)
-- [ ] Criterion 2 (e.g., Test suite passes with 100% coverage on new module)
-- [ ] Criterion 3 (e.g., Executes in < 50ms on standard CPU)
-```
+### Authoritative Definition of Ready
+Before any task can begin development, it MUST pass the 10-point checklist detailed in the standalone [**Definition of Ready Specification (`docs/DEFINITION_OF_READY.md`)**](docs/DEFINITION_OF_READY.md).
 
 ### Issue Labels
-Issues MUST be labeled with at least one Type and one Subsystem label:
-* **Type:** `type:feat`, `type:bug`, `type:docs`, `type:refactor`, `type:test`, `type:chore`
-* **Subsystem:** `sub:cv`, `sub:ocr`, `sub:rules`, `sub:frontend`, `sub:reporting`, `sub:data`
+Issues MUST be categorized using the repository taxonomy (see [`tools/github/github-labels.json`](tools/github/github-labels.json)):
+* **Type:** `type:feat`, `type:bug`, `type:legal`, `type:research`, `type:chore`, `type:docs`, `type:refactor`, `type:test`
+* **Subsystem:** `sub:cv`, `sub:ocr`, `sub:rules`, `sub:frontend`, `sub:reporting`, `sub:data`, `sub:backend`, `sub:legal-pack`, `sub:ci`, `sub:docs`
 * **Priority:** `priority:P0-blocker`, `priority:P1-high`, `priority:P2-medium`, `priority:P3-low`
+* **Status:** `status:backlog`, `status:specifying`, `status:ready`, `status:in-dev`, `status:in-review`, `status:done`
+* **Ownership:** `owner:M1-ocr`, `owner:M2-calibration`, `owner:M3-rules`, `owner:M4-frontend`, `owner:M5-data`, `owner:M6-devops`
 
 ---
 
@@ -347,9 +345,9 @@ Quality code is written systematically. Every task follows an 8-stage cycle:
    * **Math Validates:** Scale factor calculations ($S = \text{diameter} / d$) and USP calculations ($\text{MRP} / \text{Qty}$) MUST be exact, IEEE-754 guarded, and deterministic.
    * **Rules Decide:** All legal compliance checks MUST live inside `backend/modules/rules/` as pure, testable Python functions. Zero probabilistic heuristics.
    * **Humans Govern:** Ambiguities drop into `MANUAL_REVIEW_REQUIRED` (Amber state). Never guess a violation.
-2. **100% Offline Capability:**
-   * No module may make outbound HTTP calls to external third-party APIs during core inspection.
-   * All models (PaddleOCR ONNX, OpenCV contours) must execute on local CPU.
+2. **Zero External AI Cloud APIs:**
+   * Core inspection processing MUST NOT make outbound HTTP calls to third-party AI APIs (e.g. OpenAI, Google Cloud Vision, AWS Rekognition).
+   * All neural networks (PaddleOCR ONNX, OpenCV contours) must execute locally on server CPU.
 3. **No Unchecked Dependencies:**
    * Do NOT run `pip install <random-package>` or `npm install <random-package>` without consulting M3 or M6. Prefer the Python standard library and existing dependencies.
 4. **Self-Diff Review:**
@@ -437,16 +435,16 @@ Pull Requests (PRs) are the sole mechanism for introducing code into `main`. A P
 - [x] Backend Rule Engine (`backend/modules/rules/`)
 - [ ] Computer Vision / Scale Calibration
 - [ ] Multilingual OCR
-- [ ] Frontend PWA / Viewfinder
+- [ ] Frontend Web App / Upload Dropzone
 - [ ] Documentation / Legal Pack
 
 ## Statutory & Architectural Reference
 - Rule 7 & Second Schedule Table-I/II, Legal Metrology (PC) Rules, 2011.
-- Master Product Blueprint v0.3 Section 9.
+- Master Product Blueprint v1.0 Section 9.
 
 ## Testing & Verification
 - [x] All automated unit tests pass locally (`pytest backend/tests/test_rule_engine.py`)
-- [x] 100% offline verification (executed with Wi-Fi disabled)
+- [x] Deterministic core verification (runs without external cloud API calls)
 - [x] Edge cases tested (e.g., PDP area exactly 50.0 cm²)
 
 ## Verification Evidence
@@ -475,7 +473,7 @@ Reviewers MUST evaluate submissions across these prioritized dimensions:
 1. **Statutory & Mathematical Correctness:** Does the code strictly adhere to the Legal Metrology Rules and the Master Blueprint? Is floating-point division guarded against division-by-zero?
 2. **Architecture & Boundaries:** Does this code respect the Four Pillars? (e.g., no hardcoded legal judgments inside OCR code).
 3. **Security & Secrets:** Are there any hardcoded credentials, unchecked file reads, or injection vectors?
-4. **Offline Capability & Performance:** Does the change introduce hidden internet calls? Does it cause latency spikes on CPU?
+4. **Determinism & Performance:** Does the change introduce hidden external AI cloud API dependencies? Does it cause latency spikes on CPU?
 5. **Test Coverage:** Are happy paths, failure paths, and boundary conditions covered by automated tests?
 6. **Code Cleanliness & Naming:** Are variable names intuitive and descriptive? Is typing complete?
 
@@ -662,7 +660,7 @@ If CI turns red (fails) on your pull request:
 
 # 16. Environment and Secrets Management
 
-MetroLens AI is designed to operate 100% offline on edge hardware without external cloud databases or third-party paid APIs. However, developers may configure local environment parameters (ports, log levels, mock adapter URLs).
+MetroLens AI is designed as a web-first application with a self-contained, deterministic processing core that does not depend on paid third-party AI APIs. Developers configure environment parameters (host, port, log levels, mock adapter URLs, upload limits).
 
 ### THE ZERO-LEAK RULE
 > **🚨 STRICTLY PROHIBITED:**  
@@ -685,14 +683,18 @@ MetroLens AI is designed to operate 100% offline on edge hardware without extern
 ```bash
 # MetroLens AI Environment Configuration
 METROLENS_ENV=development
-METROLENS_HOST=127.0.0.1
+METROLENS_HOST=0.0.0.0
 METROLENS_PORT=8000
 METROLENS_LOG_LEVEL=INFO
 
 # Optical & Calibration Parameters
 METROLENS_COIN_DIAMETER_MM=27.0
-METROLENS_MAX_TILT_DEGREES=10.0
+METROLENS_MAX_TILT_DEGREES=15.0
 METROLENS_BORDERLINE_FONT_BUFFER_MM=0.10
+
+# Ingestion & Security
+METROLENS_MAX_UPLOAD_MB=15.0
+METROLENS_EPHEMERAL_STORAGE_PATH=/tmp/metrolens_uploads
 
 # eMaap Mock Adapter Settings
 EMAAP_MOCK_SYNC_ENABLED=true
@@ -701,21 +703,23 @@ EMAAP_MOCK_WEBHOOK_URL=http://127.0.0.1:8000/api/v1/emaap/mock-sync
 
 ---
 
-# 17. Database and Migration Workflow
+# 17. Data Architecture & Storage Policy
 
-### Edge-Native Data Architecture
-In accordance with Master Product Blueprint v0.3:
-* MetroLens AI is an **edge-native inspection tool**. It does NOT require a heavy external relational database (PostgreSQL/MySQL) or cloud database (Firebase/Supabase) to run inspections.
-* Local persistent state (inspection history, device telemetry, cryptographic hashes) is stored locally in lightweight, serverless storage:
-  * **Development / Edge Storage:** Local SQLite database (`backend/data/metrolens_edge.db`) or structured append-only JSON records.
+### Ephemeral Data Architecture
+In accordance with Master Product Blueprint v1.0:
+* MetroLens AI is an **ephemeral web inspection system**. It does NOT require a heavy persistent relational database (PostgreSQL/MySQL) or cloud database (Firebase/Supabase) to execute core inspections.
+* Uploaded images are processed in-memory or in isolated temporary spooling buffers and purged post-inspection.
+* Storage lifecycle:
+  * **Ephemeral Processing:** Uploaded images and crops live in temporary memory/disk buffers (`/tmp/metrolens_uploads/`) with a 60-minute TTL.
+  * **Local State / Test Logs:** SQLite database (`backend/data/metrolens_edge.db`) or structured append-only JSON logs for local developer testing.
   * **Static Ground Truth:** Read-only JSON datasets (`data/ground_truth_benchmark.json`).
 
 ### Database Rules for Developers
 1. **No External Database Dependencies in Core Path:**
    * Never write code that requires an external cloud database connection to perform an optical inspection or generate a compliance report.
-2. **SQLite Schema Migrations:**
-   * If modifying local database tables in `metrolens_edge.db`, write deterministic Python migration functions or Alembic migration scripts.
-   * Never perform manual out-of-band modifications to local test databases that cannot be reproduced by your teammates.
+2. **Deterministic Schemas:**
+   * If modifying database tables or schemas, write deterministic migration functions or Alembic scripts.
+   * Never perform manual out-of-band modifications to test databases that cannot be reproduced by your teammates.
 3. **Seeding & Benchmarks:**
    * Benchmark datasets (`data/ground_truth_benchmark.json`) MUST be committed directly to version control with their ground-truth physical caliper measurements.
 
@@ -727,18 +731,18 @@ The MetroLens backend is built on **FastAPI** to deliver asynchronous, low-laten
 
 ### API Rules & Guidelines
 1. **Contract-First Design:**
-   * All request payloads and response bodies MUST be defined using **Pydantic v2 schemas** located in `backend/modules/normalizer/schemas.py`.
+   * All request payloads and response bodies MUST be defined using **Pydantic v2 schemas** located in `backend/modules/normalizer/schemas.py` and conform to [`docs/API_CONTRACT.md`](docs/API_CONTRACT.md).
    * Never return raw, unvalidated Python dictionaries from FastAPI endpoints.
 2. **Deterministic Response Structure:**
-   * The primary inspection endpoint (`POST /api/v1/inspect`) MUST return the canonical `ComplianceReportResponse` containing:
+   * The primary inspection endpoint (`POST /api/v1/inspect`) MUST return the canonical `InspectionResponse` containing:
      * `inspection_id`: Unique UUID string
      * `timestamp`: ISO-8601 UTC string
      * `declarations`: Canonical key-value entity map
-     * `status`: Exactly one of the 5 compliance states
+     * `state`: Exactly one of the 5 compliance states
      * `rule_evaluations`: List of individual rule findings (Rule 6, 7, 8, 26)
      * `cryptographic_seal`: SHA-256 integrity hash
 3. **Backward Compatibility:**
-   * Do NOT arbitrarily rename fields in Pydantic schemas. If a field name change is necessary, notify the Frontend Lead (M4) before merging to prevent breaking the PWA viewfinder interface.
+   * Do NOT arbitrarily rename fields in Pydantic schemas. If a field name change is necessary, notify the Frontend Lead (M4) before merging to prevent breaking the web interface.
 4. **Interactive Documentation:**
    * Keep Swagger/OpenAPI docs clean by providing `description`, `example`, and `Field` constraints on all Pydantic models.
 
@@ -746,12 +750,12 @@ The MetroLens backend is built on **FastAPI** to deliver asynchronous, low-laten
 
 # 19. Frontend Workflow
 
-The MetroLens frontend is a responsive, mobile-first **Progressive Web App (PWA)** built with **Vite, React, and TypeScript**.
+The MetroLens frontend is a responsive, modern web application built with **Vite, React, Tailwind CSS, and TypeScript**.
 
 ### Frontend Rules & Guidelines
-1. **Mobile-First Touch Ergonomics:**
-   * Inspecting officers operate smartphones with one hand while holding a packaging sample with the other.
-   * Primary action buttons (Capture, Confirm, Reject) MUST be placed in the bottom thumb zone with large touch targets ($\ge 48\times 48\text{px}$).
+1. **Responsive & Mobile Ergonomics:**
+   * Accessible across desktop monitors, laptops, tablets, and mobile smartphones.
+   * Primary action buttons (Upload, Analyze, Download Report) MUST be prominent with large touch targets ($\ge 48\times 48\text{px}$).
 2. **Visual Hierarchy & The 5 States:**
    * UI components MUST strictly adhere to the 5-State Color Language:
      * `NO_IMAGE_VERIFIABLE_VIOLATION_DETECTED` $\rightarrow$ Emerald Green
@@ -761,8 +765,8 @@ The MetroLens frontend is a responsive, mobile-first **Progressive Web App (PWA)
      * `NOT_IMAGE_VERIFIABLE` $\rightarrow$ Slate Gray
 3. **Zero UI Placeholders:**
    * Never leave broken image links, placeholder text ("Lorem ipsum"), or non-functional mock buttons in merged code.
-4. **Viewfinder Calibration Overlay:**
-   * The camera viewfinder MUST render the circular 10-Rupee coin reticle and tilt warning indicator cleanly across responsive mobile aspect ratios (16:9, 19.5:9).
+4. **Upload Dropzone & Viewfinder Guides:**
+   * The upload interface MUST support drag-and-drop, direct file selection, and optional mobile camera capture with clear visual guides for coplanar coin placement.
 
 ---
 
@@ -866,11 +870,11 @@ During live hackathon evaluations, pitch rehearsals, or system demonstrations, c
 
 # 24. Security Workflow
 
-Even as an edge-native inspection tool, MetroLens AI must handle data with high evidentiary and legal integrity.
+Even as a web-first inspection platform, MetroLens AI must handle data with high evidentiary and legal integrity.
 
 ### Core Security Mandates
 1. **Input Sanitization & Injection Defense:**
-   * All image uploads MUST be validated for valid magic bytes (`JPEG`, `PNG`). Reject unverified binary formats immediately.
+   * All image uploads MUST be validated for valid magic bytes (`JPEG`, `PNG`, `WebP`). Reject unverified binary formats immediately.
    * File paths for temporary crops and PDF reports MUST use cryptographically random UUIDs to prevent path traversal attacks (`../`).
 2. **Tamper-Evident Hashing:**
    * Every compliance report MUST compute and embed the SHA-256 hash of the raw input image, the rectified crop, and the composite JSON evaluation payload.
@@ -900,7 +904,7 @@ vMAJOR.MINOR.PATCH (e.g., v0.3.1)
 ```text
 1. All planned milestone PRs merged into `main`
 2. Full automated test suite passes on `main`
-3. 100% offline functionality verified with network interfaces disabled
+3. Core deterministic pipeline verified with zero external cloud AI dependencies
 4. Version number updated in backend and frontend package metadata
 5. Git tag created and pushed:
    git tag -a v0.3.0 -m "Release v0.3.0: Complete Stage 1 Legal Pack and Rule Engine"
@@ -912,14 +916,20 @@ vMAJOR.MINOR.PATCH (e.g., v0.3.1)
 
 # 26. Definition of Ready (DoR)
 
-A task or GitHub Issue is **Ready to Start** ONLY when the assigned engineer can check off every item:
+The Definition of Ready (DoR) is the mandatory project-governance gate. A task or GitHub Issue is **Ready to Start** (`status:ready`) ONLY when all 10 criteria below are satisfied. For complete details, rationales, and domain examples, refer to the authoritative [**Definition of Ready Specification (`docs/DEFINITION_OF_READY.md`)**](docs/DEFINITION_OF_READY.md):
 
-- [ ] **Clear Objective:** The desired outcome is unambiguously stated in 1–2 sentences.
-- [ ] **Statutory / Architectural Anchor:** Relevant clauses of LMPC Rules, 2011 or Master Blueprint sections are linked.
-- [ ] **Acceptance Criteria Defined:** Specific, testable pass/fail conditions are documented.
-- [ ] **Scope Boundary Understood:** The developer knows what is in-scope and explicitly what is out-of-scope.
-- [ ] **Dependencies Identified:** Any prerequisite PRs or modules are already merged into `main`.
-- [ ] **Assignee Confirmed:** Exactly one primary owner is assigned.
+- [ ] **1. Clear Objective:** The desired outcome is unambiguously stated in 1–2 sentences.
+- [ ] **2. Context / Problem Understood:** Root cause, user need, statutory mandate, or architectural rationale documented.
+- [ ] **3. Statutory / Architectural Anchor:** Relevant clauses of LMPC Rules, 2011, Jan Vishwas Act 2026, Master Blueprint v1.0, or Traceability Matrix (TR-01–TR-10) linked.
+- [ ] **4. Testable Acceptance Criteria Defined:** Specific, binary pass/fail conditions and boundary cases documented.
+- [ ] **5. In-Scope Boundary Defined:** Explicit list of what the developer must implement.
+- [ ] **6. Out-of-Scope Boundary Defined:** Explicit list of what is excluded to prevent feature creep.
+- [ ] **7. Dependencies Identified & Confirmed:** Prerequisite PRs or modules are already merged into `main`.
+- [ ] **8. Test Approach Understood:** Deterministic unit and integration test strategy (e.g. pytest, parameterized cases) planned before coding.
+- [ ] **9. Relevant Subsystem Identified:** Mapped to one of the canonical subsystems (`sub:cv`, `sub:ocr`, `sub:rules`, etc.).
+- [ ] **10. Exactly One Primary Owner Assigned:** Single engineer (M1–M6) confirmed accountable.
+
+> **⚠️ Strict Gate:** Developers MUST NOT create branches or begin local implementation on tasks that have not satisfied the Definition of Ready.
 
 ---
 
@@ -930,7 +940,7 @@ A task, branch, or pull request is **Done** ONLY when every condition below is f
 - [ ] **Implementation Complete:** Code satisfies all acceptance criteria defined in the issue.
 - [ ] **Static Quality:** Clean code with strict type annotations; zero lint warnings.
 - [ ] **Automated Tests:** Unit tests added or updated; 100% of test suite passes locally.
-- [ ] **Offline Verified:** Code runs without internet access.
+- [ ] **Reproducibility Verified:** Core algorithms execute deterministically with zero external cloud API calls.
 - [ ] **Self-Review Completed:** Developer reviewed their own diff (`git diff`) and purged debug artifacts.
 - [ ] **Documentation Updated:** Relevant `.md` files, docstrings, and schemas updated.
 - [ ] **Pull Request Approved:** Formal review completed with zero open `[BLOCKER]` comments.
@@ -1183,9 +1193,9 @@ MetroLens AI is structured as a lightweight monorepo containing:
 * **NEVER manually edit, modify, or truncate PDF files inside this directory.**
 * Any addition MUST be registered in [`CHECKSUM_MANIFEST.csv`](file:///c:/Users/kunal/Desktop/MetroLens/METROLENS_LEGAL_SOURCE_PACK/00_SOURCE_INDEX/CHECKSUM_MANIFEST.csv) with its SHA-256 hash.
 
-### 3. Edge-Native & Offline Constraint
-* The core inspection flow (`/api/v1/inspect`) MUST operate with zero outbound network access.
-* Any feature requiring cloud calls (e.g., secondary LLM enrichment) MUST be strictly optional, asynchronous, and degrade gracefully when offline.
+### 3. Web Service Delivery & Zero-Cloud-AI Constraint
+* The core inspection pipeline MUST execute self-contained on the backend server using local ONNX weights, with zero outbound network calls to external third-party AI/OCR cloud services.
+* All statutory compliance decisions and measurement calculations must be 100% reproducible without external API availability.
 
 ### 4. Deterministic Statutory Rule Engine
 * All legal metrology evaluations MUST live in `backend/modules/rules/`.
@@ -1224,7 +1234,7 @@ MetroLens AI is structured as a lightweight monorepo containing:
    [Local Branch]  <── (`git checkout -b feat/...`)
           │
           ▼
-   [Development]   <── (Four Pillars, Offline First, Type Annotations)
+   [Development]   <── (Four Pillars, Deterministic Core, Type Annotations)
           │
           ▼
    [Local Tests]   <── (`pytest`, `npm test` passing 100%)

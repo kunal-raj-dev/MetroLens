@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nirikshak-measurement"
+version = "0.1.0"
+description = "Metrological physical dimension calculation, font height scaling, and PDP area computation for Nirikshak."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "nirikshak-shared",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,159 @@
+name: "⚖️ Legal / Regulatory Update"
+description: "Incorporate a statutory amendment, Gazette notification, or regulatory change into MetroLens"
+title: "[LEGAL]: "
+labels: ["type:legal", "status:specifying"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### MetroLens AI™ — Statutory & Regulatory Intake Gate
+        MetroLens is grounded in authentic Indian legal metrology law. Every legal update must reference primary sources archived in [`METROLENS_LEGAL_SOURCE_PACK/`](../../METROLENS_LEGAL_SOURCE_PACK/) or official government gazettes.
+        *Authoritative References:* [`docs/LEGAL_RULE_MATRIX.md`](../../docs/LEGAL_RULE_MATRIX.md) | [`docs/LEGAL_CHANGELOG_2025_2026.md`](../../docs/LEGAL_CHANGELOG_2025_2026.md)
+
+  - type: input
+    id: legal_summary
+    attributes:
+      label: "Regulatory Update Summary"
+      description: "Concise summary of the statutory amendment or Gazette update."
+      placeholder: "e.g., Codify Jan Vishwas Act, 2026 Section 36(1) First Offence Improvement Notice framework"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: source_authority
+    attributes:
+      label: "Issuing Authority"
+      description: "Official government ministry or regulatory body issuing this statute."
+      options:
+        - "Ministry of Consumer Affairs, Food & Public Distribution (DoCA)"
+        - "Ministry of Law and Justice (Legislative Department)"
+        - "The Gazette of India (Extraordinary / Official Publication)"
+        - "Press Information Bureau (PIB / Official Press Release)"
+        - "State Legal Metrology Department / Controller"
+    validations:
+      required: true
+
+  - type: input
+    id: official_document_identifier
+    attributes:
+      label: "Official Document Title & Gazette Identifier"
+      description: "Act number, GSR / S.O. notification number, or publication ID."
+      placeholder: "e.g., Jan Vishwas (Amendment of Provisions) Act, 2026; Notification S.O. 1234(E); PIB PRID 2278745"
+    validations:
+      required: true
+
+  - type: input
+    id: legal_pack_path
+    attributes:
+      label: "Legal Source Pack File Path / Manifest Entry"
+      description: "Relative path to the authentic source PDF in METROLENS_LEGAL_SOURCE_PACK/."
+      placeholder: "e.g., METROLENS_LEGAL_SOURCE_PACK/01_PRIMARY_ACTS/2026-02-13__MOCA__GAZETTE__Jan_Vishwas_Amendment_Provisions_Act_2026.pdf"
+    validations:
+      required: true
+
+  - type: input
+    id: affected_clause
+    attributes:
+      label: "Specific Statutory Clause / Rule Section"
+      description: "The exact legal clause(s) being enacted, amended, or repealed."
+      placeholder: "e.g., Section 36(1) of LM Act 2009; LMPC Rules, 2011 Rule 6(11) & Rule 26"
+    validations:
+      required: true
+
+  - type: input
+    id: effective_date
+    attributes:
+      label: "Statutory Effective Date & Legal Status"
+      description: "When does this rule come into force legally, and is it mandatory or advisory?"
+      placeholder: "e.g., Effective 1 May 2026; Mandatory Statutory Enforcement"
+    validations:
+      required: true
+
+  - type: textarea
+    id: legal_change_summary
+    attributes:
+      label: "Summary of Legal Change"
+      description: "Explain the legal substance of this change in plain language."
+      placeholder: |
+        The Jan Vishwas (Amendment of Provisions) Act, 2026 establishes that a first offence for packaging declaration non-compliance under Section 36(1) receives an Improvement Notice allowing a prescribed compliance window rather than direct adjudication or compound penalty. Repeat offences proceed to direct adjudication.
+    validations:
+      required: true
+
+  - type: textarea
+    id: software_impact
+    attributes:
+      label: "Software Impact Analysis"
+      description: "Which MetroLens modules, rule engines, or assessment reports must adapt to this change?"
+      placeholder: |
+        - Rule Engine (modules/rules/): Update assessment state recommendation from immediate violation to Section 36(1) Improvement Notice.
+        - PDF Generator (modules/reporting/): Include statutory compliance notice boilerplate with improvement cure window.
+        - UI Badge (frontend/): Map POTENTIAL_NON_COMPLIANCE status card to suggest 1-tap Improvement Notice draft.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: "Primary Affected Subsystem"
+      description: "Subsystem primarily responsible for implementing this regulatory logic."
+      options:
+        - "Backend / Rule Engine (modules/rules/)"
+        - "Tamper-Evident Reporting (modules/reporting/)"
+        - "Legal Source Pack & Documentation (METROLENS_LEGAL_SOURCE_PACK/)"
+        - "Frontend UI & Status Badges (frontend/)"
+        - "AI OCR / Normalizer (modules/ocr/)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: primary_owner
+    attributes:
+      label: "Primary Owner (Assigned Lead)"
+      description: "Assignee accountable for legal fidelity and rule engine updates."
+      options:
+        - "M3 — Backend & Rule Engine Lead (Deterministic rule state machine & schemas)"
+        - "M6 — Product, DevOps & Presentation Lead (Compliance audit, report schema & legal pack)"
+        - "M1 — AI & OCR Lead (Entity parsing & declaration extraction)"
+        - "M4 — Frontend & UX Lead (5-state compliance badges & notice UI)"
+        - "M5 — Data & Benchmark Lead (Dataset legal ground truth)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope_boundary
+    attributes:
+      label: "Scope Boundaries"
+      description: "Explicitly demarcate what is in-scope vs out-of-scope for this legal update."
+      placeholder: |
+        - In-Scope: Update rule evaluation recommendation string and PDF report clause reference.
+        - Out-of-Scope: Does NOT claim judicial authority or replace manual officer sign-off.
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_approach
+    attributes:
+      label: "Statutory Verification & Test Strategy"
+      description: "How will legal fidelity be tested against synthetic cases or official examples?"
+      placeholder: "e.g., Create 5 synthetic test cases in tests/test_jan_vishwas_2026.py verifying first-offence vs repeat-offence classification."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dor_verification
+    attributes:
+      label: "Definition of Ready (DoR) Gate Checklist"
+      description: "Verify that legal research is complete and authoritative before coding commences."
+      options:
+        - label: "Primary legal source PDF verified and indexed in METROLENS_LEGAL_SOURCE_PACK/"
+          required: true
+        - label: "Statutory clause and effective enforcement date verified against Gazette"
+          required: true
+        - label: "Software impact analysis clearly mapped to specific code modules"
+          required: true
+        - label: "Synthetic legal test cases documented for automated verification"
+          required: true
+        - label: "In-scope and out-of-scope boundaries explicitly demarcated"
+          required: true
+        - label: "Exactly one primary owner assigned (M1–M6)"
+          required: true

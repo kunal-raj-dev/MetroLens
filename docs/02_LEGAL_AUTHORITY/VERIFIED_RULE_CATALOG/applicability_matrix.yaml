@@ -1,0 +1,29 @@
+# Statutory Applicability Matrix
+# Defines which packaging categories, distribution channels, and commodity types fall under LMPC Rules
+
+matrix_version: "1.0.0"
+source_id: "IN-LMPC-2011-GSR202E"
+verification_status: "PARTIALLY_VERIFIED"
+
+applicability_scopes:
+  - scope_id: "SCOPE-RETAIL-STD"
+    description: "Standard Pre-Packaged Commodities for Retail Distribution"
+    applicability_status: "MANDATORY_FULL_COMPLIANCE"
+    applicable_rules:
+      - "Rule 6(1) Mandatory Declarations"
+      - "Rule 7 Font Height and PDP Area"
+      - "Rule 9 Net Quantity Expression"
+      - "Rule 18 Retail Sale Price Compliance"
+
+  - scope_id: "SCOPE-WHOLESALE-PKG"
+    description: "Wholesale Packages Containing Multiple Retail Units"
+    applicability_status: "SPECIAL_SCHEDULE_COMPLIANCE"
+    applicable_rules:
+      - "Rule 24 Declarations on Wholesale Packages"
+
+  - scope_id: "SCOPE-INSTITUTIONAL"
+    description: "Packages for Institutional / Industrial Consumers (Not for Retail Resale)"
+    applicability_status: "PARTIALLY_EXEMPT"
+    notes: >
+      Exempt from MRP declaration requirements if marked 'For Institutional Consumer Use Only / Not for Retail Sale'
+      under Rule 3 exemptions.

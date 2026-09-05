@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NirikshakApplicabilityMatrixSchema",
+  "description": "Schema defining commodity scope, packaging configurations, and statutory exemptions.",
+  "type": "object",
+  "required": ["applicability_rules"],
+  "properties": {
+    "applicability_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "applicability_id",
+          "commodity_type",
+          "statutory_scope",
+          "exemption_conditions",
+          "verification_status"
+        ],
+        "properties": {
+          "applicability_id": { "type": "string" },
+          "commodity_type": { "type": "string" },
+          "statutory_scope": {
+            "type": "string",
+            "enum": ["RETAIL_PACKAGE", "WHOLESALE_PACKAGE", "INSTITUTIONAL_CONSUMER", "EXEMPT"]
+          },
+          "exemption_conditions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "verification_status": {
+            "type": "string",
+            "enum": ["VERIFIED_PRIMARY", "PARTIALLY_VERIFIED", "PRIMARY_SOURCE_REQUIRED"]
+          }
+        }
+      }
+    }
+  }
+}

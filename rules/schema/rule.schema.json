@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NirikshakMachineReadableRule",
+  "description": "Standardized schema for machine-readable legal metrology rules.",
+  "type": "object",
+  "required": [
+    "rule_id",
+    "title",
+    "status",
+    "source_id",
+    "source_document_sha256",
+    "source_page",
+    "source_section",
+    "source_rule",
+    "source_subrule",
+    "source_table",
+    "effective_from",
+    "effective_to",
+    "applicability",
+    "requirements",
+    "exceptions",
+    "evidence_required",
+    "uncertainty_policy",
+    "verification_status",
+    "last_verified"
+  ],
+  "properties": {
+    "rule_id": { "type": "string" },
+    "title": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["IN_FORCE", "PROPOSED", "DRAFT", "SUPERSEDED", "REPEALED", "PRIMARY_SOURCE_REQUIRED"]
+    },
+    "source_id": { "type": "string" },
+    "source_document_sha256": { "type": "string" },
+    "source_page": { "type": ["string", "integer"] },
+    "source_section": { "type": "string" },
+    "source_rule": { "type": "string" },
+    "source_subrule": { "type": "string" },
+    "source_table": { "type": "string" },
+    "effective_from": { "type": ["string", "null"] },
+    "effective_to": { "type": ["string", "null"] },
+    "applicability": { "type": "object" },
+    "requirements": { "type": "object" },
+    "exceptions": { "type": "array" },
+    "evidence_required": { "type": "array" },
+    "uncertainty_policy": { "type": "object" },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_PRIMARY",
+        "VERIFIED_SECONDARY",
+        "PARTIALLY_VERIFIED",
+        "CONFLICTING",
+        "UNVERIFIED",
+        "PRIMARY_SOURCE_REQUIRED",
+        "SUPERSEDED",
+        "REJECTED"
+      ]
+    },
+    "executable": { "type": "boolean" },
+    "last_verified": { "type": ["string", "null"] },
+    "last_reviewed": { "type": ["string", "null"] }
+  }
+}

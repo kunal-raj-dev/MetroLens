@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NirikshakEvidenceItem",
+  "description": "Schema for individual photographic, optical, and physical measurement evidence items.",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "image_sha256",
+    "bounding_box",
+    "calibration_status",
+    "observed_value"
+  ],
+  "properties": {
+    "evidence_id": { "type": "string" },
+    "image_sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "panel_name": {
+      "type": "string",
+      "enum": ["PRINCIPAL_DISPLAY_PANEL", "TOP", "BOTTOM", "LEFT", "RIGHT", "BACK", "UNKNOWN"]
+    },
+    "bounding_box": {
+      "type": "object",
+      "required": ["x_min", "y_min", "x_max", "y_max"],
+      "properties": {
+        "x_min": { "type": "number" },
+        "y_min": { "type": "number" },
+        "x_max": { "type": "number" },
+        "y_max": { "type": "number" }
+      }
+    },
+    "calibration_status": {
+      "type": "string",
+      "enum": ["CALIBRATED", "UNCALIBRATED", "APPROXIMATE_ASSISTED"]
+    },
+    "physical_scale_mm_per_pixel": {
+      "type": ["number", "null"]
+    },
+    "observed_value": {
+      "type": "object",
+      "properties": {
+        "raw_text": { "type": "string" },
+        "normalized_value": { "type": ["string", "number", "boolean", "null"] },
+        "measured_font_height_mm": { "type": ["number", "null"] },
+        "measured_pdp_area_cm2": { "type": ["number", "null"] },
+        "ocr_confidence": { "type": "number" }
+      }
+    },
+    "operator_annotation": {
+      "type": "object",
+      "properties": {
+        "reviewed_by": { "type": "string" },
+        "confirmed": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 # Master MVP Unified Workflow Graph & Node Architecture Specification
 ## MetroLens AI™ — Automated Legal Metrology Inspection & Compliance System
 ### Sponsoring Ministry: Ministry of Consumer Affairs, Food & Public Distribution | Problem Statement: SIH26034
-**Document Status:** Authoritative Team Architecture Reference | **Target Environment:** 100% Offline Localhost Edge
+**Document Status:** Authoritative Team Architecture Reference | **Target Environment:** Online Web Application (FastAPI + React Web)
 
 ---
 
@@ -19,12 +19,9 @@ To accommodate different team working dynamics, this architecture supports **two
 > [!IMPORTANT]
 > **Definitive Delivery Sequence:**
 > * **Phase 1 (Active MVP Milestone): Complete Responsive Web Platform First.**  
->   All frontend engineering is strictly dedicated to the Responsive Web Application & PWA (`React + Vite + Tailwind`, HTML5 WebRTC camera stream). It runs seamlessly across mobile browsers (Chrome/Safari on smartphones) and desktop/laptop browsers. No native mobile app code is touched during this phase.
-> * **Phase 2 (Post-Web Milestone): Native Mobile App.**  
->   Development of native Android/iOS applications (or Capacitor/React Native wrappers) will commence **strictly after** the Web platform is 100% feature-complete, tested, and validated.
-
-> [!NOTE]
-> Task assignments in this document are intentionally structured as **open role slots** (`[Slot 1..6 / Teammate: _______]`) so the team can allocate roles dynamically without needing to restructure technical dependencies.
+>   All frontend engineering is strictly dedicated to the Responsive Web Application (`React + Vite + Tailwind`, modern Image Upload Dropzone with optional camera capture). It runs seamlessly across mobile browsers (Chrome/Safari on smartphones) and desktop/laptop browsers.
+> * **Phase 2 (Post-Web Milestone): Native Mobile App & Catalog Scraper.**  
+>   Development of native Android/iOS applications and marketplace catalog batch scrapers will commence **strictly after** the Web platform is 100% feature-complete, tested, and validated.
 
 ---
 
@@ -43,8 +40,8 @@ flowchart TD
     classDef testNode fill:#e0f2f1,stroke:#00897b,stroke-width:2px,stroke-dasharray: 4 4,color:#004d40;
 
     %% Layer 1: Ingestion & Quality Gate
-    subgraph L1 ["Layer 1: Edge Ingestion & Frame Quality Gate"]
-        N01["Node 01: Mobile Web Viewfinder & Ingestion<br/><code>frontend/src/components/CameraViewfinder.tsx</code><br/><i>[Slot: Viewfinder / UI Lead]</i>"]:::client
+    subgraph L1 ["Layer 1: Web Ingestion & Frame Quality Gate"]
+        N01["Node 01: Web Image Upload Dropzone & Ingestion<br/><code>apps/web/src/components/ImageUploadZone.tsx</code><br/><i>[Slot: M4 Frontend Lead]</i>"]:::client
         N02{"Node 02: Frame Quality Gate<br/>HSV Glare & Laplacian Blur<br/><code>backend/modules/calibration/quality.py</code><br/><i>[Slot: CV & Calibration Lead]</i>"}:::gate
         N02_FAIL["Quality Rejection & Reticle Feedback<br/><i>'Excessive Glare / Blur Detected'</i>"]:::fallback
         T01[["Test Node T01: Quality Gate Test Suite<br/><code>tests/test_quality_gate.py</code><br/><i>Validates blur & glare thresholds on synthetic frames</i>"]]:::testNode
@@ -203,27 +200,25 @@ Each track relies on pre-defined **Mock Test Fixtures** stored in `tests/fixture
 
 ## 4. Comprehensive Node Directory & Architecture Links (N01–N16)
 
-*(Note: Team role assignments are left open for the team to allocate dynamically.)*
-
-| Node ID | Node Name | Subsystem | Assigned Slot | Target File Path | Primary Algorithm / Library | Relevant Spec & Legal Documentation |
+| Node ID | Node Name | Subsystem | Assigned Lead | Target File Path | Primary Algorithm / Library | Relevant Spec & Legal Documentation |
 | :---: | :--- | :--- | :---: | :--- | :--- | :--- |
-| **N01** | Mobile Web Viewfinder & Ingestion | Frontend | `[Slot: Frontend Lead]` | `frontend/src/components/CameraViewfinder.tsx` | WebRTC MediaStream API, HTML5 Canvas 2D capture | [`docs/PRODUCT_BLUEPRINT.md §6`](docs/PRODUCT_BLUEPRINT.md#6-comprehensive-system-architecture-v03) |
-| **N02** | Frame Quality Gate | Calibration | `[Slot: Calibration Lead]` | `backend/modules/calibration/quality.py` | Laplacian variance (blur), HSV $V \ge 250, S \le 25$ (glare) | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md#8-physical-measurement-pipeline--optical-principles) |
-| **N03** | Metric Anchor Detector | Calibration | `[Slot: Calibration Lead]` | `backend/modules/calibration/anchor_detector.py` | OpenCV `findContours`, ellipse fitting ($27.0\text{mm}$ ₹10 coin), ArUco | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md#8-physical-measurement-pipeline--optical-principles) |
-| **N03b**| Manual Scale Override Fallback | Frontend/CV | `[Slot: Frontend & CV]` | `frontend/src/components/ManualCalibrationModal.tsx` | Two-point caliper line selection on canvas | [`docs/TECHNICAL_DECISIONS.md ADR-03`](docs/TECHNICAL_DECISIONS.md) |
-| **N04** | Planar Homography & Metric Scale Engine | Calibration | `[Slot: Calibration Lead]` | `backend/modules/calibration/homography.py` | OpenCV `getPerspectiveTransform`, `warpPerspective`, $S = 27.0 / d_{\text{major}}$ | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md#8-physical-measurement-pipeline--optical-principles) |
-| **N05** | Cylinder Central Generator Invariance Filter | Calibration | `[Slot: Calibration Lead]` | `backend/modules/calibration/cylinder.py` | Central $40^\circ$ vertical generator strip masking ($\cos\phi \ge 0.94$) | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md#8-physical-measurement-pipeline--optical-principles) |
-| **N06** | Multilingual Scene Text OCR Engine | OCR / AI | `[Slot: AI & OCR Lead]` | `backend/modules/ocr/engine.py` | PaddleOCR v4 Mobile ONNX int8 (`DBNet++`, `SVTR`) on CPU | [`docs/TECHNICAL_DECISIONS.md ADR-02`](docs/TECHNICAL_DECISIONS.md) |
-| **N07** | Calibrated Font Stroke Measurement | OCR / CV | `[Slot: AI & Calibration]` | `backend/modules/ocr/stroke_measure.py` | Vertical bounding box projection: $h_{\text{mm}} = h_{\text{px}} \times S$ | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md#8-physical-measurement-pipeline--optical-principles) |
-| **N08** | Canonical Entity Normalizer | Rules | `[Slot: Backend Lead]` | `backend/modules/rules/normalizer.py` | Deterministic regex token extractors, Pydantic data model | [`docs/PRODUCT_BLUEPRINT.md §9`](docs/PRODUCT_BLUEPRINT.md#9-statutory-compliance-rule-engine-specification) |
-| **N09** | Rule 26 Statutory Exemption Switch | Rules | `[Slot: Backend Lead]` | `backend/modules/rules/exemption_checker.py` | Boolean gating: net quantity $\le 10\text{g}/\text{ml}$, wholesale $> 25\text{kg}$ | [`docs/LEGAL_RULE_MATRIX.md §6`](docs/LEGAL_RULE_MATRIX.md) |
-| **N10** | Rule 6 Mandatory Declaration Verifier | Rules | `[Slot: Backend Lead]` | `backend/modules/rules/rule6_verifier.py` | Verification of 8 statutory clauses: 6(1)(a) through 6(1)(h) | [`docs/LEGAL_RULE_MATRIX.md §3`](docs/LEGAL_RULE_MATRIX.md) |
-| **N11** | Rule 6(11) USP Arithmetic Auditor | Rules | `[Slot: Backend Lead]` | `backend/modules/rules/usp_auditor.py` | IEEE 754 math: $\text{Expected USP} = \text{MRP} / \text{NetQty}$, tolerance $\le 1.0\%$ | [`docs/LEGAL_RULE_MATRIX.md §4`](docs/LEGAL_RULE_MATRIX.md) |
-| **N12** | Rule 7 & Table-I/II Font Height Auditor | Rules | `[Slot: Backend Lead]` | `backend/modules/rules/rule7_font_matrix.py` | Area-bracket indexing ($\le 50\text{cm}^2, 50\text{--}100, 100\text{--}500, 500\text{--}2500, >2500$) | [`docs/LEGAL_RULE_MATRIX.md §5`](docs/LEGAL_RULE_MATRIX.md) |
-| **N13** | 5-State Regulatory Adjudication Engine | Rules/QA | `[Slot: Backend & QA]` | `backend/modules/rules/classifier.py` | Statutory state machine: GREEN, RED, AMBER, BLUE, GRAY | [`docs/PRODUCT_BLUEPRINT.md §7`](docs/PRODUCT_BLUEPRINT.md#7-the-four-pillars-ai-vs-deterministic-boundaries) |
-| **N14** | Tamper-Evident Report Generator | Reporting | `[Slot: Reporting Lead]` | `backend/modules/reporting/pdf_generator.py` | ReportLab / Weasyprint, SHA-256 digest, Section 36(1) notice | [`METROLENS_LEGAL_SOURCE_PACK/`](METROLENS_LEGAL_SOURCE_PACK/) |
-| **N15** | Inspector Review UI & Evidence Viewer | Frontend | `[Slot: Frontend Lead]` | `frontend/src/components/InspectionResults.tsx` | React 5-state badge UI, side-by-side cropped declaration viewer | [`docs/PRODUCT_BLUEPRINT.md §7`](docs/PRODUCT_BLUEPRINT.md#7-the-four-pillars-ai-vs-deterministic-boundaries) |
-| **N16** | eMaap Mock REST Sync Adapter | Reporting | `[Slot: Reporting Lead]` | `backend/modules/reporting/emaap_adapter.py` | FastAPI endpoint: `POST /api/v1/emaap/mock-sync` mock receiver | [`docs/PRODUCT_BLUEPRINT.md §6`](docs/PRODUCT_BLUEPRINT.md#6-comprehensive-system-architecture-v03) |
+| **N01** | Web Image Upload Dropzone | Frontend | **M4 (Frontend Lead)** | `apps/web/src/components/ImageUploadZone.tsx` | Drag & Drop API, FilePicker, HTML5 Canvas / Camera | [`docs/PRODUCT_BLUEPRINT.md §6`](docs/PRODUCT_BLUEPRINT.md) |
+| **N02** | Frame Quality Gate | Calibration | **M2 (CV Lead)** | `backend/modules/calibration/quality.py` | Laplacian variance (blur), HSV $V \ge 250, S \le 25$ (glare) | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md) |
+| **N03** | Metric Anchor Detector | Calibration | **M2 (CV Lead)** | `backend/modules/calibration/anchor_detector.py` | OpenCV `findContours`, ellipse fitting ($27.0\text{mm}$ ₹10 coin), ArUco | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md) |
+| **N03b**| Manual Scale Override Fallback | Frontend/CV | **M4 & M2** | `apps/web/src/components/ManualCalibrationModal.tsx` | Two-point caliper line selection on canvas | [`docs/TECHNICAL_DECISIONS.md ADR-003`](docs/TECHNICAL_DECISIONS.md) |
+| **N04** | Planar Homography & Metric Scale Engine | Calibration | **M2 (CV Lead)** | `backend/modules/calibration/homography.py` | OpenCV `getPerspectiveTransform`, `warpPerspective`, $S = 27.0 / d_{\text{major}}$ | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md) |
+| **N05** | Cylinder Central Generator Invariance Filter | Calibration | **M2 (CV Lead)** | `backend/modules/calibration/cylinder.py` | Central $40^\circ$ vertical generator strip masking ($\cos\phi \ge 0.94$) | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md) |
+| **N06** | Multilingual Scene Text OCR Engine | OCR / AI | **M1 (AI/OCR Lead)** | `backend/modules/ocr/engine.py` | PaddleOCR v4 Mobile ONNX int8 (`DBNet++`, `SVTR`) on CPU | [`docs/TECHNICAL_DECISIONS.md ADR-001`](docs/TECHNICAL_DECISIONS.md) |
+| **N07** | Calibrated Font Stroke Measurement | OCR / CV | **M1 & M2** | `backend/modules/ocr/stroke_measure.py` | Vertical bounding box projection: $h_{\text{mm}} = h_{\text{px}} \times S$ | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md) |
+| **N08** | Canonical Entity Normalizer | Rules | **M3 (Backend Lead)** | `backend/modules/rules/normalizer.py` | Deterministic regex token extractors, Pydantic data model | [`docs/PRODUCT_BLUEPRINT.md §9`](docs/PRODUCT_BLUEPRINT.md) |
+| **N09** | Rule 26 Statutory Exemption Switch | Rules | **M3 (Backend Lead)** | `backend/modules/rules/exemption_checker.py` | Boolean gating: net quantity $\le 10\text{g}/\text{ml}$, wholesale $> 25\text{kg}$ | [`docs/LEGAL_RULE_MATRIX.md §6`](docs/LEGAL_RULE_MATRIX.md) |
+| **N10** | Rule 6 Mandatory Declaration Verifier | Rules | **M3 (Backend Lead)** | `backend/modules/rules/rule6_verifier.py` | Verification of 8 statutory clauses: 6(1)(a) through 6(1)(h) | [`docs/LEGAL_RULE_MATRIX.md §3`](docs/LEGAL_RULE_MATRIX.md) |
+| **N11** | Rule 6(11) USP Arithmetic Auditor | Rules | **M3 (Backend Lead)** | `backend/modules/rules/usp_auditor.py` | IEEE 754 math: $\text{Expected USP} = \text{MRP} / \text{NetQty}$, tolerance $\le 1.0\%$ | [`docs/LEGAL_RULE_MATRIX.md §4`](docs/LEGAL_RULE_MATRIX.md) |
+| **N12** | Rule 7 & Table-I/II Font Height Auditor | Rules | **M3 (Backend Lead)** | `backend/modules/rules/rule7_font_matrix.py` | Area-bracket indexing ($\le 50\text{cm}^2, 50\text{--}100, 100\text{--}500, 500\text{--}2500, >2500$) | [`docs/LEGAL_RULE_MATRIX.md §5`](docs/LEGAL_RULE_MATRIX.md) |
+| **N13** | 5-State Regulatory Adjudication Engine | Rules/QA | **M3 (Backend Lead)** | `backend/modules/rules/classifier.py` | Statutory state machine: GREEN, RED, AMBER, BLUE, GRAY | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md) |
+| **N14** | Tamper-Evident Report Generator | Reporting | **M6 (DevOps/Reporting)** | `backend/modules/reporting/pdf_generator.py` | ReportLab / Weasyprint, SHA-256 digest, Section 36(1) notice | [`METROLENS_LEGAL_SOURCE_PACK/`](METROLENS_LEGAL_SOURCE_PACK/) |
+| **N15** | Inspector Review UI & Evidence Viewer | Frontend | **M4 (Frontend Lead)** | `apps/web/src/components/InspectionResults.tsx` | React 5-state badge UI, side-by-side cropped declaration viewer | [`docs/PRODUCT_BLUEPRINT.md §8`](docs/PRODUCT_BLUEPRINT.md) |
+| **N16** | eMaap Mock REST Sync Adapter | Reporting | **M6 (DevOps/Reporting)** | `backend/modules/reporting/emaap_adapter.py` | FastAPI endpoint: `POST /api/v1/emaap/mock-sync` mock receiver | [`docs/PRODUCT_BLUEPRINT.md §6`](docs/PRODUCT_BLUEPRINT.md) |
 
 ---
 
@@ -242,18 +237,18 @@ To guarantee that any layer or track can be independently tested and certified, 
 
 ---
 
-## 6. Flexible Six-Member Team Allocation Template
+## 6. Six-Member Team Allocation Matrix
 
-Use this blank template to assign roles and track ownership within your team:
+Aligned with [`docs/TEAM_RESPONSIBILITIES.md`](docs/TEAM_RESPONSIBILITIES.md):
 
-| Slot | Functional Role Title | Assigned Teammate | Primary Node Ownership | Secondary Cross-Support Area |
-| :---: | :--- | :---: | :---: | :---: |
-| **Slot 1** | **Frontend & Viewfinder Lead** | `____________________` | **N01, N03b, N15** | Mobile camera UX, reticle guides, 5-state UI cards |
-| **Slot 2** | **Calibration & Geometry Lead** | `____________________` | **N02, N03, N04, N05** | OpenCV coin detector, homography unwarping, T01, T02 |
-| **Slot 3** | **AI & OCR Perception Lead** | `____________________` | **N06, N07** | PaddleOCR ONNX runtime, Devanagari models, T03 |
-| **Slot 4** | **Backend & Rule Engine Lead** | `____________________` | **N08, N09, N10, N11, N12** | Pydantic normalizer, deterministic state machine, T04 |
-| **Slot 5** | **Data, Benchmark & QA Lead** | `____________________` | **T01–T06, Datasets** | 35 SKU package collection, ground truth scans, test suites |
-| **Slot 6** | **Product, Reporting & DevOps Lead** | `____________________` | **N13, N14, N16** | SHA-256 PDF generator, eMaap mock sync, demo scripts |
+| Member | Functional Role Title | Primary Node Ownership | Secondary Cross-Support Area |
+| :---: | :--- | :---: | :--- |
+| **M1** | **AI & OCR Perception Lead** | **N06, N07** | PaddleOCR ONNX runtime, Devanagari models, T03 |
+| **M2** | **Calibration & Geometry Lead** | **N02, N03, N04, N05** | OpenCV coin detector, homography unwarping, T01, T02 |
+| **M3** | **Backend & Rule Engine Lead** | **N08, N09, N10, N11, N12, N13** | Pydantic normalizer, deterministic state machine, T04 |
+| **M4** | **Frontend & Web UX Lead** | **N01, N03b, N15** | Web upload dropzone, 5-state result cards, evidence modal |
+| **M5** | **Data, Benchmark & QA Lead** | **T01–T06, Datasets** | 35 SKU package collection, ground truth scans, test suites |
+| **M6** | **Product, Reporting & DevOps Lead** | **N14, N16** | SHA-256 PDF generator, eMaap mock sync, Docker CI/CD |
 
 ---
 
@@ -367,24 +362,24 @@ These canonical schemas allow teammates to mock any node's output and test in co
 
 ---
 
-## 9. How 100% Offline Edge AI Execution Works (The Zero-Cloud Guarantee)
+## 9. How Zero-Cloud-AI Web Execution Works (The Local Inference Guarantee)
 
-A common question is: **"If AI models are being used, how can the entire system run 100% offline without any internet connection?"**
+A common question is: **"If AI models are being used in a web application, does every image upload get sent to expensive third-party cloud AI APIs?"**
 
-Here is the exact engineering mechanism:
+**Answer: Absolutely NOT.** MetroLens AI executes all neural inference on the server CPU using local quantized models:
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        THE ZERO-CLOUD OFFLINE EDGE STACK                               │
+│                        THE ZERO-CLOUD-API WEB ARCHITECTURE                             │
 │                                                                                        │
-│  [ Web Browser / Smartphone PWA ]  <─── Localhost HTTP / WS ───>  [ Local FastAPI ]   │
-│  • Served from localhost:5173                                     • Runs on localhost  │
-│  • PWA Service Worker caches HTML/JS/CSS                         • Port 8000           │
+│  [ Client Web Browser / Mobile ]  <─── HTTPS REST (Upload) ───>  [ FastAPI Server ]    │
+│  • Modern Upload Dropzone & UI                                   • Port 8000           │
+│  • Responsive React / Tailwind                                   • Stream Validation   │
 │                                                                          │             │
 │                                                                          ▼             │
 │                                                        ┌─────────────────────────────┐ │
 │                                                        │ ONNX Runtime Engine (C/C++) │ │
-│                                                        │ • Executes on Local CPU     │ │
+│                                                        │ • Executes on Server CPU    │ │
 │                                                        │ • AVX2 / NEON SIMD Vector   │ │
 │                                                        └──────────────┬──────────────┘ │
 │                                                                       │                │
@@ -400,25 +395,26 @@ Here is the exact engineering mechanism:
 
 ### 1. Pre-Packaged, Quantized ONNX Neural Weights (~12.6 MB Total)
 * MetroLens AI **never calls cloud AI APIs** (like OpenAI GPT-4, Google Cloud Vision, AWS Rekognition, or Anthropic Claude).
-* Instead, it uses **quantized local neural networks** (`ch_PP-OCRv4_det_infer.onnx` + `ch_PP-OCRv4_rec_infer.onnx`) stored directly inside the repository under `backend/models/paddleocr/`.
-* The entire model bundle is only **~12.6 MB** on disk and loads directly into system RAM ($< 150\text{MB}$ memory footprint).
+* Instead, it uses **quantized local neural networks** (`ch_PP-OCRv4_det_infer.onnx` + `ch_PP-OCRv4_rec_infer.onnx`) stored directly inside the server repository under `backend/models/paddleocr/`.
+* The entire model bundle is only **~12.6 MB** on disk and loads directly into server RAM ($< 150\text{MB}$ memory footprint).
 
 ### 2. Native CPU Inference Engine (`onnxruntime`)
-* The models execute using the C++/Python `onnxruntime` library running directly on the host computer's standard CPU (Intel, AMD, or ARM).
+* The models execute using the C++/Python `onnxruntime` library running directly on the server's standard CPU (Intel, AMD, or ARM).
 * It utilizes hardware-accelerated SIMD instructions (`AVX2`, `FMA`, or ARM `NEON`) to compute forward tensor passes in **$300\text{--}800\text{ms}$** per frame without requiring an expensive NVIDIA GPU.
 
 ### 3. Strict Functional Boundary: AI Perceives, Pure Math & State Machines Decide
-* **The AI's only role:** Convert raw camera pixels into text strings and 2D bounding boxes.
+* **The AI's only role:** Convert raw packaging pixels into text strings and 2D bounding boxes.
 * **The Legal Decision Engine:** Once text is extracted, the AI is completely done. All statutory compliance decisions (Rule 6 omissions, Rule 6(11) USP division, Rule 7 area brackets, Rule 26 exemptions) are evaluated by a **pure Python deterministic state machine** (`backend/modules/rules/`).
-* This eliminates LLM hallucinations, guarantees legal reproducibility, and requires **zero internet access**.
+* This eliminates LLM hallucinations, guarantees legal reproducibility, and incurs **zero per-inspection API costs**.
 
-### 4. Local Web Server & Offline PWA Architecture
-* The backend runs on `http://localhost:8000` via Uvicorn.
-* The frontend is built as a **Progressive Web App (PWA)** using Vite. When built, the browser's Service Worker caches the web assets (`index.html`, JavaScript bundles, CSS).
-* The inspector's phone and demonstrator laptop connect via local Wi-Fi hotspot or direct USB tethering without any active cellular data or external gateway routing.
+### 4. Modern Web Server & Ephemeral Ingestion
+* The backend runs via Uvicorn/FastAPI with reverse-proxy TLS termination.
+* The frontend is built as a responsive single-page web application using Vite, React, and Tailwind CSS.
+* Images are streamed over HTTPS, verified against magic bytes, evaluated in-memory, and purged post-inspection.
 
 ---
 
 <p align="center">
-  <sub>MetroLens AI™ Architecture & Engineering Specification • Made by Harsh</sub>
+  <sub>MetroLens AI™ Architecture & Engineering Specification</sub>
 </p>
+

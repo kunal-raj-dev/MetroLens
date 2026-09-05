@@ -1,0 +1,179 @@
+name: "✨ Feature / Enhancement"
+description: "Propose a new capability, architectural feature, or algorithmic enhancement"
+title: "[FEAT]: "
+labels: ["type:feat", "status:specifying"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### MetroLens AI™ — Feature Specification & Definition of Ready
+        Every feature proposal must be thoroughly documented, grounded in statutory or architectural sources, and satisfy the **Definition of Ready (DoR)** before development begins.
+        *Authoritative References:* [`GLOBAL_TEAM_WORKFLOW.md`](../../GLOBAL_TEAM_WORKFLOW.md) | [`docs/DEFINITION_OF_READY.md`](../../docs/DEFINITION_OF_READY.md)
+
+  - type: input
+    id: feature_summary
+    attributes:
+      label: "Feature Summary"
+      description: "A concise 1–2 sentence statement of what this feature accomplishes and its desired outcome."
+      placeholder: "e.g., Implement Unit Sale Price (USP) standard denomination rounding auditor under Rule 6(11)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_context
+    attributes:
+      label: "Problem Statement & Context"
+      description: "Why does this work exist? What user problem, statutory mandate, or architectural gap does it solve?"
+      placeholder: "e.g., Manufacturers frequently declare non-standard USP units (e.g., per 50g instead of per 100g or 1kg). The rule engine requires deterministic arithmetic checks to flag deceptive packaging math."
+    validations:
+      required: true
+
+  - type: input
+    id: statutory_architectural_reference
+    attributes:
+      label: "Statutory / Architectural Reference"
+      description: "Link to Gazette notification, LMPC Rule, Jan Vishwas clause, Master Blueprint section, or Traceability ID (TR-01 to TR-10)."
+      placeholder: "e.g., LMPC Rules, 2011 Rule 6(11); docs/LEGAL_RULE_MATRIX.md; Traceability TR-05"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: "Target Subsystem"
+      description: "Select the primary MetroLens architectural module affected by this change."
+      options:
+        - "Backend / Rule Engine (modules/rules/)"
+        - "AI & Scene Text OCR (modules/ocr/)"
+        - "Computer Vision & Metric Scale (modules/cv/)"
+        - "Frontend & Inspector PWA (frontend/)"
+        - "Tamper-Evident Reporting (modules/reporting/)"
+        - "Data Collection & Ground Truth (data/)"
+        - "FastAPI Server & Infrastructure (backend/)"
+        - "Legal Source Pack (METROLENS_LEGAL_SOURCE_PACK/)"
+        - "CI/CD & Repository Governance (.github/)"
+        - "Documentation & Architecture (docs/)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority Level"
+      description: "Follow the project's authoritative P0–P3 priority standard."
+      options:
+        - "P0-blocker (Showstopper for demo or compliance verification)"
+        - "P1-high (Core milestone deliverable / critical path)"
+        - "P2-medium (Standard feature enhancement)"
+        - "P3-low (Desirable cosmetic improvement or minor optimization)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: primary_owner
+    attributes:
+      label: "Primary Owner (Exactly One)"
+      description: "Select the single responsible engineer accountable for delivering this feature to Definition of Done."
+      options:
+        - "M1 — AI & OCR Lead (PaddleOCR ONNX, CPU quantization, Devanagari)"
+        - "M2 — Calibration & Geometry Lead (Optical scale, coin detection, cylinder invariance)"
+        - "M3 — Backend & Rule Engine Lead (FastAPI, schemas, LMPC state machine, USP math)"
+        - "M4 — Frontend & UX Lead (Vite/React PWA, viewfinder, 5-state badges, evidence viewer)"
+        - "M5 — Data & Benchmark Lead (SKU curation, 1200 DPI ground-truth scans, CER/WER)"
+        - "M6 — Product, DevOps & Presentation Lead (Governance, CI/CD, PDF reports, eMaap adapter)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: secondary_support
+    attributes:
+      label: "Secondary Cross-Support Lead"
+      description: "Designated cross-support teammate responsible for pair consultation and code review."
+      options:
+        - "None / Self-contained"
+        - "M1 — AI & OCR Lead"
+        - "M2 — Calibration & Geometry Lead"
+        - "M3 — Backend & Rule Engine Lead"
+        - "M4 — Frontend & UX Lead"
+        - "M5 — Data & Benchmark Lead"
+        - "M6 — Product, DevOps & Presentation Lead"
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope_in
+    attributes:
+      label: "In-Scope Boundary"
+      description: "Explicitly specify what this feature MUST implement."
+      placeholder: |
+        - Implement USP arithmetic check for grams, kilograms, milliliters, and liters.
+        - Validate against declared Net Quantity and MRP.
+        - Return POTENTIAL_NON_COMPLIANCE when USP deviates > 1% from exact arithmetic.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope_out
+    attributes:
+      label: "Out-of-Scope Boundary (Anti-Scope Creep)"
+      description: "Explicitly declare what this feature will NOT do to prevent runaway scope."
+      placeholder: |
+        - Does NOT handle multipack / wholesale calculations (deferred to later milestone).
+        - Does NOT perform currency conversions.
+        - Does NOT alter the frontend rendering component.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: "Testable Acceptance Criteria"
+      description: "Measurable pass/fail criteria. Avoid vague statements like 'make it work'. Include edge cases."
+      placeholder: |
+        - [ ] All standard denominations under Rule 6(11) correctly parsed (1g, 100g, 1kg, 1ml, 500ml, 1l).
+        - [ ] IEEE-754 precision guarded against floating point rounding errors.
+        - [ ] Unit test suite achieves 100% branch coverage on the new module.
+        - [ ] Execution completes in < 15ms on local CPU without network calls.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: "Dependencies & Prerequisites"
+      description: "List any prerequisite issues, merged PRs, dataset fixtures, or environment requirements."
+      placeholder: "e.g., Requires Pydantic canonical schema PR #14 merged into main; requires Python 3.10+."
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_approach
+    attributes:
+      label: "Test & Verification Strategy"
+      description: "How will this feature be verified before opening a Pull Request?"
+      placeholder: "e.g., Pytest unit test suite with 15 parameterized cases; offline verification with network disabled."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dor_verification
+    attributes:
+      label: "Definition of Ready (DoR) Gate Checklist"
+      description: "The issue author and primary owner must confirm all items before transitioning this issue to READY."
+      options:
+        - label: "Clear objective stated in 1–2 unambiguous sentences"
+          required: true
+        - label: "Statutory or architectural reference documented and verified"
+          required: true
+        - label: "In-scope and out-of-scope boundaries explicitly demarcated"
+          required: true
+        - label: "Acceptance criteria are testable, measurable, and cover boundary cases"
+          required: true
+        - label: "Prerequisites and dependencies identified and confirmed available"
+          required: true
+        - label: "Test approach defined and executable locally/offline"
+          required: true
+        - label: "Target subsystem identified and aligned with repository structure"
+          required: true
+        - label: "Exactly one primary owner assigned (M1–M6)"
+          required: true

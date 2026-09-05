@@ -26,7 +26,7 @@
 #### Q3: "What is your measurement uncertainty, and how do you prevent false-positive violation notices on borderline fonts?"
 - **Answer:**
   - **FACT:** Handheld calipers and optical binarization both exhibit edge-detection variance ($\pm 0.05\text{–}0.10\text{mm}$).
-  - **ENGINEERING DECISION:** We do not issue unilateral violation notices on borderline measurements. The rule engine implements a **Statutory Benefit-of-Doubt Buffer of $0.10\text{mm}$**:
+  - **ENGINEERING DECISION:** We do not issue unilateral violation notices on borderline measurements. The rule engine implements a **Measurement Uncertainty Review Band Buffer of $0.10\text{mm}$**:
     - If statutory minimum is $1.50\text{mm}$, an actionable potential non-compliance is flagged only if measured height falls strictly below $1.40\text{mm}$.
     - Measurements between $1.40\text{mm}$ and $1.50\text{mm}$ are classified as `MANUAL_REVIEW_REQUIRED`, presenting a side-by-side zoomed crop for officer confirmation.
   - **LIMITATION:** Optical measurement precision is bounded by sensor pixel density and focus blur.
@@ -65,7 +65,7 @@
 
 #### Q8: "How does the system verify the Unit Sale Price (USP) mandate introduced in recent amendments?"
 - **Answer:**
-  - **FACT:** Under Rule 6(11) (enacted via GSR 779(E) and enforced October 1, 2022), pre-packaged commodities containing $>1$ unit or $>1\text{kg/L}$ must declare Unit Sale Price in standardized denominations: per g or per 100g ($<1\text{kg}$), per kg ($\ge 1\text{kg}$), per ml/100ml ($<1\text{L}$), per L ($\ge 1\text{L}$), or per item/number.
+  - **FACT:** Under Rule 6(11) (enacted via GSR 779(E) and enforced October 1, 2022), pre-packaged commodities containing $>1$ unit or $>1\text{kg/L}$ must declare Unit Sale Price in standardized denominations: per g or per g or kg ($<1\text{kg}$), per kg ($\ge 1\text{kg}$), per ml/100ml ($<1\text{L}$), per L ($\ge 1\text{L}$), or per item/number.
   - **ENGINEERING DECISION:** Our rule engine extracts Net Quantity and MRP, determines the mandatory statutory denomination, computes expected USP via deterministic arithmetic ($\text{Expected USP} = \text{MRP} / \text{Quantity}$), and validates that the declared USP matches the calculation within standard rounding limits ($\pm 1\%$).
   - **LIMITATION:** If declared USP text is completely obscured or worn off, OCR cannot extract it; the system flags `POTENTIAL_NON_COMPLIANCE — Omission of Mandatory USP Declaration`.
 - **Evidence:** Automated unit tests in `tests/test_rule_6_11_usp.py` covering 25 arithmetic edge cases.
@@ -150,7 +150,7 @@
 #### Q18: "What legal validity does an AI report have in an Indian court of law?"
 - **Answer:**
   - **FACT:** Under Section 63 of the Bharatiya Sakshya Adhiniyam, 2023 (formerly Section 65B of the Indian Evidence Act), electronic records require proof of authenticity, integrity, and custody certified by an authorized officer. Software cannot certify its own legal admissibility by fiat.
-  - **ENGINEERING DECISION:** The system functions as a **Prima Facie Evidentiary Screening Tool under Section 15**. To establish tamper-evidence, the generated Assessment Report embeds:
+  - **ENGINEERING DECISION:** The system functions as a **supporting inspection evidence Screening Tool under Section 15**. To establish tamper-evidence, the generated Assessment Report embeds:
     1. Cryptographic SHA-256 hash of the raw uncompressed photo.
     2. Calibrated bounding box coordinates and millimeter measurements.
     3. ISO-8601 UTC timestamp and GPS coordinates.

@@ -26,10 +26,33 @@ venv/
 .venv/
 ENV/
 
-# Environment Variables
+# Node / Web UI
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.next/
+out/
+build/
+dist/
+
+# Large binaries, models, raw datasets (tracked via manifests)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+models/weights/*
+!models/weights/.gitkeep
+
+# Environment variables & secrets
 .env
 .env.*
 !.env.example
+.env.local
+.env.production
+*.pem
+*.key
 
 # Operating System Files
 Thumbs.db
@@ -45,3 +68,15 @@ ehthumbs_vista.db
 .idea/
 *.swp
 *.swo
+
+# Test coverage & caches
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Experiment artifacts (runs)
+benchmarks/runs/*
+!benchmarks/runs/.gitkeep
+experiments/*/artifacts/

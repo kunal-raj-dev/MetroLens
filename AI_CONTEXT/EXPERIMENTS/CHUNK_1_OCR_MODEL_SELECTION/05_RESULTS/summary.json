@@ -1,0 +1,44 @@
+[
+  {
+    "candidate_id": "OCR-C1-001",
+    "model_name": "PP-OCRv3-EN",
+    "cold_load_ms": 291.11,
+    "median_latency_ms": 674.8,
+    "p95_latency_ms": 726.28,
+    "peak_rss_mb": 106.17,
+    "total_fields_tested": 29,
+    "fields_matched": 27,
+    "field_accuracy_pct": 93.1,
+    "offline_status": "PASS",
+    "license": "Apache-2.0",
+    "model_size_mb": 12.52
+  },
+  {
+    "candidate_id": "OCR-C1-002",
+    "model_name": "PP-OCRv3-HINDI",
+    "cold_load_ms": 699.52,
+    "median_latency_ms": 447.65,
+    "p95_latency_ms": 542.71,
+    "peak_rss_mb": 120.12,
+    "total_fields_tested": 29,
+    "fields_matched": 5,
+    "field_accuracy_pct": 17.2,
+    "offline_status": "PASS",
+    "license": "Apache-2.0",
+    "model_size_mb": 10.88
+  },
+  {
+    "candidate_id": "OCR-C1-003",
+    "model_name": "PP-OCRv3-DUAL",
+    "cold_load_ms": 632.61,
+    "median_latency_ms": 1227.76,
+    "p95_latency_ms": 1422.15,
+    "peak_rss_mb": 157.33,
+    "total_fields_tested": 29,
+    "fields_matched": 27,
+    "field_accuracy_pct": 93.1,
+    "offline_status": "PASS",
+    "license": "Apache-2.0",
+    "model_size_mb": 21.08
+  }
+]

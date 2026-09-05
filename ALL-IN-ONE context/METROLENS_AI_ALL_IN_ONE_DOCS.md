@@ -1,4 +1,18 @@
+> [!WARNING]
+> # HISTORICAL / RESEARCH SNAPSHOT — NOT CANONICAL
+> **THIS DOCUMENT IS A HISTORICAL RESEARCH SNAPSHOT COMPILED DURING EARLY DISCOVERY.**
+> **DO NOT USE THIS DOCUMENT AS AN AUTHORITATIVE SOURCE OF TRUTH.**
+> 
+> For active, legally verified, and canonical engineering specifications, consult:
+> - `docs/02_LEGAL_AUTHORITY/` (Official Gazette source registers and statutory citations)
+> - `docs/04_ARCHITECTURE/` (System topology, data pipelines, and evidence architecture)
+> - `docs/13_BUILD_PLAN/DISTRIBUTED_DEVELOPMENT_BASELINE.md` (Engineering seams and ownership)
+> - `docs/15_DECISIONS/` (Canonical Architecture Decision Records)
+> - `regulations/source_registry.yaml` (Sole canonical regulatory registry)
+> - `rules/` (Machine-readable rule definitions and schemas)
+> - `packages/shared/` (Frozen contract interfaces and domain models)
 
+---
 
 # --- FILE: ARCHITECTURE_REVIEW_V0_3.md ---
 

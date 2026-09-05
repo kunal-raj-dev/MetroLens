@@ -111,7 +111,7 @@ This document records the architectural, algorithmic, and engineering trade-offs
   3. System metadata (UTC ISO-8601 timestamp, GPS coordinates, device identifier, model version hash, rule-engine commit SHA).
   4. Composite inspection certificate checksum signing the entire record.
 - **Explicit Rejection of Blockchain:** Reject blockchain smart contracts or distributed ledger technology. Blockchain adds zero legal standing in Indian district courts, wastes engineering bandwidth, and represents hackathon buzzword distraction.
-- **Statutory Language Guardrail:** System outputs are described as **tamper-evident prima facie inspection packages**, not unilateral judicial decrees.
+- **Statutory Language Guardrail:** System outputs are described as **tamper-evident supporting inspection packages**, not unilateral judicial decrees.
 
 ---
 
@@ -140,3 +140,49 @@ This document records the architectural, algorithmic, and engineering trade-offs
   - Frame the report as an objective evidentiary screening tool under Section 15.
   - Cite Improvement Notices under Section 36(1) as amended by Jan Vishwas (Amendment of Provisions) Act, 2026.
   - Include explicit statutory disclaimer: *"Automated image-based assessment. Final legal determination remains with the authorized officer."*
+
+---
+
+### ADR-011: Web Application Delivery Model vs. Edge-Native Constraint
+- **Status:** **VALIDATED** (Core Product Re-Baseline)
+- **Context:** The original prototype assumed an edge-native mobile application running on field hardware without internet. The product direction has evolved to an **Online Web Application** to support broad access for LMOs, brand compliance teams, e-commerce catalog auditors, and consumer grievance reviews via desktop and mobile web browsers.
+- **Decision:** Reposition MetroLens AI as a **first-class online web application**. Decouple the **delivery model** (modern web application accessible via HTTP/REST) from the **algorithmic processing philosophy** (deterministic, modular, pure Python modules executing on CPU with local ONNX weights, zero external cloud AI API calls).
+- **Consequences:**
+  - *Pros:* Zero client installation barrier; works on any browser; enables centralized deployment and live jury evaluation.
+  - *Cons:* Requires robust server-side web security (upload validation, rate limiting, DoS protection).
+  - *Preserved Value:* Core OCR, calibration, normalizer, and rule engine components remain pure, isolated Python packages that can be unit-tested locally without network access.
+
+---
+
+### ADR-012: Synchronous Processing Architecture for Web MVP
+- **Status:** **VALIDATED** (Architectural Decision)
+- **Context:** In a web application accepting image uploads, processing can be structured synchronously (`POST /inspect` holds connection until result returns) or asynchronously (upload returns job ID, client polls or uses WebSockets).
+- **Decision:** Implement **Synchronous Request/Response** for the Web MVP.
+- **Rationale:** With quantized ONNX models running on CPU, total pipeline latency is targeted at $<2.0\text{s}$ (OCR $\sim 400\text{--}800\text{ms}$, CV/contours $\sim 100\text{ms}$, Rule engine $<10\text{ms}$, Normalization $<50\text{ms}$). Standard HTTP connection timeouts (30s) easily handle 2s responses. Introducing Celery, Redis, and WebSocket state machines adds unnecessary architectural overhead, container bloat, and demonstration failure points.
+- **Future Extensibility:** The canonical inspection schema (`CanonicalInspectionContract`) is decoupled from transport, allowing background queues to be introduced in Phase 2 if multi-image batch sessions require it.
+
+---
+
+### ADR-013: Web Image Ingestion & Binary Security Hardening
+- **Status:** **VALIDATED** (Security Architecture Standard)
+- **Context:** Moving from local camera capture to a public web upload endpoint exposes the application to malicious file uploads, decompression bombs, and memory exhaustion attacks.
+- **Decision:** Enforce a strict multi-layer server-side image ingestion gate:
+  1. Header magic-byte validation: verify first 16 bytes against authentic JPEG, PNG, and WebP signatures.
+  2. Strict file size limit: reject payloads $> 15.0\text{MB}$ with HTTP 413.
+  3. Decompression bomb protection: set Pillow `Image.MAX_IMAGE_PIXELS = 64_000_000` (~64MP) and wrap decodes in try/except.
+  4. Dimension boundaries: minimum $800 \times 600$ pixels; downsample if $> 3000\text{px}$ to optimize CPU OCR latency.
+  5. Privacy sanitization: strip all EXIF tags (GPS, camera serial, merchant personal data).
+- **Consequences:** Eliminates zip-bomb and executable polyglot vectors before any heavy OCR or CV processing begins.
+
+---
+
+### ADR-014: Ephemeral Image Retention & Data Storage Policy
+- **Status:** **VALIDATED** (Privacy & Compliance Standard)
+- **Context:** Deciding whether uploaded packaging images should be permanently stored in a database/S3 bucket or discarded.
+- **Decision:** Adopt an **Ephemeral Storage Lifecycle**.
+  - Uploaded packaging photos are processed in memory or spooled to an isolated temporary directory (`/tmp/metrolens_uploads/<uuid>/`) with restricted permissions.
+  - Image buffers are freed immediately after response generation.
+  - Temporary files and generated report PDFs are cached for a maximum of 60 minutes strictly to allow PDF downloads, then automatically purged by a TTL cleaner.
+  - Zero permanent database storage of unauthenticated merchant photos.
+- **Consequences:** Protects merchant privacy, eliminates cloud storage costs, and complies with data minimization principles under Indian privacy frameworks.
+

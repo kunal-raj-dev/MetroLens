@@ -1,0 +1,121 @@
+name: "📚 Documentation Task"
+description: "Create, update, or audit architecture docs, legal records, or guides"
+title: "[DOCS]: "
+labels: ["type:docs", "status:specifying"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### MetroLens AI™ — Documentation Specification
+        Accurate documentation maintains project truth, facilitates team onboarding, and underpins our hackathon jury presentation.
+        *Authoritative Reference:* [`GLOBAL_TEAM_WORKFLOW.md`](../../GLOBAL_TEAM_WORKFLOW.md)
+
+  - type: input
+    id: docs_summary
+    attributes:
+      label: "Documentation Summary"
+      description: "Concise title of the document or update."
+      placeholder: "e.g., Update docs/LEGAL_RULE_MATRIX.md to reflect Gazette Notification GSR 881(E)"
+    validations:
+      required: true
+
+  - type: input
+    id: target_documents
+    attributes:
+      label: "Target File(s) / Path(s)"
+      description: "List the specific markdown or resource files to be created or modified."
+      placeholder: "e.g., docs/LEGAL_RULE_MATRIX.md, docs/TRACEABILITY_MATRIX.md"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context_and_motivation
+    attributes:
+      label: "Context & Motivation"
+      description: "Why is this documentation update needed? What information gap does it address?"
+      placeholder: "e.g., Maintain consistency between newly committed gazette PDFs and the statutory rule matrix."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target_audience
+    attributes:
+      label: "Target Audience"
+      description: "Who is the primary reader for this documentation?"
+      options:
+        - "All Engineering Teammates (M1–M6)"
+        - "Hackathon Jury & Evaluators (InnoHack / SIH)"
+        - "District Legal Metrology Officers (Inspectors)"
+        - "Backend & Rule Engine Developers"
+        - "Frontend & PWA Developers"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority Level"
+      description: "Priority of this documentation task."
+      options:
+        - "P0-blocker (Essential jury requirement or safety blocker)"
+        - "P1-high (Core milestone architecture documentation)"
+        - "P2-medium (Standard documentation improvement)"
+        - "P3-low (Typo fix, formatting, minor phrasing tweak)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: primary_owner
+    attributes:
+      label: "Primary Owner (Assigned Lead)"
+      description: "Single engineer accountable for drafting and validating this documentation."
+      options:
+        - "M6 — Product, DevOps & Presentation Lead (Governance, compliance, jury QA)"
+        - "M3 — Backend & Rule Engine Lead (Architecture & rules docs)"
+        - "M1 — AI & OCR Lead (OCR model specs & benchmarks)"
+        - "M2 — Calibration & Geometry Lead (Optical math & proofs)"
+        - "M4 — Frontend & UX Lead (PWA user guides & badges)"
+        - "M5 — Data & Benchmark Lead (Dataset & SKU catalogs)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope_boundary
+    attributes:
+      label: "Scope Boundaries"
+      description: "Specify what sections are covered and what is explicitly excluded."
+      placeholder: |
+        - In-Scope: Add Section 4.5 documenting Rule 26 exemption logic.
+        - Out-of-Scope: Does not modify code or test files.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: "Acceptance Criteria"
+      description: "Conditions required before this documentation is merged."
+      placeholder: |
+        - [ ] All legal claims cite specific clause numbers.
+        - [ ] RFC 2119 keywords (MUST, SHOULD, MAY) used appropriately.
+        - [ ] All internal markdown links resolve to existing files.
+        - [ ] No unverified claims or fake metrics included.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dor_verification
+    attributes:
+      label: "Definition of Ready (DoR) Gate Checklist"
+      description: "Confirm readiness before drafting."
+      options:
+        - label: "Target documents and sections identified"
+          required: true
+        - label: "Target audience and purpose established"
+          required: true
+        - label: "In-scope and out-of-scope content defined"
+          required: true
+        - label: "Acceptance criteria specified"
+          required: true
+        - label: "Exactly one primary owner assigned (M1–M6)"
+          required: true

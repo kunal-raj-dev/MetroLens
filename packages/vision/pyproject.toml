@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nirikshak-vision"
+version = "0.1.0"
+description = "Computer vision quality gating, glare/blur detection, and PDP segmentation for Nirikshak."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "nirikshak-shared",
+    "numpy>=1.24.0",
+    "opencv-python-headless>=4.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
