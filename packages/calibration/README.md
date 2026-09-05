@@ -4,7 +4,7 @@
 **Namespace:** `nirikshak_calibration`
 **Role:** Member 2 — Computer Vision, Optical Calibration & Physical Measurement
 **Standard Compliance:** SIH26034 / Nirikshak Anti-Hallucination Architectural Framework
-**Status:** Phases 4, 5, 6, and 7 **COMPLETED & VERIFIED** (83 calibration unit tests passing)
+**Status:** Phases 4 through 9 **COMPLETED & VERIFIED** (180 calibration unit tests passing, 265 monorepo tests passing)
 
 ---
 
@@ -188,7 +188,59 @@ Provides geometric correction for curved packaging surfaces (cans, jars, bottles
 
 ---
 
-## 9. Public API Quick Reference
+## 9. Phase 8: Vision Pipeline Robustness & Defensive Hardening
+
+Phase 8 hardens all Member 2 entry points against adversarial, degenerate, and malformed inputs (`test_vision_robustness.py`, 90 tests):
+
+### A. Architectural Seam Hardening
+Four concrete vulnerability seams were eliminated:
+1. **String / Sequence Confusion in Coordinate Validation**: Coordinate tuples like `"1234"` satisfy `len(b) == 4` in Python, but fail element-type validation. Strict type verification (`isinstance(v, (int, float)) and not isinstance(v, bool)`) prevents strings or mixed sequences from entering geometry routines.
+2. **Channel Dimension Fallback in Grayscale Conversion**: Single-channel crops or intermediate arrays with trailing dimensions `(H, W, 1)` or `(H, W, 2)` caused OpenCV `cv2.cvtColor(..., cv2.COLOR_BGR2GRAY)` to crash. Slicing and single-channel passthrough guarantee graceful conversion.
+3. **Non-Numeric / Non-Finite Parameter Rejection in Cylinder Geometry**: Radii, centroids, or angular spans passed as strings, NaNs, or Infinities are validated upstream and rejected with `INVALID_CYLINDER_GEOMETRY` before trigonometric calculations.
+4. **Malformed Image Dimensions**: Input arrays with zero dimensions, 1D/4D shapes, or non-finite pixel values are intercepted at API borders, returning typed failure statuses rather than raising unhandled exceptions.
+
+### B. Comprehensive 9-Category Robustness Matrix
+The hardened pipeline is covered by 90 automated tests across 9 categories:
+- **Category 1 (Malformed Inputs)**: `None`, non-arrays, non-numeric arrays, empty arrays `(0, 0, 3)`, 1D/4D arrays.
+- **Category 2 (Extreme Dimensions)**: Micro-images `(1, 1, 3)`, `(2, 2, 3)`, extreme aspect ratios `(10, 4000, 3)`.
+- **Category 3 (Channels & Dtypes)**: Single-channel `(H, W)`, 2-channel, 4-channel RGBA, `float32`, `float64`, `uint16`, `int32` inputs.
+- **Category 4 (Degenerate Geometry)**: Inverted bounding boxes ($y_{\min} \ge y_{\max}$), collinear quadrilateral points, non-convex polygons, zero-area boxes.
+- **Category 5 (Degenerate Calibration)**: Zero, negative, NaN, Inf scale factors, missing outcomes.
+- **Category 6 (OCR Bounding Box Anomalies)**: Huge boxes larger than image, negative coordinates, float coordinates.
+- **Category 7 (Noise, Contrast & Extreme Artifacts)**: Uniform black/white images, pure Gaussian noise, heavy blur.
+- **Category 8 (Caller Array Immutability)**: Verifies that caller-owned input arrays are never mutated in-place during detection, rectification, or measurement.
+- **Category 9 (Downstream Crash Prevention)**: Guarantees zero unhandled OpenCV exceptions across all public entry points.
+
+---
+
+## 10. Phase 9: Metric Calibration Evaluation Engine
+
+The evaluation module (`evaluation.py`) establishes an automated benchmarking framework to evaluate the end-to-end production vision pipeline against reference ground truth:
+
+### A. Core Architectural Invariants
+1. **Production Pipeline Evaluation**: The evaluator exercises the real `detect_anchor()` and canonical `compute_scale_factor()` production code path—never a separate or benchmark-only algorithm.
+2. **Ground Truth Isolation**: The reference ground-truth scale ($S_{\text{gt}}$) and physical dimensions ($D_{\text{gt}}$) are held strictly in isolation for validation comparison and are never passed into the detector or calibrator.
+3. **Metric Units Separation**: Scale factor error is reported strictly in $\text{mm/px}$ (MAE, RMSE, P95) or $\%$ (Relative Error). Physical packaging dimension error is reported strictly in $\text{mm}$.
+4. **Explicit Denominator Accounting**:
+   - Scale metrics are computed over $N_{\text{scale}} = \text{scale\_evaluated\_samples}$ (only samples with both successful pipeline calibration and ground-truth scale).
+   - Dimension metrics are computed over $N_{\text{dim}} = \text{dimension\_evaluated\_samples}$.
+   - Failure rate is computed over $N_{\text{total}} = \text{total\_samples}$:
+     $$\text{Failure Rate} = \frac{\text{failed\_calibrations}}{\text{total\_samples}}$$
+   - Calibration failures cannot artificially pollute or lower scale-MAE denominators.
+5. **Scientifically Honest Reporting (`BENCHMARK_BLOCKED`)**: Because the repository currently contains synthetic/unit test fixtures and no physical packaging ground-truth dataset, the benchmark evaluator correctly and honestly flags execution as `BENCHMARK_BLOCKED`, recording that real-world physical verification is pending specimen acquisition by Member 6.
+
+### B. Evaluation CLI & Artifacts
+The evaluation suite is executed via:
+```bash
+python scripts/benchmark/run_calibration_evaluation.py
+```
+Output artifacts:
+- Structured JSON: `benchmarks/results/calibration_evaluation_results.json`
+- Human-readable report: `benchmarks/reports/calibration_evaluation_report.md`
+
+---
+
+## 11. Public API Quick Reference
 
 ```python
 from nirikshak_calibration import (
@@ -198,6 +250,10 @@ from nirikshak_calibration import (
     AnchorType,
     DetectionStatus,
     AnchorDetectionResult,
+    Point2D,
+    CircleGeometry,
+    CardGeometry,
+    ConcentricRingInfo,
     # Phase 5: Homography & Rectification
     rectify_planar_quadrilateral,
     RectificationStatus,
@@ -215,23 +271,34 @@ from nirikshak_calibration import (
     CylinderMeasurementStatus,
     CylinderMeasurementResult,
     CylinderModelConfig,
-    # Core Scale Model
+    # Phase 9: Calibration Evaluation Engine
+    GroundTruthSample,
+    CalibrationEvaluationSampleResult,
+    CalibrationEvaluationMetrics,
+    evaluate_calibration_dataset,
+    export_evaluation_metrics_json,
+    generate_evaluation_markdown_report,
+    # Core Scale Model & Helpers
     compute_scale_factor,
     CalibrationOutcome,
+    CalibrationStatus,
+    convert_to_grayscale,
+    order_quadrilateral_corners,
+    calculate_polygon_area,
 )
 ```
 
 ---
 
-## 10. Verification Suite & Test Evidence
+## 12. Verification Suite & Test Evidence
 
-The package includes **83 automated unit tests** across 5 test suites:
+The package includes **180 automated unit tests** across 7 test suites:
 
 ```bash
-# Execute complete calibration package test suite (83 tests)
+# Execute complete calibration package test suite (180 tests)
 pytest packages/calibration/tests -v
 
-# Execute monorepo regression suite (168 tests)
+# Execute monorepo regression suite (265 tests)
 pytest -q
 ```
 
@@ -241,15 +308,18 @@ pytest -q
 | **Phase 5 Homography** | `test_homography.py` | 19 | Identity, warp, card geometry, collinearity, non-convex, reprojection tolerance. |
 | **Phase 6 Font Measurer** | `test_font_measurer.py` | 14 | Scale conversion, ink profiling vs bbox, clipping, uncalibrated scale, uncertainty. |
 | **Phase 7 Cylinder** | `test_cylinder.py` | 16 | Central strip, 20° heuristic, generator invariance, planar, tapered/unknown, contracts bridge. |
+| **Phase 8 Robustness** | `test_vision_robustness.py` | 90 | 9 categories: malformed inputs, extreme dimensions, dtypes/channels, degenerate geometry, caller immutability, zero crashes. |
+| **Phase 9 Evaluation** | `test_evaluation.py` | 7 | GT isolation, production pipeline execution, explicit denominators, metric units, blocked benchmark status. |
 | **Calibration Baseline Smoke** | `test_calibration_smoke.py` | 2 | Fiducial reference scale computation baseline. |
-| **Total** | | **83** | **100% passing** |
+| **Total** | | **180** | **100% passing** |
 
 ---
 
-## 11. Scientific Evidentiary Standard Notice
+## 13. Scientific Evidentiary Standard Notice
 
 > [!IMPORTANT]
 > **Anti-Hallucination Architectural Policy**:
-> - The 83 automated unit tests verify software correctness, numerical stability, coordinate geometry transforms, and error-handling paths against controlled synthetic geometries and mathematical specifications.
+> - The 180 automated unit tests verify software correctness, numerical stability, coordinate geometry transforms, defensive error-handling paths, and evaluation metrics against controlled synthetic geometries and mathematical specifications.
+> - In all tested synthetic and adversarial scenarios, no false detections or unhandled exceptions were observed.
 > - They do **NOT** certify real-world physical calibration accuracy under uncontrolled smartphone optical distortion.
-> - Real-world physical accuracy remains strictly **PENDING** until Member 6 (QA Lead) acquires physical packaging specimens and 1200 DPI flatbed optical scans for ground-truth verification.
+> - Real-world physical accuracy evaluation remains in state **`BENCHMARK_BLOCKED`** until Member 6 (QA Lead) acquires physical packaging specimens and 1200 DPI flatbed optical scans for ground-truth verification.

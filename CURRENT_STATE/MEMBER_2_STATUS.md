@@ -1,10 +1,11 @@
 # CURRENT STATE: MEMBER 2 STATUS DOSSIER
-**Generated:** 2026-09-05T17:40:00+05:30
+**Generated:** 2026-09-05T18:15:00+05:30
 **Role:** Member 2 — Computer Vision, Optical Calibration & Physical Measurement Lead
 **Project:** MetroLens AI / Nirikshak (SIH26034)
 **Branch:** `member-2`
-**Latest Phase Delivery:** Phases 5, 6, and 7 Complete (Homography, Font Measurer, Cylinder)
-**Overall Monorepo Status:** 168/168 unit tests passing across all packages (83 in calibration)
+**Latest Phase Delivery:** Phases 0 through 9 Complete (Quality Gate, Anchor Detector, Homography, Font Measurer, Cylinder, Robustness Hardening, Evaluation Pipeline)
+**Overall Monorepo Status:** 265/265 unit tests passing across all packages (180 in calibration)
+**Latest Commit:** `4a79d7e`
 
 ---
 
@@ -118,6 +119,33 @@ Member 2 is personally responsible for:
   5. **Conditional Failures:** Enforces calibration requirement (returns `UNCALIBRATED` when scale missing), axis alignment (`MISALIGNED_AXIS`), and silhouette bounds (`OUT_OF_CYLINDER_BOUNDS`).
   6. **Contract Adapter:** Bridges to canonical `nirikshak_shared.models.contracts.MeasurementResult`.
 
+### Phase 8: Pipeline Robustness Hardening (`test_vision_robustness.py`)
+- **Objective:** Harden all public Member 2 entry points against corrupt, malformed, degenerate, or hostile inputs.
+- **Deliverables:**
+  - `packages/calibration/tests/test_vision_robustness.py` (90 passing unit tests)
+  - Defensive seam fixes across `font_measurer.py`, `cylinder.py`, and `homography.py`.
+- **Architectural & Algorithmic Highlights:**
+  1. **Seam Fixes**: String coordinate guards rejecting 4-character strings like `"1234"`; $<3$ channel protection in ink profiling; strict 2D/3D array validation in `rectify_planar_quadrilateral`; safe `try...float()` coercion in `measure_cylindrical_feature`.
+  2. **Comprehensive Robustness Matrix**: Tested across 9 categories: input existence/types, image dimensions/shapes, channel depths/dtypes, degenerate pixel values, non-standard visual content, geometry violations, calibration preconditions, OCR observation edge cases, and caller-owned array immutability.
+  3. **Zero Unhandled Exceptions**: All degenerate inputs return typed, structured failure states (`INVALID_INPUT`, `UNCALIBRATED`, `OUT_OF_IMAGE_BOUNDS`, `INVALID_BOUNDING_BOX`).
+  4. **Array Immutability**: 100% read-only verification across all public entry points.
+
+### Phase 9: Metric Calibration Evaluation Pipeline (`evaluation.py`)
+- **Objective:** Evaluate the canonical Member 2 calibration pipeline against physical ground-truth datasets.
+- **Deliverables:**
+  - `packages/calibration/src/nirikshak_calibration/evaluation.py`
+  - `packages/calibration/tests/test_evaluation.py` (7 passing unit tests)
+  - `scripts/benchmark/run_calibration_evaluation.py`
+  - `benchmarks/results/calibration_evaluation_results.json`
+  - `benchmarks/reports/calibration_evaluation_report.md`
+- **Architectural & Algorithmic Highlights:**
+  1. **Canonical Pipeline Execution**: Dispatches test frames through `detect_anchor()` $\to$ `compute_scale_factor()`, ensuring the benchmark evaluates production code.
+  2. **Ground Truth Isolation**: `ground_truth_scale_mm_per_pixel` is reference-only and never passed into the calibration pipeline.
+  3. **Metric Unit Separation**: Scale errors in `mm/pixel` and `%`; physical feature dimension errors in `mm`.
+  4. **Explicit Denominator Accounting**: Explicitly separates `total_samples` (dataset failure denominator) from `scale_evaluated_samples` ($N_{\text{scale}}$ denominator for Scale MAE/RMSE) and `dimension_evaluated_samples` ($N_{\text{dim}}$ denominator for Dimension MAE).
+  5. **Metrological Integrity (`BENCHMARK_BLOCKED`)**: When no physical packaging ground-truth dataset exists in the repository, the benchmark emits structured `BENCHMARK_BLOCKED` status with reason `"No explicit physical ground-truth dataset available."` (zero fabricated data or claims).
+- **Git Commits:** `4a79d7e`
+
 ---
 
 ## 3. Metric & Testing Status
@@ -126,20 +154,20 @@ Member 2 is personally responsible for:
 |:---|:---|:---|:---:|
 | **Quality Gate Latency** | $< 50\text{ ms}$ CPU | $\approx 22\text{ ms}$ | ✅ PASS |
 | **Anchor Detector Latency** | $< 50\text{ ms}$ CPU | $\approx 28\text{ ms}$ | ✅ PASS |
-| **Monorepo Unit Tests** | 100% passing | 168 / 168 passing | ✅ PASS |
-| **Calibration Unit Tests** | 100% passing | 83 / 83 passing | ✅ PASS |
+| **Monorepo Unit Tests** | 100% passing | 265 / 265 passing | ✅ PASS |
+| **Calibration Unit Tests** | 100% passing | 180 / 180 passing | ✅ PASS |
 | **Diff Hygiene Check** | 0 errors | `git diff --check` clean | ✅ PASS |
-| **Working Tree State** | Controlled | Scoped to Phase 5–7 files | ✅ PASS |
+| **Working Tree State** | In sync | Clean, committed and pushed to `origin/member-2` (`4a79d7e`) | ✅ PASS |
 
 ---
 
 ## 4. Scientific Evidentiary Standard Notice
 
 > [!IMPORTANT]
-> **Anti-Hallucination Architectural Policy**:
-> - The 83 deterministic automated tests verify software behavior, numerical stability, coordinate transforms, and edge-case handling against synthetic geometric test frames.
-> - They do **NOT** certify real-world physical calibration accuracy under uncontrolled smartphone optical distortion.
-> - Real-world physical accuracy remains strictly **PENDING** until Member 6 (QA Lead) acquires physical packaging specimens and 1200 DPI flatbed optical scans for ground-truth verification.
+> **Anti-Hallucination & Metrological Discipline Policy**:
+> - The 180 deterministic automated calibration tests verify software correctness, numerical stability, coordinate transforms, and edge-case handling against synthetic geometric test frames.
+> - Software formula verification is distinct from real-world physical metrological accuracy on actual packaged commodities.
+> - Because real-world physical packaging specimens with traceable ground truth are not yet present in the repository, the evaluation pipeline scientifically and transparently reports `BENCHMARK_BLOCKED` without fabricating synthetic accuracy claims.
 
 ---
 
@@ -148,4 +176,5 @@ Member 2 is personally responsible for:
 - **Downstream Consumers:**
   - **Member 1 (OCR):** Ingests rectified planar panel crops from `rectify_planar_quadrilateral()` for high-accuracy text extraction.
   - **Member 3 (Rules Engine):** Consumes `MeasurementResult` objects from `font_measurer.py` and `cylinder.py` to evaluate Rule 7 minimum numeral height compliance.
+  - **Member 6 (QA Lead):** Can execute `python scripts/benchmark/run_calibration_evaluation.py --dataset-dir <path>` once physical ground-truth packaging specimens are acquired.
 - **Evidentiary Integrity:** All physical packaging claims remain marked **PENDING** physical laboratory validation.

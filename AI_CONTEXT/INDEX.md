@@ -22,7 +22,9 @@ AI_CONTEXT/
 ├── RUN_LOGS/                    # Chronological record of AI actions and experiments
 └── HANDOFFS/                    # Inter-chunk and inter-member interface handoffs
     ├── CHUNK_1_TO_CHUNK_2.md             # Member 1 OCR Spike -> Chunk 2 Pipeline Handoff
-    └── MEMBER_2_PHASE_4_TO_PHASE_5.md    # Member 2 Anchor Detection -> Planar Homography Handoff
+    ├── MEMBER_2_PHASE_4_TO_PHASE_5.md    # Member 2 Anchor Detection -> Planar Homography Handoff
+    ├── MEMBER_2_PHASE_5_6_7_TO_DOWNSTREAM.md # Member 2 Homography, Font & Cylinder -> Downstream
+    └── MEMBER_2_PHASES_8_9_EVALUATION_HANDOFF.md # Member 2 Robustness & Evaluation Engine Handoff
 ```
 
 ## Workstream Index Links
@@ -31,5 +33,8 @@ AI_CONTEXT/
   - Current Status: [`CURRENT_STATE/MEMBER_2_STATUS.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/CURRENT_STATE/MEMBER_2_STATUS.md)
   - Work Plan: [`docs/team/MEMBER_2_WORK_PLAN.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/docs/team/MEMBER_2_WORK_PLAN.md)
   - Phase 3 Calibration Spike Report: [`benchmarks/reports/spike_calibration_report.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/benchmarks/reports/spike_calibration_report.md)
-  - Phase 4 Anchor Detector: [`packages/calibration/README.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/packages/calibration/README.md)
+  - Calibration Package Documentation: [`packages/calibration/README.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/packages/calibration/README.md)
   - Phase 4 &rarr; Phase 5 Handoff: [`AI_CONTEXT/HANDOFFS/MEMBER_2_PHASE_4_TO_PHASE_5.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/AI_CONTEXT/HANDOFFS/MEMBER_2_PHASE_4_TO_PHASE_5.md)
+  - Phase 5, 6 & 7 Downstream Handoff: [`AI_CONTEXT/HANDOFFS/MEMBER_2_PHASE_5_6_7_TO_DOWNSTREAM.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/AI_CONTEXT/HANDOFFS/MEMBER_2_PHASE_5_6_7_TO_DOWNSTREAM.md)
+  - Phases 8 & 9 Robustness & Evaluation Handoff: [`AI_CONTEXT/HANDOFFS/MEMBER_2_PHASES_8_9_EVALUATION_HANDOFF.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/AI_CONTEXT/HANDOFFS/MEMBER_2_PHASES_8_9_EVALUATION_HANDOFF.md)
+  - Phase 9 Calibration Evaluation Report: [`benchmarks/reports/calibration_evaluation_report.md`](file:///c:/Users/admin/Documents/GitHub/MetroLens/benchmarks/reports/calibration_evaluation_report.md)
