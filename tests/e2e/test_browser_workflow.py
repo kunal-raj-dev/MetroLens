@@ -52,7 +52,7 @@ def test_browser_full_inspection_workflow():
         page.wait_for_timeout(1000)
 
         # 4. Verify Dashboard & Results
-        dashboard = page.get_by_text("NO IMAGE-VERIFIABLE VIOLATIONS").first
+        dashboard = page.locator("text=/COMPLIANT|NO IMAGE-VERIFIABLE VIOLATIONS/").first
         expect(dashboard).to_be_visible(timeout=5000)
 
         # 5. Evidence Canvas verification

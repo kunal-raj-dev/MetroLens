@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Button,
   Card,
@@ -64,7 +64,7 @@ export default function OfficerWorkstationPage() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [activeVerdict, setActiveVerdict] =
     useState<OverallVerdict>("COMPLIANT");
-  const [clientMode, setClientMode] = useState<InspectionClientMode>("mock");
+  const [clientMode, setClientMode] = useState<InspectionClientMode>("live");
   const [inspectionResult, setInspectionResult] =
     useState<FrontendInspectionModel | null>(null);
   const [uploadedImageSrc, setUploadedImageSrc] = useState<string | null>(null);
@@ -128,8 +128,8 @@ export default function OfficerWorkstationPage() {
     ? inspectionResult?.declarations[selectedFieldName]?.sourceTokenIds || []
     : [];
 
-  // 1. Reset complete inspection state (Session Reset)
-  const handleStartNewInspection = () => {
+  // Clear workstation inspection state without incrementing resetTrigger
+  const handleFileCleared = useCallback(() => {
     setInspectionResult(null);
     setUploadedImageSrc(null);
     setImageDimensions(null);
@@ -143,8 +143,13 @@ export default function OfficerWorkstationPage() {
     setExternalFile(null);
     setReportError(null);
     setReportSuccess(null);
+  }, []);
+
+  // 1. Reset complete inspection state (Session Reset)
+  const handleStartNewInspection = useCallback(() => {
+    handleFileCleared();
     setResetTrigger((prev) => prev + 1);
-  };
+  }, [handleFileCleared]);
 
   // 2. Select benchmark sample package
   const handleSelectSample = (
@@ -467,7 +472,7 @@ export default function OfficerWorkstationPage() {
           </div>
         </div>
 
-        {/* Benchmark Demonstration Packages Card */}
+        {/* Synthetic Demonstration Fixtures Card (8 Fixtures) */}
         <Card shape="stadium" variant="white" className="p-5 border border-black/[0.06] shadow-halo">
           <SamplePackageSelector
             selectedSampleId={selectedSampleId}
@@ -507,7 +512,7 @@ export default function OfficerWorkstationPage() {
                 setInspectionResult(result);
                 setActiveVerdict(result.verdict.status);
               }}
-              onFileCleared={handleStartNewInspection}
+              onFileCleared={handleFileCleared}
             />
 
             <Alert variant="info" title="Sovereign Enforcement Advisory">
@@ -520,6 +525,39 @@ export default function OfficerWorkstationPage() {
           <div className="lg:col-span-7 space-y-6">
             {inspectionResult ? (
               <div className="space-y-6">
+                {/* Enforcement Dossier Action Card */}
+                <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-black/[0.06] shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-signal-orange/10 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-signal-orange" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-eyebrow text-slate-500">
+                        ENFORCEMENT DOSSIER
+                      </div>
+                      <div className="text-sm font-semibold text-ink font-mono">
+                        {inspectionResult.inspectionId}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleDownloadReport}
+                    disabled={isGeneratingReport}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {isGeneratingReport ? "Compiling PDF..." : "Download Official Report (PDF Dossier)"}
+                  </Button>
+                </div>
+
+                {reportSuccess && (
+                  <Alert variant="success" title="Dossier Compiled">
+                    <p className="text-xs leading-relaxed">{reportSuccess}</p>
+                  </Alert>
+                )}
+
                 {/* Multi-modal Compliance Dashboard */}
                 <ComplianceDashboard
                   inspection={inspectionResult}

@@ -195,7 +195,7 @@ async function runTests() {
     "Review status updated to CONFIRMED"
   );
   assert(
-    mockReviewResult.operatorNotes?.includes("Verified visual price stamp"),
+    Boolean(mockReviewResult.operatorNotes?.includes("Verified visual price stamp")),
     "Operator notes preserved in review response"
   );
 

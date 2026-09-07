@@ -101,10 +101,19 @@ export function ComplianceDashboard({
           <div className="flex items-center gap-2">
             <Badge
               variant={
-                inspection.verdict.status === "COMPLIANT"
+                inspection.verdict.uiSeverity === "GREEN" ||
+                inspection.verdict.status === "COMPLIANT" ||
+                inspection.verdict.status === "NO_IMAGE_VERIFIABLE_VIOLATIONS" ||
+                inspection.verdict.status === "NO_IMAGE_VERIFIABLE_VIOLATION_DETECTED"
                   ? "success"
-                  : inspection.verdict.status === "NON_COMPLIANT"
+                  : inspection.verdict.uiSeverity === "RED" ||
+                    inspection.verdict.status === "NON_COMPLIANT" ||
+                    inspection.verdict.status === "POTENTIAL_NON_COMPLIANCE"
                   ? "danger"
+                  : inspection.verdict.uiSeverity === "BLUE" ||
+                    inspection.verdict.status === "EXEMPTED" ||
+                    inspection.verdict.status === "STATUTORY_EXEMPTION_APPLIED"
+                  ? "info"
                   : "warning"
               }
               size="sm"

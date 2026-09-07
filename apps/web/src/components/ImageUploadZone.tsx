@@ -129,6 +129,10 @@ export function ImageUploadZone({
 
   // Reset ingestion zone
   const handleClear = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
     cleanupPreviewUrl();
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -179,11 +183,14 @@ export function ImageUploadZone({
     }
   }, [externalFile]);
 
+  const prevResetTriggerRef = useRef(resetTrigger || 0);
+
   // Respond to resetTrigger
   useEffect(() => {
-    if (resetTrigger && resetTrigger > 0) {
+    if (resetTrigger && resetTrigger > prevResetTriggerRef.current) {
       handleClear();
     }
+    prevResetTriggerRef.current = resetTrigger || 0;
   }, [resetTrigger, handleClear]);
 
   // Drag-and-drop handlers
@@ -232,20 +239,28 @@ export function ImageUploadZone({
   const handleInspect = async () => {
     if (!selectedFile || state === "INSPECTING") return;
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const currentAbort = new AbortController();
+    abortControllerRef.current = currentAbort;
+
     setState("INSPECTING");
     setErrorMessage(null);
     setErrorDetails(null);
 
-    abortControllerRef.current = new AbortController();
-
     try {
       const result = await client.inspect(selectedFile, {
-        signal: abortControllerRef.current.signal,
+        signal: currentAbort.signal,
       });
+
+      if (currentAbort.signal.aborted) return;
 
       setState("SUCCESS");
       onInspectionComplete?.(result);
     } catch (err: any) {
+      if (currentAbort.signal.aborted) return;
+
       setState("ERROR");
       if (err instanceof InspectionClientError) {
         setErrorMessage(err.message);

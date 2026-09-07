@@ -35,7 +35,7 @@ export const SAMPLE_PACKAGES: SamplePackageItem[] = [
     tagVariant: "success",
     resolution: [640, 360],
     imageSrc: "/fixtures/SYNTH-01-ENG-FMCG.png",
-    disclaimer: "SYNTHETIC REGRESSION ASSET — NOT REAL RETAIL PACKAGING",
+    disclaimer: "SYNTHETIC DEMO FIXTURE — NOT REAL RETAIL PACKAGING",
   },
   {
     id: "SYNTH-02-HIN-FMCG",
@@ -46,7 +46,7 @@ export const SAMPLE_PACKAGES: SamplePackageItem[] = [
     tagVariant: "success",
     resolution: [640, 360],
     imageSrc: "/fixtures/SYNTH-02-HIN-FMCG.png",
-    disclaimer: "SYNTHETIC REGRESSION ASSET — NOT REAL RETAIL PACKAGING",
+    disclaimer: "SYNTHETIC DEMO FIXTURE — NOT REAL RETAIL PACKAGING",
   },
   {
     id: "SYNTH-03-MIXED-BILINGUAL",
@@ -57,7 +57,7 @@ export const SAMPLE_PACKAGES: SamplePackageItem[] = [
     tagVariant: "success",
     resolution: [640, 380],
     imageSrc: "/fixtures/SYNTH-03-MIXED-BILINGUAL.png",
-    disclaimer: "SYNTHETIC REGRESSION ASSET — NOT REAL RETAIL PACKAGING",
+    disclaimer: "SYNTHETIC DEMO FIXTURE — NOT REAL RETAIL PACKAGING",
   },
   {
     id: "SYNTH-04-MICRO-FONT",
@@ -68,7 +68,7 @@ export const SAMPLE_PACKAGES: SamplePackageItem[] = [
     tagVariant: "danger",
     resolution: [640, 320],
     imageSrc: "/fixtures/SYNTH-04-MICRO-FONT.png",
-    disclaimer: "SYNTHETIC REGRESSION ASSET — NOT REAL RETAIL PACKAGING",
+    disclaimer: "SYNTHETIC DEMO FIXTURE — NOT REAL RETAIL PACKAGING",
   },
   {
     id: "SYNTH-05-LIQUID-VOLUME",
@@ -79,7 +79,7 @@ export const SAMPLE_PACKAGES: SamplePackageItem[] = [
     tagVariant: "info",
     resolution: [640, 360],
     imageSrc: "/fixtures/SYNTH-05-LIQUID-VOLUME.png",
-    disclaimer: "SYNTHETIC REGRESSION ASSET — NOT REAL RETAIL PACKAGING",
+    disclaimer: "SYNTHETIC DEMO FIXTURE — NOT REAL RETAIL PACKAGING",
   },
   {
     id: "SYNTH-06-PROHIBITED-UNITS",
@@ -90,7 +90,7 @@ export const SAMPLE_PACKAGES: SamplePackageItem[] = [
     tagVariant: "danger",
     resolution: [640, 320],
     imageSrc: "/fixtures/SYNTH-06-PROHIBITED-UNITS.png",
-    disclaimer: "SYNTHETIC REGRESSION ASSET — NOT REAL RETAIL PACKAGING",
+    disclaimer: "SYNTHETIC DEMO FIXTURE — NOT REAL RETAIL PACKAGING",
   },
   {
     id: "SYNTH-07-BLANK-FRAME",
@@ -101,7 +101,7 @@ export const SAMPLE_PACKAGES: SamplePackageItem[] = [
     tagVariant: "outline",
     resolution: [640, 320],
     imageSrc: "/fixtures/SYNTH-07-BLANK-FRAME.png",
-    disclaimer: "SYNTHETIC REGRESSION ASSET — NOT REAL RETAIL PACKAGING",
+    disclaimer: "SYNTHETIC DEMO FIXTURE — NOT REAL RETAIL PACKAGING",
   },
   {
     id: "SYNTH-08-LOW-CONTRAST-FADED",
@@ -112,7 +112,7 @@ export const SAMPLE_PACKAGES: SamplePackageItem[] = [
     tagVariant: "warning",
     resolution: [640, 320],
     imageSrc: "/fixtures/SYNTH-08-LOW-CONTRAST-FADED.png",
-    disclaimer: "SYNTHETIC REGRESSION ASSET — NOT REAL RETAIL PACKAGING",
+    disclaimer: "SYNTHETIC DEMO FIXTURE — NOT REAL RETAIL PACKAGING",
   },
 ];
 
@@ -174,10 +174,10 @@ export function SamplePackageSelector({
           </div>
           <div>
             <h3 className="text-sm font-semibold tracking-headline text-ink">
-              Benchmark Demonstration Packages
+              Synthetic Demonstration Fixtures
             </h3>
             <p className="text-[11px] text-slate-500 font-normal">
-              Pre-loaded verified statutory packaging samples for evaluation & judging.
+              Pre-loaded synthetic packaging fixtures (8) for evaluation & demonstration.
             </p>
           </div>
         </div>
@@ -185,7 +185,7 @@ export function SamplePackageSelector({
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold tracking-eyebrow uppercase text-amber-800">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            SYNTHETIC DEMO
+            SYNTHETIC DEMO FIXTURES (8)
           </div>
 
           <div className="hidden sm:flex items-center gap-1">
@@ -213,7 +213,7 @@ export function SamplePackageSelector({
       <div
         ref={scrollContainerRef}
         role="listbox"
-        aria-label="Benchmark demonstration packages"
+        aria-label="Synthetic demonstration fixtures"
         className="flex gap-3.5 overflow-x-auto pb-2 pt-1 no-scrollbar scroll-smooth snap-x snap-mandatory"
         style={{ scrollbarWidth: "thin" }}
       >

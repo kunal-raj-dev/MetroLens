@@ -51,7 +51,7 @@ Deliver a rock-solid, high-performance FastAPI application gateway and a court-a
    - Compile official "Image-Based Compliance Assessment Report".
    - Embed side-by-side visual evidence crops with bounding boxes.
    - Embed cryptographic integrity block: raw image SHA-256 hash, UTC timestamp, GPS coordinates (if provided), and model commit SHA.
-   - Embed draft Section 36(1) Improvement Notice citing 15-day cure window.
+   - Embed draft Section 36(1) Improvement Notice citing reasonable cure period (15 days demonstration default).
 6. Implement `POST /api/v1/emaap/mock-sync` simulating national registry synchronization.
 
 ---

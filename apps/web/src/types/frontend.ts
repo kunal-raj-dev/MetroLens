@@ -1,4 +1,9 @@
-import { OverallVerdict, CalibrationStatus, RuleVerdict } from "./contract";
+import {
+  OverallVerdict,
+  CanonicalComplianceState,
+  CalibrationStatus,
+  RuleVerdict,
+} from "./contract";
 
 export type SemanticStatus =
   | "SUCCESS"
@@ -104,6 +109,8 @@ export interface FrontendInspectionModel {
   pdfUrl?: string | null;
   verdict: {
     status: OverallVerdict;
+    canonicalState: CanonicalComplianceState;
+    uiSeverity?: "RED" | "GREEN" | "AMBER" | "BLUE" | "GRAY";
     label: string;
     summaryReason: string;
     isCompliant: boolean;

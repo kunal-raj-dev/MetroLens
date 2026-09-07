@@ -51,7 +51,7 @@ The **MetroLens AI™ API Gateway** serves as the hardened, high-throughput ingr
   │   ├── Stage 3: OCR Perception (PaddleOCR ONNX Runtime / fallback)
   │   ├── Stage 4: TokenNormalizer (Regex / CTC correction -> CanonicalDeclaration)
   │   ├── Stage 5: StatutoryRuleEngine (Rule 6, 6(11) USP, Rule 7 Font, Rule 26/3)
-  │   ├── Stage 6: ImprovementNoticeBuilder (Jan Vishwas Act, 2026, 15-day cure)
+  │   ├── Stage 6: ImprovementNoticeBuilder (Jan Vishwas Act, 2026, reasonable cure / 15-day demo default)
   │   └── Stage 7: Evidence Crop Generator (PIL spatial crops -> Base64 URIs)
   │
   ▼

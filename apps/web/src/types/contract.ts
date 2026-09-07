@@ -16,11 +16,27 @@ export type PanelName =
 
 export type RuleVerdict = "PASS" | "FAIL" | "REVIEW" | "NOT_APPLICABLE";
 
-export type OverallVerdict =
+/**
+ * Canonical Compliance States matching frozen backend schemas:
+ * - packages/rules-engine/src/nirikshak_rules_engine/schemas.py (ComplianceState)
+ * - apps/api/schemas.py (OverallComplianceState)
+ * - packages/shared/src/nirikshak_shared/models/primitives.py (OverallVerdict)
+ */
+export type CanonicalComplianceState =
   | "COMPLIANT"
   | "NON_COMPLIANT"
+  | "POTENTIAL_NON_COMPLIANCE"
+  | "FLAGGED_FOR_REVIEW"
+  | "MANUAL_REVIEW_REQUIRED"
+  | "EXEMPTED"
+  | "STATUTORY_EXEMPTION_APPLIED"
+  | "NO_IMAGE_VERIFIABLE_VIOLATIONS"
+  | "NO_IMAGE_VERIFIABLE_VIOLATION_DETECTED"
+  | "NOT_IMAGE_VERIFIABLE"
   | "SUSPECT_REVIEW"
   | "INCONCLUSIVE";
+
+export type OverallVerdict = CanonicalComplianceState;
 
 export type InspectionStatus =
   | "SUCCESS"
@@ -124,6 +140,7 @@ export interface BackendInspectionDTO {
   ocr_observations?: OCRObservationDTO[];
   errors: InspectionErrorDTO[];
   dossier_pdf_path?: string | null;
+  is_synthetic?: boolean;
   telemetry: Record<string, number>;
   created_at: string;
 }

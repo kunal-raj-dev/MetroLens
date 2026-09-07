@@ -147,7 +147,7 @@ Guard the core intellectual property and architectural integrity of MetroLens AI
 
 ### DAY 6: Section 36(1) Improvement Notice Generator & eMaap Payload
 - **Goal:** Format statutory Improvement Notice data for PDF generation and eMaap sync.
-- **Tasks:** Build notice draft generator citing Section 36(1) of Legal Metrology Act, 2009 (as amended by Jan Vishwas Act, 2026); structure legal notice text specifying 15-day cure period; build mock eMaap JSON payload for Member 4.
+- **Tasks:** Build notice draft generator citing Section 36(1) of Legal Metrology Act, 2009 (as amended by Jan Vishwas Act, 2026); structure legal notice text specifying reasonable cure period (15 days demonstration default); build mock eMaap JSON payload for Member 4.
 - **Deliverables:** Notice generation module in `packages/rules-engine/notice_builder.py`.
 - **Expected Time:** 5 hours.
 - **Dependencies:** None.
