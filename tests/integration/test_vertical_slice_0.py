@@ -36,7 +36,7 @@ from nirikshak_shared.models.primitives import (
 )
 from nirikshak_ocr import OCRService
 
-client = TestClient(app)
+client = TestClient(app, headers={"X-Bypass-Rate-Limit": "true"})
 
 
 def _create_synthetic_pack(

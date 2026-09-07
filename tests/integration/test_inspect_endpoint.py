@@ -81,7 +81,12 @@ def test_inspect_successful_compliant_upload(client):
     response = client.post(
         "/api/v1/inspect",
         files={"file": ("cashew_pouch.jpg", img_bytes, "image/jpeg")},
-        data={"anchor_type": "INR_10_COIN", "panel_type": "FRONT_PDP", "officer_id": "OFFICER-007"},
+        data={
+            "anchor_type": "INR_10_COIN",
+            "panel_type": "FRONT_PDP",
+            "officer_id": "OFFICER-007",
+            "mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS",
+        },
     )
     elapsed_ms = (time.perf_counter() - start_time) * 1000
 

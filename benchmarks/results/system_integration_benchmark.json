@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-09-07T12:21:36Z",
+  "hardware": {
+    "platform": "win32",
+    "cpu_count": 16,
+    "total_ram_gb": 15.31
+  },
+  "image_spec": {
+    "resolution": "640x480",
+    "format": "PNG",
+    "size_bytes": 44894,
+    "data_type": "SYNTHETIC_PACKAGING"
+  },
+  "e2e_latency_ms": {
+    "runs": 20,
+    "mean": 115.69,
+    "median": 113.5,
+    "p95": 125.15,
+    "min": 103.95,
+    "max": 136.86
+  },
+  "stage_latency_mean_ms": {
+    "ingestion_ms": 2.35,
+    "quality_gate_ms": 10.09,
+    "calibration_ms": 9.1,
+    "ocr_perception_ms": 86.9,
+    "semantic_extraction_ms": 0.13,
+    "measurement_ms": 0.02,
+    "rules_engine_ms": 0.04,
+    "evidence_assembly_ms": 0.07
+  },
+  "concurrency": {
+    "1": {
+      "requests": 2,
+      "elapsed_s": 0.266,
+      "throughput_req_per_s": 7.51,
+      "latency_ms_per_req": 133.09,
+      "errors": 0
+    },
+    "2": {
+      "requests": 4,
+      "elapsed_s": 0.41,
+      "throughput_req_per_s": 9.76,
+      "latency_ms_per_req": 102.51,
+      "errors": 0
+    },
+    "4": {
+      "requests": 8,
+      "elapsed_s": 0.831,
+      "throughput_req_per_s": 9.63,
+      "latency_ms_per_req": 103.86,
+      "errors": 0
+    },
+    "8": {
+      "requests": 16,
+      "elapsed_s": 1.541,
+      "throughput_req_per_s": 10.38,
+      "latency_ms_per_req": 96.3,
+      "errors": 0
+    }
+  },
+  "memory_rss_mb": {
+    "initial": 252.14,
+    "final": 253.46,
+    "delta": 1.32
+  }
+}
