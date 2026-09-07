@@ -1,74 +1,59 @@
 """
-Nirikshak Vision: Image quality gating and panel segmentation.
+Nirikshak Vision: Pre-flight image quality gating and frame validation.
 """
 
-from typing import Tuple, Dict, Any, Optional
+from typing import Optional
 import numpy as np
 
-
-class QualityGateResult:
-    """Represents the outcome of the pre-inference quality gate."""
-    def __init__(
-        self,
-        passed: bool,
-        laplacian_variance: float,
-        glare_ratio: float,
-        details: Optional[Dict[str, Any]] = None,
-    ):
-        self.passed = passed
-        self.laplacian_variance = laplacian_variance
-        self.glare_ratio = glare_ratio
-        self.details = details or {}
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "passed": self.passed,
-            "laplacian_variance": self.laplacian_variance,
-            "glare_ratio": self.glare_ratio,
-            "details": self.details,
-        }
+from .types import (
+    ImageQualityResult,
+    ImageQualityThresholds,
+    QualityGateResult,
+    QualityGateThresholds,
+)
+from .quality import (
+    evaluate_image_quality,
+    compute_laplacian_variance,
+    compute_glare_candidate_ratio,
+    compute_contrast,
+    compute_mean_luminance,
+    convert_to_grayscale,
+)
 
 
 def check_image_quality(
     image: np.ndarray,
     min_laplacian_variance: float = 100.0,
     max_glare_ratio: float = 0.15,
-) -> QualityGateResult:
+) -> ImageQualityResult:
     """
-    Evaluates image sharpness via Laplacian variance and specular glare via high-luminance thresholding.
-    Deterministic and fast (< 15 ms).
+    Backwards-compatible wrapper around evaluate_image_quality.
+
+    Maintains full compatibility with existing worker pipeline and legacy smoke tests:
+    - Accepts positional or keyword arguments for min_laplacian_variance and max_glare_ratio.
+    - Disables luminance exposure and contrast checks when called via this legacy interface unless configured.
+    - Returns ImageQualityResult / QualityGateResult with .passed, .laplacian_variance, .glare_ratio, .details.
     """
-    if image is None or image.size == 0:
-        return QualityGateResult(passed=False, laplacian_variance=0.0, glare_ratio=1.0, details={"error": "Empty image"})
-
-    # Convert to grayscale if 3-channel
-    if len(image.shape) == 3 and image.shape[2] == 3:
-        # Standard luminance weighting
-        gray = np.dot(image[..., :3], [0.2989, 0.5870, 0.1140]).astype(np.uint8)
-    else:
-        gray = image
-
-    # Edge sharpness via Laplacian variance (or fallback to pixel variance)
-    try:
-        import cv2
-        laplacian_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
-    except Exception:
-        laplacian_var = float(np.var(gray))
-    glare_pixels = int(np.sum(gray >= 250))
-    total_pixels = gray.size
-    glare_ratio = float(glare_pixels / total_pixels) if total_pixels > 0 else 1.0
-
-    passed = (laplacian_var >= min_laplacian_variance) and (glare_ratio <= max_glare_ratio)
-
-    return QualityGateResult(
-        passed=passed,
-        laplacian_variance=laplacian_var,
-        glare_ratio=glare_ratio,
-        details={
-            "min_laplacian_threshold": min_laplacian_variance,
-            "max_glare_threshold": max_glare_ratio,
-        },
+    thresholds = QualityGateThresholds(
+        min_blur_score=min_laplacian_variance,
+        max_glare_candidate_ratio=max_glare_ratio,
+        min_contrast_score=0.0,
+        min_mean_luminance=0.0,
+        max_mean_luminance=255.0,
     )
+    return evaluate_image_quality(image, thresholds=thresholds)
 
 
-__all__ = ["QualityGateResult", "check_image_quality"]
+__all__ = [
+    "ImageQualityResult",
+    "ImageQualityThresholds",
+    "QualityGateResult",
+    "QualityGateThresholds",
+    "evaluate_image_quality",
+    "check_image_quality",
+    "compute_laplacian_variance",
+    "compute_glare_candidate_ratio",
+    "compute_contrast",
+    "compute_mean_luminance",
+    "convert_to_grayscale",
+]

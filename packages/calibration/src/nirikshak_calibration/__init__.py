@@ -1,5 +1,6 @@
 """
-Nirikshak Calibration: Optical reference fiducial detection and metric scale calculation.
+Nirikshak Calibration: Optical reference fiducial detection, planar rectification,
+physical font measurement, and constrained cylindrical packaging measurement.
 """
 
 from typing import Optional, Dict, Any
@@ -151,4 +152,101 @@ def detect_reference_and_calibrate(
     )
 
 
-__all__ = ["CalibrationOutcome", "compute_scale_factor", "detect_reference_and_calibrate", "CalibrationStatus"]
+# Phase 4 Exports
+from .types import (
+    AnchorType,
+    AnchorDetectionStatus,
+    EllipseGeometry,
+    CardGeometry,
+    ConcentricRingInfo,
+    AnchorDetectorConfig,
+    AnchorDetectionResult,
+)
+from .anchor_detector import (
+    detect_anchor,
+    order_quadrilateral_corners,
+    compute_algebraic_ellipse_residual,
+)
+
+# Phase 5 Exports
+from .homography import (
+    RectificationStatus,
+    HomographyConfig,
+    RectificationResult,
+    rectify_planar_quadrilateral,
+    validate_quadrilateral_geometry,
+)
+
+# Phase 6 Exports
+from .font_measurer import (
+    FontMeasurementType,
+    FontMeasurementStatus,
+    FontMeasurementConfig,
+    FontMeasurementResult,
+    measure_font_height,
+    measure_font_height_batch,
+)
+
+# Phase 7 Exports
+from .cylinder import (
+    CylinderGeometryState,
+    CylinderMeasurementStatus,
+    CylinderModelConfig,
+    CylinderMeasurementResult,
+    measure_cylindrical_feature,
+)
+
+# Phase 9 Exports
+from .evaluation import (
+    BenchmarkStatus,
+    GroundTruthSample,
+    EvaluationConfig,
+    SampleEvaluation,
+    CalibrationEvaluationResult,
+    evaluate_calibration,
+)
+
+__all__ = [
+    # Baseline
+    "CalibrationOutcome",
+    "compute_scale_factor",
+    "detect_reference_and_calibrate",
+    "CalibrationStatus",
+    # Phase 4
+    "AnchorType",
+    "AnchorDetectionStatus",
+    "EllipseGeometry",
+    "CardGeometry",
+    "ConcentricRingInfo",
+    "AnchorDetectorConfig",
+    "AnchorDetectionResult",
+    "detect_anchor",
+    "order_quadrilateral_corners",
+    "compute_algebraic_ellipse_residual",
+    # Phase 5
+    "RectificationStatus",
+    "HomographyConfig",
+    "RectificationResult",
+    "rectify_planar_quadrilateral",
+    "validate_quadrilateral_geometry",
+    # Phase 6
+    "FontMeasurementType",
+    "FontMeasurementStatus",
+    "FontMeasurementConfig",
+    "FontMeasurementResult",
+    "measure_font_height",
+    "measure_font_height_batch",
+    # Phase 7
+    "CylinderGeometryState",
+    "CylinderMeasurementStatus",
+    "CylinderModelConfig",
+    "CylinderMeasurementResult",
+    "measure_cylindrical_feature",
+    # Phase 9
+    "BenchmarkStatus",
+    "GroundTruthSample",
+    "EvaluationConfig",
+    "SampleEvaluation",
+    "CalibrationEvaluationResult",
+    "evaluate_calibration",
+]

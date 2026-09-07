@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-09-05T10:24:07.937083+00:00",
+  "pipeline": {
+    "iterations": 20,
+    "mean_ms": 72.82,
+    "min_ms": 68.89,
+    "max_ms": 78.21,
+    "p50_ms": 72.74,
+    "p90_ms": 76.09,
+    "p95_ms": 76.75,
+    "p99_ms": 77.91,
+    "budget_limit_ms": 2500.0,
+    "budget_passed": true,
+    "stages_mean_ms": {
+      "quality_gate": 46.02,
+      "metric_calibration": 0.03,
+      "ocr_perception": 0.03,
+      "normalization": 0.18,
+      "rule_engine": 0.11,
+      "evidence_packaging": 1.26
+    }
+  },
+  "pdf_reporting": {
+    "iterations": 20,
+    "mean_ms": 20.22,
+    "min_ms": 18.63,
+    "max_ms": 30.02,
+    "p50_ms": 19.38,
+    "p90_ms": 21.0,
+    "p95_ms": 24.05,
+    "p99_ms": 28.82,
+    "budget_limit_ms": 500.0,
+    "budget_passed": true
+  }
+}

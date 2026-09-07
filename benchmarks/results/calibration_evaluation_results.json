@@ -1,0 +1,35 @@
+{
+  "status": "BENCHMARK_BLOCKED",
+  "total_samples": 0,
+  "successful_calibrations": 0,
+  "failed_calibrations": 0,
+  "calibration_success_rate": 0.0,
+  "calibration_failure_rate": 0.0,
+  "scale_evaluated_samples": 0,
+  "dimension_evaluated_samples": 0,
+  "scale_metrics_mm_per_pixel": {
+    "evaluated_samples": 0,
+    "mae": null,
+    "median_ae": null,
+    "rmse": null,
+    "p95_ae": null,
+    "relative_error_mean": null,
+    "relative_error_median": null
+  },
+  "dimension_metrics_mm": {
+    "evaluated_samples": 0,
+    "mae": null,
+    "median_ae": null,
+    "rmse": null,
+    "p95_ae": null
+  },
+  "verdicts": {
+    "scale_target_passed": null,
+    "dimension_target_passed": null,
+    "success_rate_passed": null
+  },
+  "stratified_by_surface": {},
+  "failure_breakdown": {},
+  "sample_evaluations": [],
+  "message": "No explicit physical ground-truth dataset available."
+}
