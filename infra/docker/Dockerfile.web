@@ -1,15 +1,46 @@
-# Nirikshak Web UI Container — DEVELOPMENT SCAFFOLD (PRE-IMPLEMENTATION)
-# Production container hardening and static optimization to be finalized during Phase 2 implementation.
+# ==============================================================================
+# MetroLens AI™ Web UI — Hardened Multi-Stage Production Container
+# SIH 2026 Problem Statement 26034 — Member 6 Release Hardening
+# ==============================================================================
 
-FROM node:20-alpine
+# Stage 1: Dependencies Cache
+FROM node:20-alpine AS deps
+WORKDIR /app
+RUN apk add --no-cache libc6-compat
+COPY apps/web/package.json apps/web/package-lock.json ./
+RUN npm ci
 
+# Stage 2: Production Build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY apps/web ./
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+# Stage 3: Production Runtime (Minimal & Non-Root)
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-COPY apps/web/package.json* ./
-RUN if [ -f package.json ]; then npm install; fi
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
 
-COPY . /app
+# Non-root user
+RUN addgroup --system --gid 10001 nodejs && \
+    adduser --system --uid 10001 nextjs
+
+# Copy static assets and standalone server output
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER 10001:10001
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+HEALTHCHECK --interval=5s --timeout=3s --retries=3 --start-period=5s \
+    CMD wget -qO- http://localhost:3000 || exit 1
+
+CMD ["node", "server.js"]
