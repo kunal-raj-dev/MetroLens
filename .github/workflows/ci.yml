@@ -1,0 +1,78 @@
+name: MetroLens AI CI
+
+on:
+  push:
+    branches: [ main, member-2 ]
+  pull_request:
+    branches: [ main, member-2 ]
+
+jobs:
+  backend-verification:
+    name: Backend Tests & Integrity Audits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify Python syntax and compilation
+        run: |
+          python -m compileall -q packages/ apps/ tests/
+
+      - name: Run master anti-hallucination verification suite
+        run: |
+          python scripts/verification/verify_legal_sources.py
+          python scripts/verification/verify_rule_registry.py
+          python scripts/verification/verify_claims.py
+          python scripts/verification/verify_dataset_manifest.py
+          python scripts/verification/verify_repository_integrity.py
+
+      - name: Run backend unit and integration test suite
+        run: |
+          pytest tests/unit tests/integration tests/rules tests/contracts tests/security packages/ -v --durations=10
+
+  frontend-verification:
+    name: Frontend Quality & Build Verification
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Run TypeScript type checking
+        run: npx tsc --noEmit
+
+      - name: Run frontend unit & integration test suite
+        run: npm test
+
+      - name: Build production Next.js application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000

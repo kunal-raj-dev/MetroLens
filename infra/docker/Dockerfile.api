@@ -1,22 +1,46 @@
-# Nirikshak API Container — DEVELOPMENT SCAFFOLD (PRE-IMPLEMENTATION)
-# Production container hardening and multistage builds to be finalized during Phase 2 implementation.
+# ==============================================================================
+# MetroLens AI™ API Gateway — Hardened Production Container
+# SIH 2026 Problem Statement 26034 — Member 6 Release Hardening
+# ==============================================================================
+# Base: Python 3.12 slim (Debian Bookworm) for OpenCV & ONNX Runtime stability
+FROM python:3.12-slim AS runtime
 
-FROM python:3.12-slim
+# System runtime dependencies for OpenCV, PIL, and native math routines
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Security: Non-root application user (UID 10001)
+RUN groupadd -g 10001 appgroup && \
+    useradd -u 10001 -g appgroup -m -s /bin/bash appuser
 
 WORKDIR /app
 
-# Install system dependencies for OpenCV and Tesseract in development
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libgl1 \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+# Dependency caching layer
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-COPY requirements.txt* ./
-RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
+# Application source
+COPY --chown=10001:10001 . /app
 
-COPY . /app
+# Ensure writable directory for spooling evidence and temp files
+RUN mkdir -p /app/data/evidence_store /app/tmp && \
+    chown -R 10001:10001 /app/data /app/tmp
+
+# Drop privileges to non-root user
+USER 10001:10001
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app:/app/packages/shared/src:/app/packages/vision/src:/app/packages/calibration/src:/app/packages/ocr/src:/app/packages/extraction/src:/app/packages/measurement/src:/app/packages/rules-engine/src:/app/packages/evidence/src:/app/packages/reporting/src:/app/apps/api:/app/apps/worker
 
 EXPOSE 8000
+
+# Container health probe
+HEALTHCHECK --interval=5s --timeout=3s --retries=3 --start-period=5s \
+    CMD curl -f http://localhost:8000/health || python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 CMD ["python", "-m", "uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
