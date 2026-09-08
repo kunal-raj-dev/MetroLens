@@ -44,7 +44,7 @@ jobs:
 
       - name: Run backend unit and integration test suite
         run: |
-          pytest tests/unit tests/integration tests/rules tests/contracts tests/security packages/ -v --durations=10
+          pytest tests/unit tests/integration tests/rules tests/contracts tests/security tests/benchmarks packages/ -v --durations=10
 
   frontend-verification:
     name: Frontend Quality & Build Verification
