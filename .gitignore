@@ -45,6 +45,8 @@ data/processed/*
 !data/processed/.gitkeep
 models/weights/*
 !models/weights/.gitkeep
+!models/weights/ocr/
+!models/weights/ocr/**
 
 # Environment variables & secrets
 .env
