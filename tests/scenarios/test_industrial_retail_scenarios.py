@@ -1,23 +1,8 @@
-"""
-Industrial & Retail Statutory Packaging Enforcement Scenarios
-=============================================================
-Authoritative end-to-end statutory enforcement scenarios testing the Legal
-Metrology Act, 2009, Legal Metrology (Packaged Commodities) Rules, 2011,
-Bureau of Indian Standards Quality Control Orders, and CCPA 2023 Guidelines.
+"""Isolated industrial/retail helper regression scenarios.
 
-Covers 60+ real-world commercial packaging scenarios:
-    1. Edible Oils, Vanaspati & Ghee (Rule 12 Dual Volume/Mass Declarations).
-    2. Industrial Cement & Construction Materials (IS 1489 / IS 269 standard 50kg bags).
-    3. Paints, Varnishes & Thinners (Rule 12 Net Volume at Specified Temperatures).
-    4. Fertilizers & Agricultural Chemicals (Neem Urea, DAP, MOP with N-P-K ratios).
-    5. Certified Agricultural Seeds (Germination %, Physical/Genetic Purity %).
-    6. Textile Piece Goods & Sewing Threads (Rule 13 Fabric Length, Width & GSM).
-    7. Safety Matches & Tobacco Products (Standard Match Sticks & Cigarette Counts).
-    8. Consumer Durables & White Goods (Rule 6 Importer, Country of Origin, BEE Rating).
-    9. E-Commerce Digital Product Display (CCPA 2023 Dark Patterns & Rule 6(10) USP).
-   10. Compounding Ladders under Section 48 & 48A for First vs Repeat Offences.
-   11. Wholesale Master Cartons under Third Schedule (Multi-Pack Retail Disclaimers).
-   12. Institutional & Industrial Consumer Exemption Audits under Rule 26(b).
+These fixtures exercise helper modules, not a mounted officer, prosecution,
+government integration, or complete physical-metrology workflow. Passing tests
+does not verify statutory sources or establish production legal authority.
 """
 
 import io

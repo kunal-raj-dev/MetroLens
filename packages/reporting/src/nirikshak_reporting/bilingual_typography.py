@@ -14,6 +14,7 @@ Rule 6(3) Statutory Mandate:
 from __future__ import annotations
 
 import unicodedata
+from .text_safety import text as paragraph_text
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -156,11 +157,7 @@ class BilingualTypographyEngine:
         cleaned = "".join(ch for ch in normalized if ch == "\n" or ch == "\t" or ord(ch) >= 32)
 
         # XML entity escaping for ReportLab Paragraph
-        cleaned = cleaned.replace("&", "&amp;")
-        cleaned = cleaned.replace("<", "&lt;")
-        cleaned = cleaned.replace(">", "&gt;")
-
-        return cleaned
+        return paragraph_text(cleaned)
 
     @classmethod
     def create_statutory_declaration_row(

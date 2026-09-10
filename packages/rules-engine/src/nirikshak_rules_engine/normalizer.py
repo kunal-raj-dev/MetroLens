@@ -26,11 +26,7 @@ class TokenNormalizer:
     def __init__(self):
         # Pre-compile regex extractors for maximum evaluation speed (< 5ms)
         self._regex_mrp = re.compile(
-            r"(?:MRP|M\.R\.P|PRICE|MRP\s*Rs|अधिकतम\s*खुदरा\s*मूल्य)\.?\s*[:.-]?\s*(?:₹|Rs\.?|INR)?\s*(\d+(?:\.\d{1,2})?)",
-            re.IGNORECASE,
-        )
-        self._regex_currency_fallback = re.compile(
-            r"(?:₹|Rs\.?|INR)\s*(\d+(?:\.\d{1,2})?)",
+            r"(?<!\w)(?:MRP|M\.R\.P|Maximum\s+Retail\s+Price|अधिकतम\s*खुदरा\s*मूल्य)\.?\s*[:.-]?\s*(?:₹|Rs\.?|INR)?\s*(\d+(?:\.\d{1,2})?)",
             re.IGNORECASE,
         )
         self._regex_tax_qualifier = re.compile(
@@ -123,22 +119,14 @@ class TokenNormalizer:
 
         decl = CanonicalDeclaration()
 
-        # 1. Extract MRP and Tax Qualifier
+        # 1. Require an explicit maximum-retail-price label. A generic PRICE
+        # or currency match can be a unit sale price, discount, or other amount.
         mrp_match = self._regex_mrp.search(full_cleaned_text)
         if mrp_match:
             try:
                 decl.mrp_inr = float(mrp_match.group(1))
             except ValueError:
                 pass
-        else:
-            # Fallback to general currency symbol search
-            curr_match = self._regex_currency_fallback.search(full_cleaned_text)
-            if curr_match:
-                try:
-                    decl.mrp_inr = float(curr_match.group(1))
-                except ValueError:
-                    pass
-
         decl.tax_qualifier_present = bool(self._regex_tax_qualifier.search(full_cleaned_text))
 
         # 2. Extract Net Quantity

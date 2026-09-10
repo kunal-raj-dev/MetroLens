@@ -93,7 +93,7 @@ class StatutoryRuleEngine:
         # 2. Rule 26(a): Small Package Exemption (<= 10g or <= 10ml)
         if (
             decl.net_quantity_value is not None
-            and decl.net_quantity_value <= 10.0
+            and 0 < decl.net_quantity_value <= 10.0
             and decl.net_quantity_unit in [UnitType.GRAM, UnitType.MILLILITER]
         ):
             # STRICT CARVE-OUT: Pan Masala and Tobacco products are NEVER exempt under G.S.R. 881(E)
@@ -392,21 +392,31 @@ class StatutoryRuleEngine:
             rule_evals.append(rule7_record)
 
         # 5. Composite 5-State Taxonomy Adjudication
-        has_failures = any(not r.is_compliant and r.status == "FAIL" for r in rule_evals)
-        has_deviations = any(not r.is_compliant and r.status == "REVIEW" for r in rule_evals)
+        has_failures = any(r.status == "FAIL" for r in rule_evals)
+        review_rules = [r for r in rule_evals if r.status == "REVIEW"]
+        # REVIEW is authoritative even when the legacy boolean merely indicates
+        # that an unmeasured input must not trigger a hard violation.
+        has_unresolved_checks = any(r.deficit_mm is None for r in review_rules)
 
         if has_failures:
             overall_verdict = ComplianceState.NON_COMPLIANT
             badge_color = VerdictBadgeColor.RED
-            failing_rules = [r.statutory_reference for r in rule_evals if not r.is_compliant and r.status == "FAIL"]
+            failing_rules = [r.statutory_reference for r in rule_evals if r.status == "FAIL"]
             summary = (
                 f"Statutory non-compliance detected across {len(failing_rules)} declaration(s): "
                 f"{', '.join(failing_rules)} under Legal Metrology (Packaged Commodities) Rules, 2011."
             )
-        elif has_deviations:
+        elif has_unresolved_checks:
+            overall_verdict = ComplianceState.UNCERTAIN
+            badge_color = VerdictBadgeColor.AMBER
+            summary = (
+                "Manual review required: one or more checks lack sufficient "
+                "measurement evidence or verified historical applicability."
+            )
+        elif review_rules:
             overall_verdict = ComplianceState.DEVIATION_DETECTED
             badge_color = VerdictBadgeColor.AMBER
-            dev_rules = [r.statutory_reference for r in rule_evals if not r.is_compliant and r.status == "REVIEW"]
+            dev_rules = [r.statutory_reference for r in review_rules]
             summary = (
                 f"Statutory deviation/borderline condition detected in {', '.join(dev_rules)}. "
                 f"Manual inspection or physical gauge calibration recommended."
@@ -435,5 +445,4 @@ class StatutoryRuleEngine:
             improvement_notice=improvement_notice,
             telemetry_ms=round(elapsed_ms, 2),
         )
-
 

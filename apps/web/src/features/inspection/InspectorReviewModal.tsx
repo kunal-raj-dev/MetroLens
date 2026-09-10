@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   Button,
@@ -55,9 +55,11 @@ export function InspectorReviewModal({
   const [status, setStatus] = useState<"IDLE" | "SUBMITTING" | "SUCCESS" | "ERROR">("IDLE");
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const reviewVersion = useRef(0);
 
   // Reset state whenever a new declaration is opened
   useEffect(() => {
+    reviewVersion.current += 1;
     if (isOpen) {
       setDecision("CONFIRMED");
       setNotes(declaration?.operatorNotes || "");
@@ -65,11 +67,14 @@ export function InspectorReviewModal({
       setResultMessage(null);
       setErrorMessage(null);
     }
-  }, [isOpen, declaration]);
+    return () => { reviewVersion.current += 1; };
+  }, [isOpen, declaration, inspectionId]);
 
   if (!declaration) return null;
 
   const handleSubmit = async () => {
+    if (!isMock || status === "SUBMITTING" || isSubmitting) return;
+    const version = reviewVersion.current;
     setStatus("SUBMITTING");
     setErrorMessage(null);
 
@@ -81,11 +86,13 @@ export function InspectorReviewModal({
         notes: notes.trim() || undefined,
       });
 
+      if (version !== reviewVersion.current) return;
       setStatus("SUCCESS");
       setResultMessage(
-        result?.statusMessage || "Review decision recorded in audit trail."
+        result?.statusMessage || "Demonstration review updated in this browser session."
       );
     } catch (err: any) {
+      if (version !== reviewVersion.current) return;
       setStatus("ERROR");
       setErrorMessage(err?.message || "Failed to submit inspector review.");
     }
@@ -96,7 +103,7 @@ export function InspectorReviewModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`Inspector Review: ${declaration.label || declaration.fieldName}`}
-      description="Officer adjudication under Legal Metrology (Packaged Commodities) Rules, 2011"
+      description={isMock ? "Practice reviewing extracted declarations. Changes last only in this browser session." : "Inspect the extracted evidence. Saving a live officer review is not available yet."}
       className="max-w-xl"
     >
       <div className="space-y-5 pt-2">
@@ -115,7 +122,7 @@ export function InspectorReviewModal({
               Inspection Dossier: #{inspectionId}
             </span>
             <span className="text-[11px] font-mono text-slate-500">
-              Confidence: {(declaration.confidence * 100).toFixed(1)}%
+              Confidence: {declaration.confidence == null ? "Not supplied" : `${(declaration.confidence * 100).toFixed(1)}%`}
             </span>
           </div>
 
@@ -144,11 +151,12 @@ export function InspectorReviewModal({
         {/* Adjudication Decision Selection */}
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-eyebrow text-slate-700">
-            Adjudication Finding
+            Review Finding
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
+              aria-pressed={decision === "CONFIRMED"}
               onClick={() => setDecision("CONFIRMED")}
               className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
                 decision === "CONFIRMED"
@@ -161,12 +169,13 @@ export function InspectorReviewModal({
               }`} />
               <div className="space-y-0.5">
                 <div className="text-xs font-semibold text-ink">Confirm Pass</div>
-                <div className="text-[10px] text-slate-500">Satisfies statutory rule format</div>
+                <div className="text-[10px] text-slate-500">Mark extraction as reviewed</div>
               </div>
             </button>
 
             <button
               type="button"
+              aria-pressed={decision === "FLAGGED"}
               onClick={() => setDecision("FLAGGED")}
               className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
                 decision === "FLAGGED"
@@ -179,7 +188,7 @@ export function InspectorReviewModal({
               }`} />
               <div className="space-y-0.5">
                 <div className="text-xs font-semibold text-ink">Flag Deficit</div>
-                <div className="text-[10px] text-slate-500">Marks statutory violation</div>
+                <div className="text-[10px] text-slate-500">Flag for further checking</div>
               </div>
             </button>
           </div>
@@ -235,9 +244,9 @@ export function InspectorReviewModal({
               variant="primary"
               size="sm"
               onClick={handleSubmit}
-              disabled={status === "SUBMITTING"}
+              disabled={!isMock || isSubmitting || status === "SUBMITTING"}
             >
-              {status === "SUBMITTING" ? "Recording Decision..." : "Submit Review Finding"}
+              {status === "SUBMITTING" ? "Updating demo..." : isMock ? "Update Demo Review" : "Live review unavailable"}
             </Button>
           )}
         </div>

@@ -208,3 +208,37 @@ def test_normalizer_latency_budget(normalizer, mock_fixtures):
 
     avg_ms = (elapsed / iterations) * 1000
     assert avg_ms < 5.0, f"Normalizer exceeded 5ms latency budget: {avg_ms:.2f} ms"
+
+
+@pytest.mark.parametrize("usp", [
+    "Unit Sale Price: ₹ 1.20 / g",
+    "UNIT SALE PRICE: Rs. 1.20 per g",
+    "USP: INR 1.20/g",
+    "इकाई विक्रय मूल्य: ₹ 1.20 / g",
+    "Unit\nSale\nPrice:\n₹ 1.20 / g",
+])
+def test_unit_sale_price_does_not_supply_missing_mrp(normalizer, usp):
+    decl = normalizer.normalize(["Net Quantity: 200 g", usp])
+    assert decl.mrp_inr is None
+    assert decl.declared_usp_value == 1.20
+    assert decl.declared_usp_unit == "g"
+
+
+@pytest.mark.parametrize("price", ["Price: ₹ 240", "₹ 240", "Rs. 240", "INR 240"])
+def test_unlabelled_price_is_not_confirmed_as_mrp(normalizer, price):
+    assert normalizer.normalize(price).mrp_inr is None
+
+
+@pytest.mark.parametrize("mrp", [
+    "MRP ₹ 240.00 (inclusive of all taxes)",
+    "M.R.P.: Rs. 240.00",
+    "Maximum Retail Price: INR 240.00",
+    "अधिकतम खुदरा मूल्य: ₹ 240.00",
+    "MRP:\n₹ 240.00",
+])
+@pytest.mark.parametrize("usp_first", [True, False])
+def test_explicit_mrp_is_distinct_from_unit_price(normalizer, mrp, usp_first):
+    usp = "Unit Sale Price: ₹ 1.20 / g"
+    decl = normalizer.normalize([usp, mrp] if usp_first else [mrp, usp])
+    assert decl.mrp_inr == 240.0
+    assert decl.declared_usp_value == 1.2

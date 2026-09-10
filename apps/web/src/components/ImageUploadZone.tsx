@@ -48,6 +48,9 @@ export interface ImageUploadZoneProps {
     dimensions?: { width: number; height: number }
   ) => void;
   initialMode?: InspectionClientMode;
+  allowUpload?: boolean;
+  inspectionDisabled?: boolean;
+  onFileChanging?: () => void;
   clientMode?: InspectionClientMode;
   onModeChange?: (mode: InspectionClientMode) => void;
   externalFile?: File | null;
@@ -60,6 +63,9 @@ export function ImageUploadZone({
   onFileCleared,
   onFileReady,
   initialMode = "mock",
+  allowUpload = true,
+  inspectionDisabled = false,
+  onFileChanging,
   clientMode: controlledClientMode,
   onModeChange,
   externalFile,
@@ -100,6 +106,8 @@ export function ImageUploadZone({
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileVersion = useRef(0);
+  const validFile = useRef(false);
   const previewUrlRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -113,6 +121,7 @@ export function ImageUploadZone({
 
   useEffect(() => {
     return () => {
+      fileVersion.current += 1;
       cleanupPreviewUrl();
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -129,6 +138,8 @@ export function ImageUploadZone({
 
   // Reset ingestion zone
   const handleClear = useCallback(() => {
+    fileVersion.current += 1;
+    validFile.current = false;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -148,7 +159,13 @@ export function ImageUploadZone({
 
   // File ingestion & validation pipeline
   const processFile = async (file: File) => {
+    const version = ++fileVersion.current;
+    abortControllerRef.current?.abort();
+    validFile.current = false;
+    onFileChanging?.();
     cleanupPreviewUrl();
+    setPreviewUrl(null);
+    setFileDimensions(null);
     setSelectedFile(file);
     setErrorMessage(null);
     setErrorDetails(null);
@@ -156,6 +173,7 @@ export function ImageUploadZone({
 
     const validation: FileValidationResult = await validateInspectionImage(file);
 
+    if (version !== fileVersion.current) return;
     if (!validation.valid && validation.error) {
       setState("ERROR");
       setErrorMessage(validation.error.message);
@@ -163,6 +181,7 @@ export function ImageUploadZone({
       return;
     }
 
+    validFile.current = true;
     // Allocate safe Object URL for thumbnail
     const url = URL.createObjectURL(file);
     previewUrlRef.current = url;
@@ -176,10 +195,13 @@ export function ImageUploadZone({
     onFileReady?.(file, url, validation.dimensions);
   };
 
-  // Respond to externalFile if injected from SamplePackageSelector
+  const processFileRef = useRef(processFile);
+  processFileRef.current = processFile;
+
+  // Respond only to a newly selected file, using the current callbacks.
   useEffect(() => {
     if (externalFile) {
-      processFile(externalFile);
+      processFileRef.current(externalFile);
     }
   }, [externalFile]);
 
@@ -219,7 +241,7 @@ export function ImageUploadZone({
     e.stopPropagation();
     setIsDragOver(false);
 
-    if (state === "INSPECTING") return;
+    if (state === "INSPECTING" || !allowUpload) return;
 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
@@ -237,7 +259,7 @@ export function ImageUploadZone({
 
   // Trigger inspection
   const handleInspect = async () => {
-    if (!selectedFile || state === "INSPECTING") return;
+    if (!selectedFile || !validFile.current || inspectionDisabled || state === "INSPECTING") return;
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -274,45 +296,7 @@ export function ImageUploadZone({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Inspection Mode Indicator & Controls */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-eyebrow text-slate-500">
-            Source Mode:
-          </span>
-          <div className="inline-flex rounded-pill bg-white p-0.5 border border-black/[0.08] shadow-sm">
-            <button
-              type="button"
-              onClick={() => handleModeToggle("mock")}
-              className={`px-3 py-1 text-xs font-semibold rounded-pill transition-all ${
-                clientMode === "mock"
-                  ? "bg-ink text-white shadow-sm"
-                  : "text-slate-600 hover:text-ink"
-              }`}
-            >
-              Mock Synthetic
-            </button>
-            <button
-              type="button"
-              onClick={() => handleModeToggle("live")}
-              className={`px-3 py-1 text-xs font-semibold rounded-pill transition-all ${
-                clientMode === "live"
-                  ? "bg-signal-orange text-white shadow-sm"
-                  : "text-slate-600 hover:text-ink"
-              }`}
-            >
-              Live API
-            </button>
-          </div>
-        </div>
-
-        <Badge
-          variant={clientMode === "mock" ? "default" : "warning"}
-          size="sm"
-        >
-          {clientMode === "mock" ? "Demo Sandbox" : "Backend POST"}
-        </Badge>
-      </div>
+      <div className="text-xs text-slate-600" role="status">{clientMode === "mock" ? "Prepared demonstration result · no live analysis" : "Live analysis · image sent to the configured service"}</div>
 
       {/* Main Upload Dropzone Stadium Card */}
       <Card
@@ -340,21 +324,22 @@ export function ImageUploadZone({
           onChange={handleFileInputChange}
           className="sr-only"
           id="officer-file-upload"
-          aria-describedby="upload-instructions"
+          aria-label="Select packaging photograph"
+          disabled={!allowUpload || state === "INSPECTING"}
         />
 
         {/* State: EMPTY (Initial Drag-and-Drop View) */}
         {state === "EMPTY" && (
           <div
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => { if (allowUpload) fileInputRef.current?.click(); }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
+              if (allowUpload && (e.key === "Enter" || e.key === " ")) {
                 e.preventDefault();
                 fileInputRef.current?.click();
               }
             }}
-            tabIndex={0}
-            role="button"
+            tabIndex={allowUpload ? 0 : -1}
+            role="group"
             className="flex flex-col items-center justify-center text-center py-8 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-orange rounded-stadium"
           >
             {/* Circular Portrait Icon with Attached Satellite micro-CTA */}
@@ -372,13 +357,13 @@ export function ImageUploadZone({
 
             <div className="space-y-1.5 mt-4 max-w-sm">
               <h3 className="text-lg font-medium tracking-headline text-ink">
-                Ingest Package Photograph
+                {allowUpload ? "Upload Package Photograph" : "Choose a Demonstration Example"}
               </h3>
               <p
                 id="upload-instructions"
                 className="text-xs text-slate-500 leading-relaxed"
               >
-                Drag & drop front panel image or click to browse. Supported formats:{" "}
+                {allowUpload ? "Drag and drop a clear packaging image, or choose a file. " : "Select one of the examples above. Live Inspection is required for your own photographs. "}
                 <span className="font-semibold text-slate-700">JPEG, PNG, WebP</span> (Max 15MB).
               </p>
             </div>
@@ -388,12 +373,13 @@ export function ImageUploadZone({
                 type="button"
                 variant="primary"
                 size="sm"
+                disabled={!allowUpload}
                 onClick={(e) => {
                   e.stopPropagation();
                   fileInputRef.current?.click();
                 }}
               >
-                Choose Image File
+                {allowUpload ? "Choose Image File" : "Choose an Example Above"}
               </Button>
             </div>
           </div>
@@ -449,8 +435,8 @@ export function ImageUploadZone({
                     {selectedFile.name}
                   </h4>
                   <p className="text-xs text-slate-500">
-                    Size: {formatFileSize(selectedFile.size)} • Status:{" "}
-                    <span className="font-medium text-emerald-700">Validated</span>
+                    Size: {formatFileSize(selectedFile.size)} · Status:{" "}
+                    <span className="font-medium">{validFile.current ? "Validated" : "Rejected"}</span>
                   </p>
                 </div>
 
@@ -460,7 +446,8 @@ export function ImageUploadZone({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => { if (allowUpload) fileInputRef.current?.click(); }}
+                    disabled={!allowUpload}
                     aria-label="Replace package photograph"
                   >
                     <RefreshCw className="w-3.5 h-3.5 mr-1 text-slate-600" />
@@ -510,7 +497,7 @@ export function ImageUploadZone({
             {/* Primary Action: Inspect Package */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-black/[0.06]">
               <span className="text-xs text-slate-500">
-                Ready for Rule 6, Rule 7, and OCR feature extraction.
+                {clientMode === "mock" ? "Display the prepared result for this example." : inspectionDisabled ? "Configure live service access before inspecting." : "Ready for image-based assessment."}
               </span>
 
               <Button
@@ -518,7 +505,7 @@ export function ImageUploadZone({
                 variant="signal"
                 size="md"
                 onClick={handleInspect}
-                disabled={!selectedFile}
+                disabled={!selectedFile || !validFile.current || inspectionDisabled}
                 className="w-full sm:w-auto"
               >
                 <Sparkles className="w-4 h-4 mr-1.5" />
@@ -539,14 +526,14 @@ export function ImageUploadZone({
               }
               description={
                 clientMode === "mock"
-                  ? "Processing statutory declarations under Legal Metrology Rules, 2011..."
-                  : "Submitting package photograph to POST /api/v1/inspect..."
+                  ? "Loading the prepared demonstration result..."
+                  : "Uploading and analyzing your package photograph..."
               }
               stageName="Rule 6 & Rule 7 Verification"
               className="py-4 bg-transparent border-none p-4"
             />
             <p className="text-xs text-slate-500 max-w-sm">
-              Executing OCR polygon extraction, metric scale calibration, and deterministic gazette rules.
+              {clientMode === "mock" ? "Demonstration data does not establish real packaging compliance." : "Processing time depends on image size and server availability."}
             </p>
           </div>
         )}

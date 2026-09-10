@@ -1,0 +1,1185 @@
+{
+  "documentType": "metrolens.security-semantic-draft",
+  "status": "unsealed-native-tools-unavailable",
+  "scanId": "ba3f9691-c359-4bb0-817f-49f3bc8e8bb5",
+  "targetRevision": "c436e3a7055b8f048018727df3ee3b34d0311bf1",
+  "sourceScope": "baseline source review; local working-tree remediation separately validated",
+  "findings": [
+    {
+      "ruleId": "path-traversal.report-spool",
+      "identity": {
+        "anchor": "path-traversal.report-spool"
+      },
+      "title": "A report request can delete directories outside the evidence spool",
+      "summary": "A caller-controlled report identifier is joined to the spool root without containment validation. An existing directory older than the retention interval is recursively deleted, even when it is outside the spool.",
+      "severity": {
+        "level": "high",
+        "rationale": "Deletion of service-writable directories and evidence outside the intended session; limited by operating-system permissions and target existence.",
+        "changeConditions": "Severity assumes the Python API is reachable by untrusted clients; production API hosting and perimeter controls were not established."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Exact baseline source dataflow independently checked; local targeted regressions validate the corrected invariant."
+      },
+      "taxonomy": {
+        "category": "path-traversal",
+        "cwe": [
+          "CWE-22",
+          "CWE-73"
+        ]
+      },
+      "locations": [
+        {
+          "path": "apps/api/schemas.py",
+          "startLine": 242,
+          "endLine": 246,
+          "role": "user_input"
+        },
+        {
+          "path": "apps/api/routes/report.py",
+          "startLine": 45,
+          "endLine": 54,
+          "role": "entrypoint"
+        },
+        {
+          "path": "apps/api/services/spool_service.py",
+          "startLine": 250,
+          "endLine": 255,
+          "role": "propagation"
+        },
+        {
+          "path": "apps/api/services/spool_service.py",
+          "startLine": 168,
+          "endLine": 184,
+          "role": "sink"
+        }
+      ],
+      "codeEvidence": [
+        {
+          "id": "input",
+          "label": "input",
+          "path": "apps/api/schemas.py",
+          "startLine": 242,
+          "endLine": 246,
+          "language": "python",
+          "role": "user_input",
+          "code": "class ReportPdfRequest(BaseModel):\n    \"\"\"POST /api/v1/report/pdf request body matching API Contract 3.3.\"\"\"\n    inspection_id: str = Field(..., description=\"Identifier of completed inspection to render\")\n    officer_notes: Optional[str] = Field(None, description=\"Optional inspecting officer annotations\")\n    include_raw_image: bool = Field(True, description=\"Whether to embed packaging thumbnail in PDF\")",
+          "explanation": "Report IDs are unconstrained strings."
+        },
+        {
+          "id": "request",
+          "label": "request",
+          "path": "apps/api/routes/report.py",
+          "startLine": 45,
+          "endLine": 54,
+          "language": "python",
+          "role": "entrypoint",
+          "code": "def download_inspection_report_pdf(payload: ReportPdfRequest) -> Response:\n    \"\"\"\n    Synchronously compiles or retrieves an assessment report PDF.\n    Returns binary PDF stream with Content-Disposition: attachment header.\n    \"\"\"\n    inspection_id = payload.inspection_id\n    logger.info(\"Received PDF report request for inspection '%s'\", inspection_id)\n\n    # 1. Check if PDF is already cached in ephemeral spool session\n    cached_pdf = spool_service.get_pdf_report(inspection_id)",
+          "explanation": "The attacker-supplied ID reaches spool lookup without authorization or containment."
+        },
+        {
+          "id": "lookup",
+          "label": "lookup",
+          "path": "apps/api/services/spool_service.py",
+          "startLine": 250,
+          "endLine": 255,
+          "language": "python",
+          "role": "propagation",
+          "code": "    def get_pdf_report(self, inspection_id: str) -> Optional[bytes]:\n        \"\"\"Retrieves PDF report binary if within the TTL retention window.\"\"\"\n        session = self.get_session(inspection_id)\n        if not session or not session.pdf_report_path or not session.pdf_report_path.is_file():\n            return None\n        return session.pdf_report_path.read_bytes()",
+          "explanation": "Report lookup calls session recovery using the same ID."
+        },
+        {
+          "id": "delete",
+          "label": "delete",
+          "path": "apps/api/services/spool_service.py",
+          "startLine": 168,
+          "endLine": 184,
+          "language": "python",
+          "role": "sink",
+          "code": "            # Check if directory exists on disk even if not in memory (e.g. after worker restart)\n            session_dir = self.base_dir / inspection_id\n            if session_dir.is_dir():\n                mtime = session_dir.stat().st_mtime\n                age = time.time() - mtime\n                if age > self.ttl_seconds:\n                    shutil.rmtree(session_dir, ignore_errors=True)\n                    return None\n\n                recovered_session = SpoolSession(\n                    inspection_id=inspection_id,\n                    session_dir=session_dir,\n                    created_at_utc=mtime,\n                    last_accessed_utc=time.time(),\n                )\n                self._sessions[inspection_id] = recovered_session\n                return recovered_session",
+          "explanation": "The joined path may escape the spool and reaches recursive deletion or recovery."
+        }
+      ],
+      "rootCause": {
+        "summary": "`ReportPdfRequest.inspection_id` accepts any string. The public report route passes it to `get_pdf_report()`, which invokes `get_session()`. Recovery treats the resulting joined path as a session and calls `shutil.rmtree()` when its timestamp is old; neither path normalization nor root containment is enforced.",
+        "evidenceRefs": [
+          "input",
+          "request",
+          "lookup",
+          "delete"
+        ]
+      },
+      "validation": {
+        "method": "baseline source trace and local remediation regression tests",
+        "summary": "Independent source trace and delegated isolated temporary-directory regression. Before the fix, a sibling sentinel under the test root was deleted through get_pdf_report('../victim'); the containment fix passes the spool-boundary regressions.",
+        "evidenceRefs": [
+          "input",
+          "request",
+          "lookup",
+          "delete"
+        ],
+        "limitations": [
+          "No production exploitation or deployment verification was performed.",
+          "Findings describe baseline c436e3a7055b8f048018727df3ee3b34d0311bf1; remediation is in the local working tree."
+        ]
+      },
+      "attackPath": {
+        "summary": "A client that can reach the Python API supplies an absolute or parent-relative inspection identifier referring to a writable existing directory. The expired-session recovery path deletes that directory. A recent directory can instead be registered for later expiry.",
+        "evidenceRefs": [
+          "input",
+          "request",
+          "lookup",
+          "delete"
+        ],
+        "reachability": {
+          "summary": "Reachable when the baseline Python API is exposed; production API location is unknown.",
+          "attacker": "untrusted API client",
+          "outcome": "Deletion of service-writable directories and evidence outside the intended session; limited by operating-system permissions and target existence."
+        },
+        "impact": {
+          "level": "high",
+          "why": "Deletion of service-writable directories and evidence outside the intended session; limited by operating-system permissions and target existence."
+        },
+        "limitations": [
+          "Hosting, proxy controls and live exposure are not verified."
+        ]
+      },
+      "remediation": "Require portable inspection identifiers and enforce resolved containment/reparse-point rejection at every spool read, write, recovery and deletion boundary. Locally implemented in identifiers.py and spool_service.py; deployment is unverified.",
+      "remediationTests": [
+        "tests/security/test_spool_boundaries.py covers traversal, absolute paths, unsafe Windows names, symlinks/junctions, recovery and cleanup."
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "extensions": {
+        "candidateId": "BASE-GROUP-1",
+        "localFixStatus": "implemented; see regression tests; not deployed"
+      }
+    },
+    {
+      "ruleId": "authentication.unverified-officer-api",
+      "identity": {
+        "anchor": "authentication.unverified-officer-api"
+      },
+      "title": "Clients can access inspection operations and mint officer identities without authentication",
+      "summary": "Inspection/report operations have no authentication boundary. The token route accepts caller-supplied officer roles and identity without credentials, and token signing also has a known default secret.",
+      "severity": {
+        "level": "high",
+        "rationale": "Unauthorized inspection processing and disclosure/manipulation of known inspection records; fabricated officer identity and granted-scope claims.",
+        "changeConditions": "Severity assumes the Python API is reachable by untrusted clients; production API hosting and perimeter controls were not established."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Exact baseline source dataflow independently checked; local targeted regressions validate the corrected invariant."
+      },
+      "taxonomy": {
+        "category": "authentication",
+        "cwe": [
+          "CWE-306",
+          "CWE-862",
+          "CWE-798"
+        ]
+      },
+      "locations": [
+        {
+          "path": "apps/api/main.py",
+          "startLine": 179,
+          "endLine": 185,
+          "role": "entrypoint"
+        },
+        {
+          "path": "apps/api/main.py",
+          "startLine": 325,
+          "endLine": 335,
+          "role": "sink"
+        },
+        {
+          "path": "apps/api/routes/auth.py",
+          "startLine": 22,
+          "endLine": 27,
+          "role": "user_input"
+        },
+        {
+          "path": "apps/api/routes/auth.py",
+          "startLine": 45,
+          "endLine": 68,
+          "role": "root_control"
+        },
+        {
+          "path": "apps/api/auth/tokens.py",
+          "startLine": 63,
+          "endLine": 66,
+          "role": "root_control"
+        }
+      ],
+      "codeEvidence": [
+        {
+          "id": "mount",
+          "label": "mount",
+          "path": "apps/api/main.py",
+          "startLine": 179,
+          "endLine": 185,
+          "language": "python",
+          "role": "entrypoint",
+          "code": "# 6. Mount API v1 route blueprints\napp.include_router(report_router)\napp.include_router(emaap_router)\napp.include_router(health_router)\napp.include_router(metrics_router)\napp.include_router(auth_router)\napp.include_router(audit_router)",
+          "explanation": "Routers are mounted without app-level authentication dependencies."
+        },
+        {
+          "id": "read",
+          "label": "read",
+          "path": "apps/api/main.py",
+          "startLine": 325,
+          "endLine": 335,
+          "language": "python",
+          "role": "sink",
+          "code": "@app.get(\n    \"/api/v1/inspections/{inspection_id}\",\n    response_model=InspectionResult,\n    tags=[\"Inspections\"],\n)\ndef get_inspection(inspection_id: str) -> InspectionResult:\n    \"\"\"Retrieves current inspection state and evidence graph.\"\"\"\n    if inspection_id in INSPECTIONS_DB:\n        stored = INSPECTIONS_DB[inspection_id]\n        if isinstance(stored, InspectionResult):\n            return stored",
+          "explanation": "Inspection lookup returns stored records with no authenticated-principal argument."
+        },
+        {
+          "id": "role",
+          "label": "role",
+          "path": "apps/api/routes/auth.py",
+          "startLine": 22,
+          "endLine": 27,
+          "language": "python",
+          "role": "user_input",
+          "code": "class OfficerLoginRequest(BaseModel):\n    officer_id: str = Field(..., description=\"Unique government employee identifier\")\n    officer_name: str = Field(..., description=\"Full legal name of the inspecting officer\")\n    badge_number: str = Field(..., description=\"Official Legal Metrology badge/license number\")\n    jurisdiction_code: str = Field(..., description=\"Station jurisdiction code, e.g. 'IN-DL-SOUTH'\")\n    role: str = Field(default=\"FIELD_INSPECTOR\", description=\"Designated role\")",
+          "explanation": "Officer identity and role are provided by the caller."
+        },
+        {
+          "id": "issue",
+          "label": "issue",
+          "path": "apps/api/routes/auth.py",
+          "startLine": 45,
+          "endLine": 68,
+          "language": "python",
+          "role": "root_control",
+          "code": "def login_for_token(req: OfficerLoginRequest) -> OfficerTokenResponse:\n    try:\n        role_enum = OfficerRole(req.role.upper())\n    except ValueError:\n        role_enum = OfficerRole.FIELD_INSPECTOR\n\n    token = token_manager.issue_token(\n        officer_id=req.officer_id,\n        officer_name=req.officer_name,\n        badge_number=req.badge_number,\n        jurisdiction_code=req.jurisdiction_code,\n        roles=[role_enum],\n        ttl_seconds=28800,\n    )\n\n    perms = RBACManager.get_all_permissions([role_enum])\n\n    return OfficerTokenResponse(\n        access_token=token,\n        token_type=\"Bearer\",\n        expires_in_seconds=28800,\n        officer_name=req.officer_name,\n        jurisdiction_code=req.jurisdiction_code,\n        permissions=[p.value for p in perms],",
+          "explanation": "The role is signed and granted permissions without a credential check."
+        },
+        {
+          "id": "key",
+          "label": "key",
+          "path": "apps/api/auth/tokens.py",
+          "startLine": 63,
+          "endLine": 66,
+          "language": "python",
+          "role": "root_control",
+          "code": "    def __init__(self, signing_secret_key: Optional[bytes] = None) -> None:\n        self.signing_secret_key = signing_secret_key or os.environ.get(\n            \"METROLENS_AUTH_SECRET\", \"DEV_AUTH_SECRET_KEY_METROLENS_2026\"\n        ).encode(\"utf-8\")",
+          "explanation": "A known literal becomes the signing secret when configuration is absent."
+        }
+      ],
+      "rootCause": {
+        "summary": "The app mounts report and audit routers without authentication dependencies; endpoint signatures do not require a verified principal. `login_for_token()` converts the caller's role to an enum and issues a signed token directly. `OfficerTokenManager` uses a source-known fallback when its environment secret is absent, so verification cannot establish officer identity.",
+        "evidenceRefs": [
+          "mount",
+          "read",
+          "role",
+          "issue",
+          "key"
+        ]
+      },
+      "validation": {
+        "method": "baseline source trace and local remediation regression tests",
+        "summary": "Baseline source review confirms unguarded router mounting, unguarded read access, direct role issuance and the fallback key. Local API regressions check missing/wrong service keys and disabled identity issuance after remediation.",
+        "evidenceRefs": [
+          "mount",
+          "read",
+          "role",
+          "issue",
+          "key"
+        ],
+        "limitations": [
+          "No production exploitation or deployment verification was performed.",
+          "Findings describe baseline c436e3a7055b8f048018727df3ee3b34d0311bf1; remediation is in the local working tree."
+        ]
+      },
+      "attackPath": {
+        "summary": "An API client calls operational routes without a bearer token, or submits invented officer details and a permitted role to `/auth/token`. In deployments using the fallback secret, tokens can also be signed independently. None of these paths verifies a government identity.",
+        "evidenceRefs": [
+          "mount",
+          "read",
+          "role",
+          "issue",
+          "key"
+        ],
+        "reachability": {
+          "summary": "Reachable when the baseline Python API is exposed; production API location is unknown.",
+          "attacker": "untrusted API client",
+          "outcome": "Unauthorized inspection processing and disclosure/manipulation of known inspection records; fabricated officer identity and granted-scope claims."
+        },
+        "impact": {
+          "level": "high",
+          "why": "Unauthorized inspection processing and disclosure/manipulation of known inspection records; fabricated officer identity and granted-scope claims."
+        },
+        "limitations": [
+          "Hosting, proxy controls and live exposure are not verified."
+        ]
+      },
+      "remediation": "Enforce a common fail-closed access dependency on operations, bind retained records to a trusted principal, remove default signing credentials and disable officer-token issuance until actual identity verification exists. Local fixes use a configured strong service key, not per-officer RBAC.",
+      "remediationTests": [
+        "tests/security/test_launch_api.py checks protected operational routes and disabled credential-free identity endpoints."
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "extensions": {
+        "candidateId": "BASE-GROUP-2",
+        "localFixStatus": "implemented; see regression tests; not deployed"
+      }
+    },
+    {
+      "ruleId": "resource-control.client-rate-bypass",
+      "identity": {
+        "anchor": "resource-control.client-rate-bypass"
+      },
+      "title": "A caller-supplied header disables request throttling",
+      "summary": "A client can bypass the API limiter using X-Bypass-Rate-Limit or obtain new buckets by changing X-Forwarded-For.",
+      "severity": {
+        "level": "medium",
+        "rationale": "Loss of throttling for CPU, memory and report-processing work. Other server/proxy limits may reduce impact.",
+        "changeConditions": "Severity assumes the Python API is reachable by untrusted clients; production API hosting and perimeter controls were not established."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Exact baseline source dataflow independently checked; local targeted regressions validate the corrected invariant."
+      },
+      "taxonomy": {
+        "category": "resource-exhaustion",
+        "cwe": [
+          "CWE-807",
+          "CWE-770"
+        ]
+      },
+      "locations": [
+        {
+          "path": "apps/api/middleware/rate_limit.py",
+          "startLine": 128,
+          "endLine": 140,
+          "role": "root_control"
+        },
+        {
+          "path": "apps/api/middleware/rate_limit.py",
+          "startLine": 153,
+          "endLine": 161,
+          "role": "root_control"
+        }
+      ],
+      "codeEvidence": [
+        {
+          "id": "bypass",
+          "label": "bypass",
+          "path": "apps/api/middleware/rate_limit.py",
+          "startLine": 128,
+          "endLine": 140,
+          "language": "python",
+          "role": "root_control",
+          "code": "        # 1. Exempt administrative and health routes\n        if path in self.exempt_paths or path.startswith(\"/docs\") or path.startswith(\"/redoc\"):\n            return await call_next(request)\n\n        # 2. Check for explicit test bypass header\n        if request.headers.get(\"X-Bypass-Rate-Limit\") == \"true\":\n            return await call_next(request)\n\n        # 3. Extract client IP (respecting proxy forward headers)\n        client_ip = self._extract_client_ip(request)\n\n        # 3. Rate limit check\n        allowed, retry_after = self.limiter.is_allowed(client_ip)",
+          "explanation": "The request header skips the limiter before the quota check."
+        },
+        {
+          "id": "forwarded",
+          "label": "forwarded",
+          "path": "apps/api/middleware/rate_limit.py",
+          "startLine": 153,
+          "endLine": 161,
+          "language": "python",
+          "role": "root_control",
+          "code": "    @staticmethod\n    def _extract_client_ip(request: Request) -> str:\n        \"\"\"Resolves client IP from X-Forwarded-For or socket peer.\"\"\"\n        forwarded = request.headers.get(\"X-Forwarded-For\")\n        if forwarded:\n            # First IP in comma-separated proxy chain is original client\n            return forwarded.split(\",\")[0].strip()\n        if request.client:\n            return request.client.host",
+          "explanation": "The caller-supplied forwarded address chooses the limiter bucket."
+        }
+      ],
+      "rootCause": {
+        "summary": "RateLimitMiddleware trusts an arbitrary request header as an unconditional bypass. Its bucket-key helper also accepts the first forwarded IP without checking a trusted proxy boundary.",
+        "evidenceRefs": [
+          "bypass",
+          "forwarded"
+        ]
+      },
+      "validation": {
+        "method": "baseline source trace and local remediation regression tests",
+        "summary": "Source confirms both caller-controlled branches. Local regression tests check bypass headers are ineffective after removal and that untrusted forwarded addresses do not change the caller bucket.",
+        "evidenceRefs": [
+          "bypass",
+          "forwarded"
+        ],
+        "limitations": [
+          "No production exploitation or deployment verification was performed.",
+          "Findings describe baseline c436e3a7055b8f048018727df3ee3b34d0311bf1; remediation is in the local working tree."
+        ]
+      },
+      "attackPath": {
+        "summary": "Send repeated processing/report requests with the bypass header set to true, or change the forwarded address between requests. The middleware skips or resets the intended request quota.",
+        "evidenceRefs": [
+          "bypass",
+          "forwarded"
+        ],
+        "reachability": {
+          "summary": "Reachable when the baseline Python API is exposed; production API location is unknown.",
+          "attacker": "untrusted API client",
+          "outcome": "Loss of throttling for CPU, memory and report-processing work. Other server/proxy limits may reduce impact."
+        },
+        "impact": {
+          "level": "medium",
+          "why": "Loss of throttling for CPU, memory and report-processing work. Other server/proxy limits may reduce impact."
+        },
+        "limitations": [
+          "Hosting, proxy controls and live exposure are not verified."
+        ]
+      },
+      "remediation": "Remove the public bypass and derive buckets from a verified socket/proxy identity. Locally implemented; deploy behind bounded request/concurrency controls.",
+      "remediationTests": [
+        "tests/security/test_launch_api.py includes rate-limit bypass and forwarded-header regressions."
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "extensions": {
+        "candidateId": "BASE-GROUP-3",
+        "localFixStatus": "implemented; see regression tests; not deployed"
+      }
+    },
+    {
+      "ruleId": "resource-exhaustion.upload-decode",
+      "identity": {
+        "anchor": "resource-exhaustion.upload-decode"
+      },
+      "title": "Uploads can reach full buffering and image decoding before resource guards",
+      "summary": "The upload route buffers the entire multipart file before its size check, and a caller-selectable legacy branch decodes image pixels without the shared dimension guard.",
+      "severity": {
+        "level": "high",
+        "rationale": "Worker memory exhaustion or processing unavailability, subject to upstream request limits and decoder protections.",
+        "changeConditions": "Severity assumes the Python API is reachable by untrusted clients; production API hosting and perimeter controls were not established."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Exact baseline source dataflow independently checked; local targeted regressions validate the corrected invariant."
+      },
+      "taxonomy": {
+        "category": "resource-exhaustion",
+        "cwe": [
+          "CWE-400",
+          "CWE-770"
+        ]
+      },
+      "locations": [
+        {
+          "path": "apps/api/main.py",
+          "startLine": 229,
+          "endLine": 246,
+          "role": "user_input"
+        },
+        {
+          "path": "apps/api/main.py",
+          "startLine": 252,
+          "endLine": 277,
+          "role": "sink"
+        }
+      ],
+      "codeEvidence": [
+        {
+          "id": "dispatch",
+          "label": "dispatch",
+          "path": "apps/api/main.py",
+          "startLine": 229,
+          "endLine": 246,
+          "language": "python",
+          "role": "user_input",
+          "code": "    # Determine flow: Vertical Slice (Member 1) vs Enterprise (Member 4)\n    is_m1_flow = (\n        anchor_type in (\"AUTO\", \"COIN\", \"ARUCO\")\n        or fname in (\n            \"packaging.png\",\n            \"uncalib.png\",\n            \"missing_mrp.png\",\n            \"calibrated.png\",\n            \"pack_evidence.png\",\n            \"test_pack.png\",\n        )\n    ) and (\n        panel_type is None\n        and mock_fixture_key is None\n        and fname not in (\"quota_test.jpg\", \"stream_test.jpg\", \"needle_wide.png\", \"corrupt.txt\")\n    )\n\n    content = await file.read()",
+          "explanation": "Filename/form values select legacy processing; file bytes are read without a limit."
+        },
+        {
+          "id": "decode",
+          "label": "decode",
+          "path": "apps/api/main.py",
+          "startLine": 252,
+          "endLine": 277,
+          "language": "python",
+          "role": "sink",
+          "code": "        if len(content) > MAX_FILE_SIZE:\n            raise HTTPException(\n                status_code=413,\n                detail=f\"File exceeds maximum allowed size of {MAX_FILE_SIZE // (1024*1024)}MB\",\n            )\n\n        # Magic bytes check for M1 flow\n        is_jpeg = content.startswith(MAGIC_BYTES[\"jpeg\"])\n        is_png = content.startswith(MAGIC_BYTES[\"png\"])\n        is_webp = (\n            content.startswith(MAGIC_BYTES[\"webp\"])\n            and len(content) >= 12\n            and content[8:12] == b\"WEBP\"\n        )\n        if not (is_jpeg or is_png or is_webp):\n            raise HTTPException(\n                status_code=400,\n                detail=\"Unsupported or corrupt image format. Allowed formats: JPEG, PNG, WebP.\",\n            )\n\n        nparr = np.frombuffer(content, np.uint8)\n        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)\n        if img is None or img.size == 0:\n            raise HTTPException(\n                status_code=400,\n                detail=\"Failed to decode image buffer. File may be corrupted.\",",
+          "explanation": "Compressed length and magic checks precede an unguarded decoded-pixel allocation."
+        }
+      ],
+      "rootCause": {
+        "summary": "`is_m1_flow` depends on attacker-controlled filename and form values. `file.read()` has no bound; only afterwards is compressed length checked. The selected branch checks magic bytes but calls OpenCV decode before validating image dimensions, bypassing the shared sanitizer.",
+        "evidenceRefs": [
+          "dispatch",
+          "decode"
+        ]
+      },
+      "validation": {
+        "method": "baseline source trace and local remediation regression tests",
+        "summary": "Source-exact trace confirms unrestricted read and direct decode. Local image-boundary and API body-limit regressions verify bounded reads and predecode pixel/side checks in the unified path.",
+        "evidenceRefs": [
+          "dispatch",
+          "decode"
+        ],
+        "limitations": [
+          "No production exploitation or deployment verification was performed.",
+          "Findings describe baseline c436e3a7055b8f048018727df3ee3b34d0311bf1; remediation is in the local working tree."
+        ]
+      },
+      "attackPath": {
+        "summary": "Submit a large multipart file or a small compressed image advertising excessive decoded dimensions, with a filename or anchor value selecting the legacy flow. The request consumes memory/CPU before the intended controls can reject it.",
+        "evidenceRefs": [
+          "dispatch",
+          "decode"
+        ],
+        "reachability": {
+          "summary": "Reachable when the baseline Python API is exposed; production API location is unknown.",
+          "attacker": "untrusted API client",
+          "outcome": "Worker memory exhaustion or processing unavailability, subject to upstream request limits and decoder protections."
+        },
+        "impact": {
+          "level": "high",
+          "why": "Worker memory exhaustion or processing unavailability, subject to upstream request limits and decoder protections."
+        },
+        "limitations": [
+          "Hosting, proxy controls and live exposure are not verified."
+        ]
+      },
+      "remediation": "Bound the ASGI request body before multipart processing, bound file reads, remove caller-selectable legacy dispatch and enforce shared decoded-dimension/format limits before inference. Locally implemented.",
+      "remediationTests": [
+        "tests/security/test_image_boundaries.py covers oversized image headers and metadata handling.",
+        "tests/security/test_launch_api.py covers streamed body limits and image validation before OCR."
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "extensions": {
+        "candidateId": "BASE-GROUP-4",
+        "localFixStatus": "implemented; see regression tests; not deployed"
+      }
+    },
+    {
+      "ruleId": "integrity.synthetic-live-inspection",
+      "identity": {
+        "anchor": "integrity.synthetic-live-inspection"
+      },
+      "title": "Live inspections can silently replace OCR with synthetic product declarations",
+      "summary": "A public fixture parameter and OCR failure/empty-result fallbacks create synthetic tokens that are evaluated as if extracted from the uploaded package.",
+      "severity": {
+        "level": "high",
+        "rationale": "False packaging/compliance assessments tied to genuine uploaded image IDs and hashes, undermining evidence integrity and user decisions.",
+        "changeConditions": "Severity assumes the Python API is reachable by untrusted clients; production API hosting and perimeter controls were not established."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Exact baseline source dataflow independently checked; local targeted regressions validate the corrected invariant."
+      },
+      "taxonomy": {
+        "category": "data-integrity",
+        "cwe": [
+          "CWE-754",
+          "CWE-345"
+        ]
+      },
+      "locations": [
+        {
+          "path": "apps/api/main.py",
+          "startLine": 203,
+          "endLine": 211,
+          "role": "user_input"
+        },
+        {
+          "path": "apps/api/services/pipeline_orchestrator.py",
+          "startLine": 424,
+          "endLine": 438,
+          "role": "root_control"
+        },
+        {
+          "path": "apps/api/services/pipeline_orchestrator.py",
+          "startLine": 453,
+          "endLine": 459,
+          "role": "root_control"
+        },
+        {
+          "path": "apps/api/services/pipeline_orchestrator.py",
+          "startLine": 214,
+          "endLine": 240,
+          "role": "sink"
+        }
+      ],
+      "codeEvidence": [
+        {
+          "id": "form",
+          "label": "form",
+          "path": "apps/api/main.py",
+          "startLine": 203,
+          "endLine": 211,
+          "language": "python",
+          "role": "user_input",
+          "code": "async def inspect_packaging(\n    file: UploadFile = File(..., description=\"Packaging surface image file (JPEG, PNG, WebP)\"),\n    anchor_type: Optional[str] = Form(None, description=\"Calibration target hint ('COIN', 'ARUCO', 'NONE', 'AUTO', 'INR_10_COIN', 'ISO_CARD')\"),\n    panel_type: Optional[str] = Form(None, description=\"Packaging panel classification ('FRONT_PDP', 'BACK_INFO', 'ALL_IN_ONE')\"),\n    officer_id: Optional[str] = Form(None, description=\"Identifier of inspecting officer\"),\n    brand_name: Optional[str] = Form(None, description=\"Optional brand name metadata\"),\n    product_type: Optional[str] = Form(None, description=\"Optional commodity/product category\"),\n    mock_fixture_key: Optional[str] = Form(None, description=\"Optional fixture identifier for offline deterministic test evaluation\"),\n    x_request_id: Optional[str] = Header(None, alias=\"X-Request-ID\", description=\"Client tracing correlation UUID\"),",
+          "explanation": "The live multipart route exposes an OCR fixture selector."
+        },
+        {
+          "id": "fixture",
+          "label": "fixture",
+          "path": "apps/api/services/pipeline_orchestrator.py",
+          "startLine": 424,
+          "endLine": 438,
+          "language": "python",
+          "role": "root_control",
+          "code": "        # 1. Direct mock token list provided\n        if mock_tokens:\n            return self._parse_mock_tokens(mock_tokens)\n\n        # 2. Mock fixture key provided from tests/fixtures/mock_ocr_tokens.json\n        if mock_fixture_key:\n            fixture_tokens = self._load_fixture_tokens(mock_fixture_key)\n            if fixture_tokens:\n                return fixture_tokens\n\n        # 3. Live OCRService instance if available\n        ocr_service = self._get_ocr_service()\n        if ocr_service:\n            try:\n                ocr_result = ocr_service.extract(img_bgr, image_id=image_id)",
+          "explanation": "Fixture tokens return before live extraction."
+        },
+        {
+          "id": "fallback",
+          "label": "fallback",
+          "path": "apps/api/services/pipeline_orchestrator.py",
+          "startLine": 453,
+          "endLine": 459,
+          "language": "python",
+          "role": "root_control",
+          "code": "                if rules_tokens:\n                    return rules_tokens\n            except Exception as e:\n                logger.warning(\"Live OCR inference failed (%s); using synthetic fallback.\", e)\n\n        # 4. Resilient synthetic default tokens for test / offline execution\n        return self._generate_synthetic_tokens(img_bgr)",
+          "explanation": "Empty or failed OCR reaches synthetic default token generation."
+        },
+        {
+          "id": "evaluate",
+          "label": "evaluate",
+          "path": "apps/api/services/pipeline_orchestrator.py",
+          "startLine": 214,
+          "endLine": 240,
+          "language": "python",
+          "role": "sink",
+          "code": "        extracted_tokens = self._extract_ocr_tokens(\n            img_bgr=img_bgr,\n            image_id=inspection_id,\n            mock_tokens=mock_tokens,\n            mock_fixture_key=mock_fixture_key,\n        )\n        stage_ocr_ms = (time.perf_counter() - t_stage3) * 1000.0\n\n        # ---------------------------------------------------------------------\n        # 4. Token Normalization\n        # ---------------------------------------------------------------------\n        t_stage4 = time.perf_counter()\n        declarations = self.normalizer.normalize(extracted_tokens)\n        stage_norm_ms = (time.perf_counter() - t_stage4) * 1000.0\n\n        # ---------------------------------------------------------------------\n        # 5. Master Statutory Rules Engine\n        # ---------------------------------------------------------------------\n        t_stage5 = time.perf_counter()\n        # Measure font height from tokens if available\n        measured_font_height_mm = self._estimate_numeral_font_height(\n            tokens=extracted_tokens,\n            scale=metric_scale_result,\n        )\n\n        compliance_result = self.rule_engine.evaluate(\n            decl=declarations,",
+          "explanation": "Returned tokens become normalized declarations evaluated as live evidence."
+        }
+      ],
+      "rootCause": {
+        "summary": "The inspection route accepts `mock_fixture_key` from the client. `_extract_ocr_tokens()` returns matching fixture tokens before invoking OCR, and otherwise falls back to generated tokens when extraction fails or returns no tokens. These values flow through normalization into the rules engine with the real inspection identifier.",
+        "evidenceRefs": [
+          "form",
+          "fixture",
+          "fallback",
+          "evaluate"
+        ]
+      },
+      "validation": {
+        "method": "baseline source trace and local remediation regression tests",
+        "summary": "Baseline source trace establishes both fallback paths and subsequent rule evaluation. Local tests reject public fixture requests and ensure unavailable, failed or empty OCR cannot yield fabricated success.",
+        "evidenceRefs": [
+          "form",
+          "fixture",
+          "fallback",
+          "evaluate"
+        ],
+        "limitations": [
+          "No production exploitation or deployment verification was performed.",
+          "Findings describe baseline c436e3a7055b8f048018727df3ee3b34d0311bf1; remediation is in the local working tree."
+        ]
+      },
+      "attackPath": {
+        "summary": "Supply an available fixture key, or inspect an image when OCR is unavailable/fails/returns empty. The service evaluates prepared declarations instead of the uploaded evidence and returns an apparent inspection result.",
+        "evidenceRefs": [
+          "form",
+          "fixture",
+          "fallback",
+          "evaluate"
+        ],
+        "reachability": {
+          "summary": "Reachable when the baseline Python API is exposed; production API location is unknown.",
+          "attacker": "untrusted API client",
+          "outcome": "False packaging/compliance assessments tied to genuine uploaded image IDs and hashes, undermining evidence integrity and user decisions."
+        },
+        "impact": {
+          "level": "high",
+          "why": "False packaging/compliance assessments tied to genuine uploaded image IDs and hashes, undermining evidence integrity and user decisions."
+        },
+        "limitations": [
+          "Hosting, proxy controls and live exposure are not verified."
+        ]
+      },
+      "remediation": "Remove all synthetic fallbacks from live processing, reject fixture selection on operational endpoints, and return an explicit unavailable/review outcome. Keep demonstrations isolated and visibly synthetic. Locally implemented.",
+      "remediationTests": [
+        "tests/security/test_launch_api.py exercises unavailable/failing/empty OCR and public mock controls."
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "extensions": {
+        "candidateId": "BASE-GROUP-5",
+        "localFixStatus": "implemented; see regression tests; not deployed"
+      }
+    },
+    {
+      "ruleId": "integrity.fabricated-inspection-report-proof",
+      "identity": {
+        "anchor": "integrity.fabricated-inspection-report-proof"
+      },
+      "title": "Arbitrary inspection IDs receive fabricated compliance reports and verification",
+      "summary": "Unknown inspection IDs return successful compliant records; JSON submissions can overwrite IDs with compliant results. Report and audit routes fabricate facts rather than reading and verifying retained evidence.",
+      "severity": {
+        "level": "high",
+        "rationale": "Forged assessment and evidence-integrity claims, including overwrite of known in-memory identifiers and fabricated official-looking documents.",
+        "changeConditions": "Severity assumes the Python API is reachable by untrusted clients; production API hosting and perimeter controls were not established."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Exact baseline source dataflow independently checked; local targeted regressions validate the corrected invariant."
+      },
+      "taxonomy": {
+        "category": "data-integrity",
+        "cwe": [
+          "CWE-345",
+          "CWE-841"
+        ]
+      },
+      "locations": [
+        {
+          "path": "apps/api/main.py",
+          "startLine": 309,
+          "endLine": 320,
+          "role": "sink"
+        },
+        {
+          "path": "apps/api/main.py",
+          "startLine": 344,
+          "endLine": 353,
+          "role": "root_control"
+        },
+        {
+          "path": "apps/api/routes/report.py",
+          "startLine": 138,
+          "endLine": 154,
+          "role": "sink"
+        },
+        {
+          "path": "apps/api/routes/audit.py",
+          "startLine": 79,
+          "endLine": 92,
+          "role": "sink"
+        }
+      ],
+      "codeEvidence": [
+        {
+          "id": "overwrite",
+          "label": "overwrite",
+          "path": "apps/api/main.py",
+          "startLine": 309,
+          "endLine": 320,
+          "language": "python",
+          "role": "sink",
+          "code": "def submit_inspection(request: InspectionRequest) -> InspectionResult:\n    \"\"\"Submits a new inspection request via structured JSON contract.\"\"\"\n    result = InspectionResult(\n        inspection_id=request.inspection_id,\n        status=InspectionStatus.SUCCESS,\n        image_sha256=request.image_sha256 or (\"0\" * 64),\n        overall_verdict=OverallVerdict.COMPLIANT,\n        quality_gate_passed=True,\n        calibration_status=CalibrationStatus.UNCALIBRATED,\n    )\n    INSPECTIONS_DB[request.inspection_id] = result\n    return result",
+          "explanation": "Caller IDs overwrite the shared store with a manufactured compliant record."
+        },
+        {
+          "id": "unknown",
+          "label": "unknown",
+          "path": "apps/api/main.py",
+          "startLine": 344,
+          "endLine": 353,
+          "language": "python",
+          "role": "root_control",
+          "code": "    if not inspection_id:\n        raise HTTPException(status_code=404, detail=\"Inspection ID not found\")\n    return InspectionResult(\n        inspection_id=inspection_id,\n        status=InspectionStatus.SUCCESS,\n        image_sha256=\"0\" * 64,\n        overall_verdict=OverallVerdict.COMPLIANT,\n        quality_gate_passed=True,\n        calibration_status=CalibrationStatus.UNCALIBRATED,\n    )",
+          "explanation": "Any nonempty unknown ID is treated as a successful compliant inspection."
+        },
+        {
+          "id": "report",
+          "label": "report",
+          "path": "apps/api/routes/report.py",
+          "startLine": 138,
+          "endLine": 154,
+          "language": "python",
+          "role": "sink",
+          "code": "    comp_result = ComplianceEvaluationResult(\n        inspection_id=inspection_id,\n        timestamp_utc=time.strftime(\"%Y-%m-%dT%H:%M:%SZ\", time.gmtime()),\n        overall_verdict=ComplianceState.COMPLIANT,\n        verdict_badge_color=VerdictBadgeColor.GREEN,\n        primary_legal_summary=\"All packaging declarations satisfy the Legal Metrology (Packaged Commodities) Rules, 2011.\",\n        rule_evaluations=evals,\n        declarations=decl,\n        calibrated_measurements=scale,\n        sha256_hash=\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\n    )\n\n    pdf_bytes = pdf_compiler.compile_report_pdf(\n        comp_result,\n        officer_id=\"LMO-DELHI-42\",\n        jurisdiction_code=\"DL-01-CENTRAL\",\n    )",
+          "explanation": "Report rendering uses fixed compliance, digest, officer and jurisdiction values."
+        },
+        {
+          "id": "proof",
+          "label": "proof",
+          "path": "apps/api/routes/audit.py",
+          "startLine": 79,
+          "endLine": 92,
+          "language": "python",
+          "role": "sink",
+          "code": "def verify_inspection_proof(inspection_id: str) -> Dict[str, Any]:\n    # Construct verified docket response\n    return {\n        \"status\": \"VERIFIED\",\n        \"inspection_id\": inspection_id,\n        \"is_chain_valid\": True,\n        \"tamper_detected\": False,\n        \"legal_admissibility_standard\": \"Section 63(4) Bharatiya Sakshya Adhiniyam, 2023\",\n        \"verification_notes\": [\n            \"All sequential block digests match cryptographic parent hashes.\",\n            \"Raw image SHA-256 matches initial ingestion signature.\",\n            \"Zero unauthorized post-hoc mutations detected.\",\n        ],\n    }",
+          "explanation": "Verification returns hardcoded success without checking a record or file."
+        }
+      ],
+      "rootCause": {
+        "summary": "The structured submit route inserts a compliant result using the caller's inspection ID, and lookup fabricates a compliant response for unknown IDs. On a report cache miss, fixed declarations, calibration, digest and officer values are compiled. Audit verification returns unconditional success without loading evidence.",
+        "evidenceRefs": [
+          "overwrite",
+          "unknown",
+          "report",
+          "proof"
+        ]
+      },
+      "validation": {
+        "method": "baseline source trace and local remediation regression tests",
+        "summary": "Source review confirms no authoritative record is required for the shown success paths. Local regressions verify nonexistent/expired IDs cannot generate reports, retained results are immutable and evidence tampering prevents report issuance.",
+        "evidenceRefs": [
+          "overwrite",
+          "unknown",
+          "report",
+          "proof"
+        ],
+        "limitations": [
+          "No production exploitation or deployment verification was performed.",
+          "Findings describe baseline c436e3a7055b8f048018727df3ee3b34d0311bf1; remediation is in the local working tree."
+        ]
+      },
+      "attackPath": {
+        "summary": "Submit or retrieve an arbitrary inspection ID, request its PDF, then request its verification status. The baseline can return a compliant report and verified proof for an inspection that never happened.",
+        "evidenceRefs": [
+          "overwrite",
+          "unknown",
+          "report",
+          "proof"
+        ],
+        "reachability": {
+          "summary": "Reachable when the baseline Python API is exposed; production API location is unknown.",
+          "attacker": "untrusted API client",
+          "outcome": "Forged assessment and evidence-integrity claims, including overwrite of known in-memory identifiers and fabricated official-looking documents."
+        },
+        "impact": {
+          "level": "high",
+          "why": "Forged assessment and evidence-integrity claims, including overwrite of known in-memory identifiers and fabricated official-looking documents."
+        },
+        "limitations": [
+          "Hosting, proxy controls and live exposure are not verified."
+        ]
+      },
+      "remediation": "Use one bounded immutable canonical record store; require retained records and verify their evidence before report rendering. Disable fabricated JSON submission/affidavit paths and describe local hash checks truthfully. Locally implemented.",
+      "remediationTests": [
+        "tests/security/test_launch_api.py checks record binding, unknown IDs, stored-result immutability, tamper detection and disabled fabricated endpoints."
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "extensions": {
+        "candidateId": "BASE-GROUP-6",
+        "localFixStatus": "implemented; see regression tests; not deployed"
+      }
+    },
+    {
+      "ruleId": "injection.reportlab-untrusted-markup",
+      "identity": {
+        "anchor": "injection.reportlab-untrusted-markup"
+      },
+      "title": "PDF fields can load remote or local images through ReportLab markup",
+      "summary": "The affidavit endpoint forwards caller-controlled filenames and officer text to ReportLab Paragraph without escaping, allowing inline-image markup to trigger resource loading during PDF generation.",
+      "severity": {
+        "level": "high",
+        "rationale": "Server-side URL access or inclusion of readable local image resources. This is not unrestricted arbitrary-file disclosure; format, file permissions and ReportLab URL policy constrain the sink.",
+        "changeConditions": "Severity assumes the Python API is reachable by untrusted clients; production API hosting and perimeter controls were not established."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Exact baseline source dataflow independently checked; local targeted regressions validate the corrected invariant."
+      },
+      "taxonomy": {
+        "category": "markup-injection",
+        "cwe": [
+          "CWE-918",
+          "CWE-73",
+          "CWE-116"
+        ]
+      },
+      "locations": [
+        {
+          "path": "apps/api/routes/audit.py",
+          "startLine": 42,
+          "endLine": 62,
+          "role": "entrypoint"
+        },
+        {
+          "path": "packages/reporting/src/nirikshak_reporting/legal_affidavit.py",
+          "startLine": 198,
+          "endLine": 204,
+          "role": "root_control"
+        },
+        {
+          "path": "packages/reporting/src/nirikshak_reporting/legal_affidavit.py",
+          "startLine": 223,
+          "endLine": 232,
+          "role": "sink"
+        }
+      ],
+      "codeEvidence": [
+        {
+          "id": "input",
+          "label": "input",
+          "path": "apps/api/routes/audit.py",
+          "startLine": 42,
+          "endLine": 62,
+          "language": "python",
+          "role": "entrypoint",
+          "code": "def generate_bsa_affidavit(req: AffidavitGenerationRequest) -> Response:\n    evidence = ElectronicRecordEvidenceDetails(\n        inspection_id=req.inspection_id,\n        timestamp_utc=\"2026-09-05T10:00:00Z\",\n        timestamp_ist=\"05-Sep-2026 15:30:00 IST\",\n        raw_image_sha256=req.raw_image_sha256,\n        raw_image_filename=req.raw_image_filename,\n        raw_image_size_bytes=req.raw_image_size_bytes,\n        derived_pdf_sha256=None,\n        statutory_violations_detected=req.statutory_violations_count,\n        overall_verdict=req.overall_verdict,\n    )\n\n    officer = CertifyingOfficerInfo(\n        officer_name=req.officer_name,\n        badge_number=req.badge_number,\n        district=req.district,\n        state=req.state,\n    )\n\n    pdf_bytes = affidavit_compiler.generate_affidavit_pdf(evidence, officer)",
+          "explanation": "Request filenames and officer fields are copied into compiler arguments."
+        },
+        {
+          "id": "officer",
+          "label": "officer",
+          "path": "packages/reporting/src/nirikshak_reporting/legal_affidavit.py",
+          "startLine": 198,
+          "endLine": 204,
+          "language": "python",
+          "role": "root_control",
+          "code": "        # 2. Preamble\n        preamble_text = (\n            f\"I, <b>{officer.officer_name}</b>, holding the official post of <b>{officer.designation}</b>, \"\n            f\"authorized under the Legal Metrology Act, 2009, with jurisdiction code <b>{officer.jurisdiction_code}</b>, \"\n            f\"having my office at {officer.station_address}, do hereby solemnly affirm and state on oath as follows:\"\n        )\n        story.append(Paragraph(preamble_text, legal_body))",
+          "explanation": "Officer data is interpolated into interpreted markup without escaping."
+        },
+        {
+          "id": "filename",
+          "label": "filename",
+          "path": "packages/reporting/src/nirikshak_reporting/legal_affidavit.py",
+          "startLine": 223,
+          "endLine": 232,
+          "language": "python",
+          "role": "sink",
+          "code": "                Paragraph(\"Inspection Docket UUID\", table_cell),\n                Paragraph(f\"<code>{evidence.inspection_id}</code>\", table_cell),\n            ],\n            [\n                Paragraph(\"Original Image Filename\", table_cell),\n                Paragraph(evidence.raw_image_filename, table_cell),\n            ],\n            [\n                Paragraph(\"Input Image SHA-256 Digest\", table_cell),\n                Paragraph(f\"<code>{evidence.raw_image_sha256}</code>\", table_cell),",
+          "explanation": "Filename and identifiers are passed directly to Paragraph."
+        }
+      ],
+      "rootCause": {
+        "summary": "The route copies request fields into evidence/officer structures and calls the compiler. Raw filenames and interpolated officer strings become Paragraph markup. ReportLab interprets inline image tags, so a text field crosses into URL/local-image resolution.",
+        "evidenceRefs": [
+          "input",
+          "officer",
+          "filename"
+        ]
+      },
+      "validation": {
+        "method": "baseline source trace and local remediation regression tests",
+        "summary": "Static source trace plus a positive-control runtime test of the installed ReportLab inline-image loader. Regression tests patch the actual loader and confirm HTTP/file image tags remain literal through all six corrected compilers.",
+        "evidenceRefs": [
+          "input",
+          "officer",
+          "filename"
+        ],
+        "limitations": [
+          "No production exploitation or deployment verification was performed.",
+          "Findings describe baseline c436e3a7055b8f048018727df3ee3b34d0311bf1; remediation is in the local working tree."
+        ]
+      },
+      "attackPath": {
+        "summary": "A client able to reach the baseline affidavit endpoint places an inline image tag in a filename or officer field. During document rendering, ReportLab attempts to load the tag's source.",
+        "evidenceRefs": [
+          "input",
+          "officer",
+          "filename"
+        ],
+        "reachability": {
+          "summary": "Reachable when the baseline Python API is exposed; production API location is unknown.",
+          "attacker": "untrusted API client",
+          "outcome": "Server-side URL access or inclusion of readable local image resources. This is not unrestricted arbitrary-file disclosure; format, file permissions and ReportLab URL policy constrain the sink."
+        },
+        "impact": {
+          "level": "high",
+          "why": "Server-side URL access or inclusion of readable local image resources. This is not unrestricted arbitrary-file disclosure; format, file permissions and ReportLab URL policy constrain the sink."
+        },
+        "limitations": [
+          "Hosting, proxy controls and live exposure are not verified."
+        ]
+      },
+      "remediation": "Escape every data value before Paragraph interpolation, use only trusted constant templates, and keep unsupported affidavit issuance disabled. Locally implemented and tested.",
+      "remediationTests": [
+        "tests/security/test_report_text_safety.py includes positive-control resource loading, HTTP/file payloads through six compilers and trusted-format preservation."
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "extensions": {
+        "candidateId": "BASE-GROUP-7",
+        "localFixStatus": "implemented; see regression tests; not deployed"
+      }
+    },
+    {
+      "ruleId": "integrity.original-evidence-not-retained",
+      "identity": {
+        "anchor": "integrity.original-evidence-not-retained"
+      },
+      "title": "The recorded original-image hash does not match the bytes retained as original evidence",
+      "summary": "The pipeline records a digest of the original upload but saves the sanitized derivative in the raw-image slot, preventing later verification of the claimed original evidence.",
+      "severity": {
+        "level": "medium",
+        "rationale": "Loss of verifiable original evidence and misleading custody/integrity claims. This is a deterministic integrity defect, not a demonstrated remote takeover.",
+        "changeConditions": "Severity assumes the Python API is reachable by untrusted clients; production API hosting and perimeter controls were not established."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Exact baseline source dataflow independently checked; local targeted regressions validate the corrected invariant."
+      },
+      "taxonomy": {
+        "category": "evidence-integrity",
+        "cwe": [
+          "CWE-345"
+        ]
+      },
+      "locations": [
+        {
+          "path": "apps/api/services/pipeline_orchestrator.py",
+          "startLine": 158,
+          "endLine": 170,
+          "role": "root_control"
+        }
+      ],
+      "codeEvidence": [
+        {
+          "id": "hash",
+          "label": "hash",
+          "path": "apps/api/services/pipeline_orchestrator.py",
+          "startLine": 158,
+          "endLine": 170,
+          "language": "python",
+          "role": "root_control",
+          "code": "        sanitized_record = ImageSecurityValidator.sanitize_and_verify(image_bytes)\n        sanitized_bytes = sanitized_record.sanitized_bytes\n        image_hash = sanitized_record.raw_sha256\n        img_width = sanitized_record.width\n        img_height = sanitized_record.height\n        media_type = f\"image/{sanitized_record.format.lower()}\"\n\n        spool_session = self.spooler.create_session(inspection_id=inspection_id)\n        raw_path = self.spooler.save_raw_image(\n            inspection_id=inspection_id,\n            content=sanitized_bytes,\n            extension=\".jpg\" if \"jpeg\" in media_type else \".png\",\n        )",
+          "explanation": "The original hash is recorded while sanitized content is saved in the raw slot."
+        }
+      ],
+      "rootCause": {
+        "summary": "Sanitization returns original and derived-byte information. The pipeline selects `raw_sha256` as its evidence digest but passes `sanitized_bytes` to `save_raw_image()`. The upload's exact original bytes are not preserved by this path.",
+        "evidenceRefs": [
+          "hash"
+        ]
+      },
+      "validation": {
+        "method": "baseline source trace and local remediation regression tests",
+        "summary": "Source trace confirms mismatched selection. Local regression checks raw spool bytes equal the upload, sanitized bytes differ where expected, the recorded digest matches the original and tampering is detected.",
+        "evidenceRefs": [
+          "hash"
+        ],
+        "limitations": [
+          "No production exploitation or deployment verification was performed.",
+          "Findings describe baseline c436e3a7055b8f048018727df3ee3b34d0311bf1; remediation is in the local working tree."
+        ]
+      },
+      "attackPath": {
+        "summary": "Process an image whose sanitization changes its bytes, such as one with metadata. Subsequent raw-image evidence refers to a different byte sequence from the recorded input digest.",
+        "evidenceRefs": [
+          "hash"
+        ],
+        "reachability": {
+          "summary": "Reachable when the baseline Python API is exposed; production API location is unknown.",
+          "attacker": "untrusted API client",
+          "outcome": "Loss of verifiable original evidence and misleading custody/integrity claims. This is a deterministic integrity defect, not a demonstrated remote takeover."
+        },
+        "impact": {
+          "level": "medium",
+          "why": "Loss of verifiable original evidence and misleading custody/integrity claims. This is a deterministic integrity defect, not a demonstrated remote takeover."
+        },
+        "limitations": [
+          "Hosting, proxy controls and live exposure are not verified."
+        ]
+      },
+      "remediation": "Retain original and sanitized bytes separately under protected bounded retention, store distinct digests and explicitly identify the report thumbnail as a sanitized derivative. Locally implemented.",
+      "remediationTests": [
+        "tests/security/test_launch_api.py verifies exact original preservation, distinct sanitized evidence and digest-bound report generation."
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "extensions": {
+        "candidateId": "BASE-GROUP-8",
+        "localFixStatus": "implemented; see regression tests; not deployed"
+      }
+    }
+  ],
+  "coverage": {
+    "completeness": "partial",
+    "mode": "repository",
+    "inventoryStrategy": "custom",
+    "includePaths": [
+      "."
+    ],
+    "excludePaths": [],
+    "surfaces": [
+      {
+        "id": "api-boundaries",
+        "label": "Operational API authentication, request controls, evidence and reports",
+        "disposition": "reported",
+        "receiptRefs": [],
+        "notes": "Baseline request-to-sink traces independently checked; local fixes covered by targeted tests."
+      },
+      {
+        "id": "report-templates",
+        "label": "ReportLab text and document integrity",
+        "disposition": "reported",
+        "receiptRefs": [],
+        "notes": "Six compilers reviewed and exercised with HTTP/local-image markup traps."
+      },
+      {
+        "id": "runtime-and-unused-subsystems",
+        "label": "Hosting, model binaries and unused subsystems",
+        "disposition": "needs_follow_up",
+        "receiptRefs": [],
+        "notes": "No known live Python API host; no exhaustive model-binary or unused-subsystem review."
+      }
+    ],
+    "explicitExclusions": [
+      {
+        "pattern": "models/weights/**",
+        "reason": "Model binaries and training provenance not security-reversed."
+      },
+      {
+        "pattern": "external deployment infrastructure",
+        "reason": "Cloud/backend hosting and secret configuration unavailable."
+      },
+      {
+        "pattern": "unused research and integration subsystems",
+        "reason": "Only active reachable paths and directly supporting code received bounded review."
+      }
+    ],
+    "deferred": [
+      {
+        "id": "deployment-exposure",
+        "reason": "Python API hosting, perimeter controls and deployment of local fixes are unverified."
+      },
+      {
+        "id": "legal-and-model-validation",
+        "reason": "No legal certification or representative OCR/calibration accuracy validation performed."
+      },
+      {
+        "id": "full-repository-depth",
+        "reason": "Requested whole-repository inventory was not exhaustively reviewed; coverage remains partial."
+      }
+    ],
+    "openQuestions": [
+      {
+        "question": "Where is the live Python API hosted, and which revision is deployed?"
+      }
+    ]
+  },
+  "threatModel": {
+    "summary": "Untrusted packaging images and request metadata cross the Python API into decoding, OCR, retained evidence and PDF rendering. These boundaries must prevent unauthorized operations, uncontrolled resource use and fabricated evidence claims.",
+    "assets": [
+      "Uploaded image bytes and derived evidence",
+      "Inspection records and generated PDFs",
+      "API process CPU/memory/filesystem",
+      "Trust in assessment provenance"
+    ],
+    "trustBoundaries": [
+      "Browser/API request to application identity",
+      "Compressed image bytes to decoder allocation",
+      "Inspection identifier to filesystem path",
+      "OCR/operator text to ReportLab markup",
+      "Application records to human-facing verification"
+    ],
+    "assumptions": [
+      "API findings assume the baseline Python service is reachable; actual deployment exposure is unknown.",
+      "Local fixes have not been confirmed deployed.",
+      "Shared service-key access is not per-officer identity verification."
+    ]
+  },
+  "scope": {
+    "summary": "11 initial candidate observations reconciled into 8 baseline findings with 25 exact source snippets; local remediation tests noted.",
+    "artifactsReviewed": [
+      "apps/api/main.py",
+      "apps/api/schemas.py",
+      "apps/api/routes/report.py",
+      "apps/api/services/spool_service.py",
+      "apps/api/routes/auth.py",
+      "apps/api/auth/tokens.py",
+      "apps/api/middleware/rate_limit.py",
+      "apps/api/services/pipeline_orchestrator.py",
+      "apps/api/routes/audit.py",
+      "packages/reporting/src/nirikshak_reporting/legal_affidavit.py"
+    ],
+    "limitations": [
+      "Not a sealed native scan result.",
+      "No production exploitation.",
+      "No claim of all vulnerabilities eliminated."
+    ]
+  }
+}

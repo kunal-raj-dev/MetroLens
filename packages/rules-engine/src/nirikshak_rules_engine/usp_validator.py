@@ -188,6 +188,29 @@ class USPValidator:
         stat_ref = "Rule 6(11)"
         citation = "Rule 6(11) inserted by G.S.R. 779(E) and amended by G.S.R. 226(E)"
 
+        # The repository source registry and effective_dates.yaml place the
+        # provisional current USP epoch at 2022-12-01. The source is explicitly
+        # PARTIALLY_VERIFIED / instrument_status UNKNOWN, so use this boundary
+        # only to avoid applying modern rules to historical packages; it cannot
+        # establish a legal exemption or a verified historical commencement.
+        if decl.mfg_year is not None and (decl.mfg_year, decl.mfg_month or 1) < (2022, 12):
+            return RuleEvaluationRecord(
+                rule_id=rule_id,
+                rule_title=rule_title,
+                statutory_reference=stat_ref,
+                status="REVIEW",
+                is_compliant=False,
+                observed_value=f"Manufactured {decl.mfg_year}-{decl.mfg_month or 'unknown'}",
+                required_value="Verified USP regulatory snapshot for the manufacture date",
+                statutory_citation=citation,
+                notes=(
+                    "Historical USP applicability requires review: the manufacture date "
+                    "predates the repository's provisional current USP epoch (2022-12). "
+                    "Historical commencement and transitional provisions are not verified; "
+                    "the modern USP mandate must not produce an automatic violation."
+                ),
+            )
+
         # 1. Statutory Exemption: Wholesale Bulk Packages (Proviso (b))
         if decl.is_wholesale_or_bulk:
             return RuleEvaluationRecord(

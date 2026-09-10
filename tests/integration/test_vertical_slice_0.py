@@ -1,266 +1,115 @@
-"""
-Chunk 5 Integration Tests: Vertical Slice 0 Core Inspection Pipeline Integration.
-
-Validates the full end-to-end inspection flow:
-Image -> Validation -> Quality Gate -> Calibration -> Multilingual OCR ->
-Semantic Extraction -> Rule Evaluation -> Structured Result & Evidence DAG.
-
-Tests:
-1. test_vs0_valid_packaging_end_to_end: Complete pipeline execution with statutory declarations.
-2. test_vs0_upload_security_checks: Corrupted, non-image, and empty payload rejection.
-3. test_vs0_quality_gate_rejection: Low-contrast / blurry frame rejected at Gate 2.
-4. test_vs0_uncalibrated_handling: Packaging without reference returns UNCALIBRATED without fabricating mm.
-5. test_vs0_defect_detection_missing_mrp: Packaging missing mandatory MRP returns NON_COMPLIANT.
-6. test_vs0_calibrated_measurement: Packaging with reference coin calculates metric mm and evaluates Table-I.
-7. test_vs0_evidence_chain_linkage: Evidence DAG cryptographic linkage and coordinate integrity.
-8. test_vs0_offline_execution: Strict offline execution under socket network isolation.
-9. test_vs0_stage_timings: Stage-by-stage latency tracking across all 8 pipeline phases.
-"""
+"""Current API vertical slice with isolated model outputs and real evidence storage."""
 
 import hashlib
-import io
+import importlib
 import socket
+from types import SimpleNamespace
+
 import pytest
-import numpy as np
-import cv2
-from fastapi.testclient import TestClient
-
-from apps.api.main import app
-from apps.worker.main import InspectionPipelineWorker
-from nirikshak_shared.models.contracts import InspectionRequest, InspectionResult
-from nirikshak_shared.models.primitives import (
-    InspectionStatus,
-    OverallVerdict,
-    CalibrationStatus,
-    RuleVerdict,
-)
-from nirikshak_ocr import OCRService
-
-client = TestClient(app, headers={"X-Bypass-Rate-Limit": "true"})
 
 
-def _create_synthetic_pack(
-    include_mrp: bool = True,
-    include_net_qty: bool = True,
-    include_mfg_date: bool = True,
-    include_coin: bool = False,
-    bg_color: int = 220,
-) -> np.ndarray:
-    """Helper to synthesize a clean, high-contrast packaging frame."""
-    img = np.full((500, 600, 3), bg_color, dtype=np.uint8)
-
-    y = 80
-    if include_mrp:
-        cv2.putText(img, "MRP Rs 250.00 (incl. of all taxes)", (40, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
-        y += 60
-    if include_net_qty:
-        cv2.putText(img, "Net Quantity: 500 g", (40, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
-        y += 60
-    if include_mfg_date:
-        cv2.putText(img, "Mfg Date: 03/2026", (40, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
-        y += 60
-
-    cv2.putText(img, "Consumer Care: support@metrolens.in", (40, y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
-
-    if include_coin:
-        # Draw a high-contrast circular coin reference (radius 50 px, diameter 100 px)
-        cv2.circle(img, (480, 100), 50, (60, 60, 60), -1)
-        cv2.circle(img, (480, 100), 50, (0, 0, 0), 2)
-
-    return img
+def test_vs0_valid_packaging_end_to_end(guarded_api):
+    data = guarded_api.upload()
+    assert data["image_metadata"]["is_quality_valid"] is True
+    assert data["image_metadata"]["sha256_hash"] == hashlib.sha256(guarded_api.image_bytes).hexdigest()
+    assert data["declarations"]["mrp_inr"] == 240.0
+    assert data["rule_evaluations"]["font_height_audit"]["status"] == "REVIEW"
+    result = guarded_api.client.get(f'/api/v1/inspections/{data["inspection_id"]}')
+    assert result.status_code == 200 and result.json() == data
 
 
-def _encode_png(img: np.ndarray) -> bytes:
-    success, enc = cv2.imencode(".png", img)
-    assert success
-    return enc.tobytes()
+def test_vs0_upload_security_checks(guarded_api):
+    for payload, expected in ((b"SOME_CORRUPTED_BINARY_DATA", 415), (b"", 400)):
+        response = guarded_api.client.post("/api/v1/inspect",
+            files={"file": ("bad.jpg", payload, "image/jpeg")})
+        assert response.status_code == expected
+    assert not list(guarded_api.spool.base_dir.iterdir())
 
 
-def test_vs0_valid_packaging_end_to_end():
-    """Verify standard packaging image executes all 8 stages and returns valid InspectionResult."""
-    img = _create_synthetic_pack(include_mrp=True, include_net_qty=True, include_mfg_date=True)
-    img_bytes = _encode_png(img)
-    expected_sha = hashlib.sha256(img_bytes).hexdigest()
+def test_vs0_quality_gate_rejection(guarded_api, monkeypatch):
+    module = importlib.import_module("apps.api.services.pipeline_orchestrator")
+    monkeypatch.setattr(module, "check_image_quality", lambda image: SimpleNamespace(
+        passed=False, laplacian_variance=0.0, glare_ratio=0.0))
+    monkeypatch.setattr(module.pipeline_orchestrator, "_get_ocr_service",
+                        lambda: pytest.fail("OCR must not follow a quality rejection"))
+    response = guarded_api.client.post("/api/v1/inspect",
+        files={"file": ("flat.png", guarded_api.image_bytes, "image/png")})
+    assert response.status_code == 422
+    assert not list(guarded_api.spool.base_dir.iterdir())
 
-    response = client.post(
-        "/api/v1/inspect",
-        files={"file": ("packaging.png", img_bytes, "image/png")},
-        data={"anchor_type": "AUTO", "officer_id": "INSP-TEST-01"},
-    )
-    assert response.status_code == 200
+
+def test_vs0_uncalibrated_handling(guarded_api):
+    data = guarded_api.upload()
+    assert data["calibration"]["is_calibrated"] is False
+    assert data["calibration"]["scale_mm_per_px"] is None
+    font = data["rule_evaluations"]["font_height_audit"]
+    assert font["measured_net_qty_height_mm"] is None
+    assert font["status"] == "REVIEW"
+
+
+def test_vs0_missing_mrp_requires_other_panel_review(guarded_api, monkeypatch):
+    module = importlib.import_module("apps.api.services.pipeline_orchestrator")
+    tokens = [token for token in guarded_api.set_tokens() if "MRP" not in token.text]
+    monkeypatch.setattr(module.pipeline_orchestrator, "_get_ocr_service", lambda: SimpleNamespace(
+        extract=lambda *args, **kwargs: SimpleNamespace(tokens=tokens)))
+    data = guarded_api.upload()
+    assert data["declarations"]["mrp_inr"] is None
+    assert data["state"] == "POTENTIAL_NON_COMPLIANCE"
+    assert data["rule_evaluations"]["rule6_mandatory_status"]["details"]["mrp"] == "REVIEW"
+    assert data["improvement_notice"] is None
+
+
+def test_vs0_calibrated_scale_does_not_invent_panel_dimensions(guarded_api, monkeypatch):
+    module = importlib.import_module("apps.api.services.pipeline_orchestrator")
+    from nirikshak_calibration import AnchorDetectionStatus
+    monkeypatch.setattr(module, "detect_anchor", lambda *args, **kwargs: SimpleNamespace(
+        status=AnchorDetectionStatus.SUCCESS, confidence=0.95,
+        geometry=SimpleNamespace(major_axis_px=100.0, aspect_ratio=1.0)))
+    response = guarded_api.client.post("/api/v1/inspect",
+        files={"file": ("pack.png", guarded_api.image_bytes, "image/png")},
+        data={"anchor_type": "INR_10_COIN"})
+    assert response.status_code == 200, response.text
     data = response.json()
-
-    assert data["status"] == InspectionStatus.SUCCESS.value
-    assert data["quality_gate_passed"] is True
-    assert data["image_sha256"] == expected_sha
-    assert len(data["rule_evaluations"]) >= 1
-
-    # Verify retrieval endpoint
-    insp_id = data["inspection_id"]
-    get_res = client.get(f"/api/v1/inspections/{insp_id}")
-    assert get_res.status_code == 200
-    assert get_res.json()["inspection_id"] == insp_id
+    assert data["calibration"]["is_calibrated"] is True
+    assert data["calibration"]["scale_mm_per_px"] == pytest.approx(0.27)
+    assert data["calibration"]["pdp_area_cm2"] is None
+    assert data["rule_evaluations"]["font_height_audit"]["status"] == "REVIEW"
 
 
-def test_vs0_upload_security_checks():
-    """Verify security controls: rejection of corrupted, non-image, and empty payloads."""
-    # 1. Corrupt random bytes
-    res_corrupt = client.post(
-        "/api/v1/inspect",
-        files={"file": ("bad.jpg", b"SOME_CORRUPTED_BINARY_DATA", "image/jpeg")},
-    )
-    assert res_corrupt.status_code == 400
-
-    # 2. Empty payload
-    res_empty = client.post(
-        "/api/v1/inspect",
-        files={"file": ("empty.png", b"", "image/png")},
-    )
-    assert res_empty.status_code == 400
+def test_vs0_evidence_source_linkage_and_retained_hashes(guarded_api):
+    data = guarded_api.upload()
+    observations = {token["token_id"]: token for token in data["ocr_observations"]}
+    assert observations and data["evidence_crops"]
+    for crop in data["evidence_crops"]:
+        assert crop["source_token_id"] in observations
+        x, y, width, height = crop["bbox_px"]
+        assert 0 <= x < x + width <= 800
+        assert 0 <= y < y + height <= 600
+    audit = guarded_api.client.get(f'/api/v1/audit/verify/{data["inspection_id"]}').json()
+    assert audit["status"] == "LOCAL_HASHES_MATCH"
+    assert audit["cryptographic_signature_verified"] is False
 
 
-def test_vs0_quality_gate_rejection():
-    """Verify that blurry/low-contrast images are rejected with REJECTED_QUALITY and INCONCLUSIVE verdict."""
-    worker = InspectionPipelineWorker()
-    req = InspectionRequest(inspection_id="insp_low_quality")
-
-    # Uniform low-contrast flat image (variance 0.0)
-    flat_img = np.full((300, 300, 3), 120, dtype=np.uint8)
-    res = worker.process_inspection(req, flat_img)
-
-    assert res.status == InspectionStatus.REJECTED_QUALITY
-    assert res.quality_gate_passed is False
-    assert res.overall_verdict == OverallVerdict.INCONCLUSIVE
-    assert len(res.errors) >= 1
-    assert res.errors[0].error_code == "QUALITY_REJECTED"
-
-
-def test_vs0_uncalibrated_handling():
-    """Verify uncalibrated frames report UNCALIBRATED status without fabricating millimeter values."""
-    img = _create_synthetic_pack(include_coin=False)
-    img_bytes = _encode_png(img)
-
-    response = client.post(
-        "/api/v1/inspect",
-        files={"file": ("uncalib.png", img_bytes, "image/png")},
-    )
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data["calibration_status"] == CalibrationStatus.UNCALIBRATED.value
-    # Measured font height in mm must NOT be fabricated
-    if "font_height" in data["measurements"]:
-        assert data["measurements"]["font_height"]["measured_mm"] is None
-
-    # Rule 7 font height must be flagged REVIEW due to uncalibrated scale
-    r07_evals = [e for e in data["rule_evaluations"] if "R07" in e["rule_id"]]
-    for r in r07_evals:
-        assert r["verdict"] == RuleVerdict.REVIEW.value
-        assert r["uncertainty_flag"] is True
-
-
-def test_vs0_defect_detection_missing_mrp():
-    """Verify missing statutory declarations result in RuleVerdict.FAIL and NON_COMPLIANT overall."""
-    # Packaging missing MRP
-    img = _create_synthetic_pack(include_mrp=False, include_net_qty=True, include_mfg_date=True)
-    img_bytes = _encode_png(img)
-
-    response = client.post(
-        "/api/v1/inspect",
-        files={"file": ("missing_mrp.png", img_bytes, "image/png")},
-    )
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data["overall_verdict"] == OverallVerdict.NON_COMPLIANT.value
-    mrp_eval = next((e for e in data["rule_evaluations"] if "MRP" in e["rule_id"]), None)
-    assert mrp_eval is not None
-    assert mrp_eval["verdict"] == RuleVerdict.FAIL.value
-
-
-def test_vs0_calibrated_measurement():
-    """Verify reference coin detection enables metric calculation and deterministic Rule 7 verdict."""
-    img = _create_synthetic_pack(include_mrp=True, include_net_qty=True, include_coin=True)
-    img_bytes = _encode_png(img)
-
-    response = client.post(
-        "/api/v1/inspect",
-        files={"file": ("calibrated.png", img_bytes, "image/png")},
-    )
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data["calibration_status"] == CalibrationStatus.CALIBRATED.value
-    if "font_height" in data["measurements"]:
-        assert data["measurements"]["font_height"]["measured_mm"] is not None
-        assert data["measurements"]["font_height"]["measured_mm"] > 0.0
-
-
-def test_vs0_evidence_chain_linkage():
-    """Verify evidence DAG nodes link source tokens, bounding boxes, and SHA-256 digests."""
-    img = _create_synthetic_pack(include_mrp=True, include_net_qty=True)
-    img_bytes = _encode_png(img)
-    expected_sha = hashlib.sha256(img_bytes).hexdigest()
-
-    response = client.post(
-        "/api/v1/inspect",
-        files={"file": ("pack_evidence.png", img_bytes, "image/png")},
-    )
-    assert response.status_code == 200
-    data = response.json()
-
-    evidence_chain = data["evidence_chain"]
-    assert len(evidence_chain) >= 1
-
-    for item in evidence_chain:
-        assert item["image_sha256"] == expected_sha
-        assert item["bounding_box"] is not None
-        bbox = item["bounding_box"]
-        assert 0.0 <= bbox["y_min"] < bbox["y_max"] <= 500.0
-        assert 0.0 <= bbox["x_min"] < bbox["x_max"] <= 600.0
-
-
-
-def test_vs0_offline_execution(monkeypatch):
-    """Verify the entire inspection pipeline operates completely offline with zero external network calls."""
+def test_vs0_offline_execution(guarded_api, monkeypatch):
     def block_network(*args, **kwargs):
-        raise RuntimeError("CRITICAL ERROR: Outbound network call attempted during offline inspection execution!")
-
+        raise AssertionError("Outbound network call attempted during isolated inspection")
     monkeypatch.setattr(socket, "create_connection", block_network)
     monkeypatch.setattr(socket.socket, "connect", block_network)
-
-    img = _create_synthetic_pack()
-    worker = InspectionPipelineWorker()
-    req = InspectionRequest(inspection_id="insp_offline_001")
-
-    # Must complete offline without raising network error
-    res = worker.process_inspection(req, img)
-    assert res.status == InspectionStatus.SUCCESS
-
-
-def test_vs0_stage_timings():
-    """Verify pipeline records non-zero telemetry latency timings for every stage."""
-    img = _create_synthetic_pack()
-    worker = InspectionPipelineWorker()
-    req = InspectionRequest(inspection_id="insp_timings_001")
-
-    res = worker.process_inspection(req, img)
-    assert res.status == InspectionStatus.SUCCESS
-
-    telemetry = res.telemetry
-    expected_stages = [
-        "ingestion_ms",
-        "quality_gate_ms",
-        "calibration_ms",
-        "ocr_perception_ms",
-        "semantic_extraction_ms",
-        "measurement_ms",
-        "rules_engine_ms",
-        "evidence_assembly_ms",
-        "total_ms",
-    ]
+    # Calling the synchronous pipeline avoids intercepting Windows asyncio's
+    # own loopback socketpair when it constructs the in-process test transport.
+    module = importlib.import_module("apps.api.services.pipeline_orchestrator")
+    result = module.pipeline_orchestrator.orchestrate_inspection(
+        image_bytes=guarded_api.image_bytes, filename="offline.png", anchor_type="NONE")
+    assert result.ocr_observations
+    assert guarded_api.spool.get_session(result.inspection_id) is not None
 
 
-    for stage in expected_stages:
-        assert stage in telemetry, f"Missing expected stage timing: {stage}"
-        assert telemetry[stage] >= 0.0, f"Stage {stage} returned negative latency"
+def test_vs0_stage_timings(guarded_api):
+    data = guarded_api.upload()
+    telemetry = data["telemetry"]
+    assert telemetry["total_duration_ms"] >= 0
+    assert set(telemetry["stages_ms"]) == {
+        "quality_gate", "metric_calibration", "ocr_perception", "normalization",
+        "rule_engine", "evidence_packaging",
+    }
+    assert all(value >= 0 for value in telemetry["stages_ms"].values())

@@ -1,46 +1,36 @@
 """
 MetroLens API Gateway: End-to-End Inspection Pipeline Orchestrator.
 Coordinates:
-1. Security & Cryptographic Ingestion (Magic bytes, 64MP cap, EXIF sanitization, SHA-256 digest).
+1. Bounded ingestion (Magic bytes, 40MP cap, EXIF sanitization, SHA-256 digest).
 2. Ephemeral Spool Session Lifecycle (SpoolService, isolated sandbox directories).
 3. Image Quality Pre-Flight Gate (Laplacian blur variance, specular glare thresholding).
-4. Optical Metric Scale Calibration (Fiducial reference detection, mm/px conversion, PDP dimensions).
-5. Multilingual OCR Perception (OCRService via PaddleOCR ONNX Runtime, with resilient mock fallback).
+4. Optical Metric Scale Calibration (Fiducial reference detection and mm/px conversion).
+5. Multilingual OCR Perception (OCRService via PaddleOCR ONNX Runtime; failures create no assessment).
 6. Deterministic Entity Normalization (TokenNormalizer regex/CTC parsing into CanonicalDeclaration).
 7. Master Statutory Rules Engine (StatutoryRuleEngine: Rule 6(1), Rule 6(11) USP, Rule 7 Font Height, Rule 26/3 Exemptions).
-8. Section 36(1) Jan Vishwas Improvement Notice Generation.
+8. Conservative single-panel review; no officer notice issuance.
 9. Visual Forensic Evidence Crops (PIL spatial cropping and base64 data URI serialization).
-10. Granular Stage Latency Telemetry (< 2.5s CPU budget).
+10. Granular stage latency telemetry.
 """
 
 import base64
 import hashlib
 import io
-import json
 import logging
 import math
-import os
 import time
 import uuid
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
 from PIL import Image
+from fastapi import HTTPException
+from decimal import Decimal, ROUND_HALF_UP
 
-from apps.api.errors import (
-    ImageCorruptedError,
-    ImageTooLargeError,
-    ImageResolutionTooLowError,
-    DecompressionBombError,
-    UnsupportedMediaTypeError,
-    PipelineExecutionError,
-)
-from apps.api.middleware.security import ImageSecurityValidator, UploadSecurityGate
+from apps.api.middleware.security import ImageSecurityValidator
 from apps.api.schemas import (
-    AnchorType,
     CalibrationInfo,
     DeclarationsInfo,
     EvidenceCrop,
@@ -49,8 +39,8 @@ from apps.api.schemas import (
     ImageMetadata,
     ImprovementNoticeInfo,
     InspectionResponse,
-    OverallComplianceState,
-    PanelType,
+    OCRBoundingBox,
+    OCRObservation,
     Rule6MandatoryStatus,
     RuleEvaluationsGroup,
     TelemetryInfo,
@@ -65,9 +55,6 @@ from nirikshak_calibration import (
     detect_anchor,
     AnchorType as CalibrationAnchorType,
     AnchorDetectionStatus,
-    measure_font_height,
-    FontMeasurementType,
-    FontMeasurementStatus,
 )
 from nirikshak_rules_engine.normalizer import TokenNormalizer
 from nirikshak_rules_engine.rule_engine import StatutoryRuleEngine
@@ -77,7 +64,7 @@ from nirikshak_rules_engine.schemas import (
     ComplianceState,
     MetricScaleResult,
     OCRToken as RulesOCRToken,
-    UnitType,
+    EvidenceCropMetadata,
 )
 from nirikshak_vision import check_image_quality
 
@@ -86,8 +73,8 @@ logger = logging.getLogger("metrolens.pipeline")
 
 class PipelineOrchestrator:
     """
-    Production-grade central conductor coordinating all perception and statutory rules modules.
-    Guarantees thread-safe execution, deterministic evaluation, and strict latency compliance.
+    Coordinates image perception and preliminary rule evaluation.
+    The HTTP route serializes CPU processing; latency depends on the image and host.
     """
 
     def __init__(
@@ -114,7 +101,7 @@ class PipelineOrchestrator:
             except Exception as e:
                 logger.warning(
                     "OCRService ONNX runtime unavailable (models not found or offline mode): %s. "
-                    "Using resilient token fallback adapter.",
+                    "No assessment will be created.",
                     e,
                 )
                 self._ocr_service = None
@@ -127,9 +114,7 @@ class PipelineOrchestrator:
         filename: str = "upload.jpg",
         anchor_type: str = "INR_10_COIN",
         panel_type: str = "FRONT_PDP",
-        officer_id: str = "WEB-GUEST",
-        mock_tokens: Optional[List[Dict[str, Any]]] = None,
-        mock_fixture_key: Optional[str] = None,
+        officer_id: str = "Unverified operator",
     ) -> InspectionResponse:
         """
         Executes synchronous end-to-end inspection pipeline.
@@ -139,35 +124,23 @@ class PipelineOrchestrator:
             filename: Client-provided asset filename.
             anchor_type: Fiducial calibration reference ("INR_10_COIN", "ISO_CARD", "NONE").
             panel_type: Package view ("FRONT_PDP", "BACK_INFO", "ALL_IN_ONE").
-            officer_id: Identifier of inspecting officer.
-            mock_tokens: Explicit mock tokens to bypass OCR engine (primarily for unit testing).
-            mock_fixture_key: Fixture key to load from mock_ocr_tokens.json.
+            officer_id: Server-supplied operator attribution, not verified officer identity.
 
         Returns:
             Authoritative InspectionResponse conforming to docs/API_CONTRACT.md.
         """
         total_start = time.perf_counter()
-        inspection_id = f"INSP-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        inspection_id = f"INSP-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex.upper()}"
         logger.info("Starting inspection %s for file '%s' (%d bytes)", inspection_id, filename, len(image_bytes))
 
         # ---------------------------------------------------------------------
         # 0. Ingestion Security & Ephemeral Spooling
         # ---------------------------------------------------------------------
-        from apps.api.middleware.security import ImageSecurityValidator
-
-        sanitized_record = ImageSecurityValidator.sanitize_and_verify(image_bytes)
+        sanitized_record = self.security_gate.sanitize_and_verify(image_bytes)
         sanitized_bytes = sanitized_record.sanitized_bytes
         image_hash = sanitized_record.raw_sha256
         img_width = sanitized_record.width
         img_height = sanitized_record.height
-        media_type = f"image/{sanitized_record.format.lower()}"
-
-        spool_session = self.spooler.create_session(inspection_id=inspection_id)
-        raw_path = self.spooler.save_raw_image(
-            inspection_id=inspection_id,
-            content=sanitized_bytes,
-            extension=".jpg" if "jpeg" in media_type else ".png",
-        )
 
         # Open PIL Image for subsequent cropping and dimension checks
         pil_image = Image.open(io.BytesIO(sanitized_bytes))
@@ -184,6 +157,8 @@ class PipelineOrchestrator:
         t_stage1 = time.perf_counter()
         q_result = check_image_quality(img_bgr)
         stage_quality_ms = (time.perf_counter() - t_stage1) * 1000.0
+        if not q_result.passed:
+            raise HTTPException(422, "Image quality is insufficient for reliable inspection. Retake a sharp photo without glare.")
 
         image_metadata = ImageMetadata(
             filename=filename,
@@ -214,8 +189,6 @@ class PipelineOrchestrator:
         extracted_tokens = self._extract_ocr_tokens(
             img_bgr=img_bgr,
             image_id=inspection_id,
-            mock_tokens=mock_tokens,
-            mock_fixture_key=mock_fixture_key,
         )
         stage_ocr_ms = (time.perf_counter() - t_stage3) * 1000.0
 
@@ -231,10 +204,9 @@ class PipelineOrchestrator:
         # ---------------------------------------------------------------------
         t_stage5 = time.perf_counter()
         # Measure font height from tokens if available
-        measured_font_height_mm = self._estimate_numeral_font_height(
-            tokens=extracted_tokens,
-            scale=metric_scale_result,
-        )
+        # OCR line boxes are not measured numeral glyph heights. Until reliable
+        # glyph segmentation and package-area measurement exist, Rule 7 needs review.
+        measured_font_height_mm = None
 
         compliance_result = self.rule_engine.evaluate(
             decl=declarations,
@@ -242,6 +214,40 @@ class PipelineOrchestrator:
             inspection_id=inspection_id,
             measured_font_height_mm=measured_font_height_mm,
         )
+        # This endpoint observes one photograph, not the complete physical package.
+        # OCR absence is not proof that a declaration is absent from other panels.
+        for rule in compliance_result.rule_evaluations:
+            if rule.status == "FAIL" and rule.observed_value in (None, "Not detected"):
+                rule.status = "REVIEW"
+                rule.is_compliant = False
+                rule.notes = "Not observed on the photographed panel; inspect the remaining package panels before deciding compliance."
+        if compliance_result.overall_verdict == ComplianceState.NON_COMPLIANT.value:
+            compliance_result.overall_verdict = ComplianceState.RED.value
+            compliance_result.primary_legal_summary = (
+                "Potential non-compliance requires review of the photographed panel and any unobserved package panels. "
+                "This image-only screening does not establish whole-package compliance or a statutory violation."
+            )
+        if any(token.confidence < 0.60 for token in extracted_tokens):
+            # The normalizer has no field-level confidence provenance yet. A weak
+            # token must therefore block conclusions, including a quantity exemption.
+            compliance_result.overall_verdict = ComplianceState.AMBER.value
+            compliance_result.verdict_badge_color = "amber"
+            compliance_result.primary_legal_summary = (
+                "Manual review required: OCR confidence is below 0.60 for part of the observed text. "
+                "No compliance conclusion or package exemption is established from these observations."
+            )
+            for rule in compliance_result.rule_evaluations:
+                rule.status = "REVIEW"
+                rule.is_compliant = False
+                rule.notes = "Low OCR confidence prevents confirming this check. Verify the text against the original image."
+        # This MVP has neither individual officer identity nor an issuance workflow.
+        compliance_result.improvement_notice = None
+        if (compliance_result.overall_verdict == ComplianceState.COMPLIANT.value
+                and any(r.status == "REVIEW" for r in compliance_result.rule_evaluations)):
+            compliance_result.overall_verdict = ComplianceState.AMBER.value
+            compliance_result.verdict_badge_color = "amber"
+            compliance_result.primary_legal_summary = "Manual review required: one or more checks lack sufficient measurement or declaration evidence."
+        compliance_result.sha256_hash = image_hash
         stage_rule_ms = (time.perf_counter() - t_stage5) * 1000.0
 
         # ---------------------------------------------------------------------
@@ -254,6 +260,7 @@ class PipelineOrchestrator:
             declarations=declarations,
             scale=metric_scale_result,
         )
+        compliance_result.evidence_crops = [EvidenceCropMetadata(**crop.model_dump()) for crop in evidence_crops]
         stage_evidence_ms = (time.perf_counter() - t_stage6) * 1000.0
 
         # ---------------------------------------------------------------------
@@ -272,14 +279,6 @@ class PipelineOrchestrator:
         )
         summary_reason = compliance_result.primary_legal_summary
 
-        # Enforce quality gate safety: an unverified/corrupted image cannot be ruled COMPLIANT
-        if not q_result.passed and verdict_val == OverallComplianceState.COMPLIANT.value:
-            verdict_val = OverallComplianceState.FLAGGED_FOR_REVIEW.value
-            summary_reason = (
-                f"Image quality gate check failed (blur variance: {q_result.laplacian_variance:.1f}, "
-                f"glare ratio: {q_result.glare_ratio * 100.0:.1f}%). Flagged for mandatory officer review."
-            )
-
         response = InspectionResponse(
             inspection_id=inspection_id,
             timestamp=datetime.now(timezone.utc).isoformat(),
@@ -291,6 +290,12 @@ class PipelineOrchestrator:
             rule_evaluations=rule_eval_group,
             improvement_notice=improvement_notice_info,
             evidence_crops=evidence_crops,
+            ocr_observations=[OCRObservation(
+                token_id=token.token_id, text=token.text, confidence=token.confidence,
+                bounding_box=OCRBoundingBox(x_min=token.bbox[0], y_min=token.bbox[1],
+                    x_max=token.bbox[2], y_max=token.bbox[3]),
+                polygon=token.polygon, script=token.script,
+            ) for token in extracted_tokens],
             telemetry=TelemetryInfo(
                 total_duration_ms=round(total_duration_ms, 2),
                 stages_ms=TelemetryStages(
@@ -310,6 +315,25 @@ class PipelineOrchestrator:
             total_duration_ms,
             response.state,
         )
+        # Retain original bytes and the privacy-safe derivative separately. Failed
+        # inspections never acquire a successful record or a retained spool session.
+        extension = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}[sanitized_record.format]
+        spool_session = self.spooler.create_session(inspection_id)
+        try:
+            self.spooler.save_raw_image(inspection_id, image_bytes, extension)
+            self.spooler.save_sanitized_image(inspection_id, sanitized_bytes, extension)
+            spool_session.metadata.update({
+                "compliance_result": compliance_result,
+                "raw_sha256": image_hash,
+                "sanitized_sha256": hashlib.sha256(sanitized_bytes).hexdigest(),
+                "raw_size_bytes": len(image_bytes),
+                "sanitized_size_bytes": len(sanitized_bytes),
+                "actor": officer_id,
+                "panel_type": panel_type,
+            })
+        except Exception:
+            self.spooler.purge_session(inspection_id)
+            raise
         return response
 
     # =========================================================================
@@ -357,9 +381,6 @@ class PipelineOrchestrator:
 
                     if scale_outcome.status == CalibrationStatus.CALIBRATED and scale_outcome.scale_factor_mm_per_pixel:
                         scale_mm_per_px = scale_outcome.scale_factor_mm_per_pixel
-                        pdp_w_mm = float(img_width * scale_mm_per_px * 0.45)
-                        pdp_h_mm = float(img_height * scale_mm_per_px * 0.45)
-                        pdp_area_cm2 = float((pdp_w_mm * pdp_h_mm) / 100.0)
 
                         detected_type_str = "INR_10_COIN" if marker_name == "INR_10_COIN" else "ISO_CARD"
                         calib_info = CalibrationInfo(
@@ -367,13 +388,13 @@ class PipelineOrchestrator:
                             anchor_type=detected_type_str,
                             coin_detected=(marker_name == "INR_10_COIN"),
                             scale_mm_per_px=round(scale_mm_per_px, 4),
-                            pdp_width_mm=round(pdp_w_mm, 1),
-                            pdp_height_mm=round(pdp_h_mm, 1),
-                            pdp_area_cm2=round(pdp_area_cm2, 1),
+                            pdp_width_mm=None,
+                            pdp_height_mm=None,
+                            pdp_area_cm2=None,
                             calibration_confidence=round(detection_res.confidence, 2),
                         )
 
-                        tilt_deg = 2.5
+                        tilt_deg = None
                         if hasattr(detection_res.geometry, "aspect_ratio") and detection_res.geometry.aspect_ratio is not None:
                             ar = min(1.0, float(detection_res.geometry.aspect_ratio))
                             tilt_deg = round(math.degrees(math.acos(ar)), 1)
@@ -381,7 +402,7 @@ class PipelineOrchestrator:
                         metric_scale = MetricScaleResult(
                             is_calibrated=True,
                             scale_factor_mm_per_px=scale_mm_per_px,
-                            pdp_area_sqcm=pdp_area_cm2,
+                            pdp_area_sqcm=None,
                             anchor_type_detected=detected_type_str,
                             tilt_angle_deg=tilt_deg,
                             is_cylindrical=False,
@@ -415,175 +436,29 @@ class PipelineOrchestrator:
         self,
         img_bgr: np.ndarray,
         image_id: str,
-        mock_tokens: Optional[List[Dict[str, Any]]] = None,
-        mock_fixture_key: Optional[str] = None,
     ) -> List[RulesOCRToken]:
-        """
-        Extracts OCR tokens via PaddleOCR service or deterministic fixture/heuristic fallback.
-        """
-        # 1. Direct mock token list provided
-        if mock_tokens:
-            return self._parse_mock_tokens(mock_tokens)
-
-        # 2. Mock fixture key provided from tests/fixtures/mock_ocr_tokens.json
-        if mock_fixture_key:
-            fixture_tokens = self._load_fixture_tokens(mock_fixture_key)
-            if fixture_tokens:
-                return fixture_tokens
-
-        # 3. Live OCRService instance if available
+        """Only real inference may contribute observed evidence."""
         ocr_service = self._get_ocr_service()
-        if ocr_service:
-            try:
-                ocr_result = ocr_service.extract(img_bgr, image_id=image_id)
-                rules_tokens = []
-                for tok in ocr_result.tokens:
-                    rules_tokens.append(
-                        RulesOCRToken(
-                            token_id=tok.token_id,
-                            text=tok.text,
-                            confidence=tok.confidence,
-                            bbox=list(tok.bbox),
-                            polygon=getattr(tok, "polygon", None),
-                            script=getattr(tok, "script", "latin"),
-                            raw_pixel_height=getattr(tok, "raw_pixel_height", None),
-                            model_name=getattr(tok, "model_name", ""),
-                        )
-                    )
-                if rules_tokens:
-                    return rules_tokens
-            except Exception as e:
-                logger.warning("Live OCR inference failed (%s); using synthetic fallback.", e)
-
-        # 4. Resilient synthetic default tokens for test / offline execution
-        return self._generate_synthetic_tokens(img_bgr)
-
-    def _load_fixture_tokens(self, fixture_key: str) -> Optional[List[RulesOCRToken]]:
-        """Loads predefined tokens from tests/fixtures/mock_ocr_tokens.json."""
+        if ocr_service is None:
+            raise HTTPException(503, "OCR is unavailable. Contact the service administrator.")
         try:
-            fixture_path = Path("tests/fixtures/mock_ocr_tokens.json")
-            if not fixture_path.is_file():
-                # Try repo root relative
-                fixture_path = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "mock_ocr_tokens.json"
-            if fixture_path.is_file():
-                with open(fixture_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    fixtures = data.get("fixtures", {})
-                    if fixture_key in fixtures:
-                        raw_toks = fixtures[fixture_key].get("tokens", [])
-                        return self._parse_mock_tokens(raw_toks)
-        except Exception as e:
-            logger.error("Failed to load fixture '%s': %s", fixture_key, e)
-        return None
-
-    def _parse_mock_tokens(self, raw_tokens: List[Dict[str, Any]]) -> List[RulesOCRToken]:
-        """Converts raw dictionary token representations into RulesOCRToken instances."""
-        tokens: List[RulesOCRToken] = []
-        for i, item in enumerate(raw_tokens):
-            tok_id = item.get("token_id", f"tok_{i:02d}")
-            text = item.get("text", "")
-            conf = float(item.get("confidence", 0.95))
-            bbox = item.get("bbox", [0.0, 0.0, 100.0, 20.0])
-            script = item.get("script", "latin")
-            tokens.append(
+            ocr_result = ocr_service.extract(img_bgr, image_id=image_id)
+            tokens = [
                 RulesOCRToken(
-                    token_id=tok_id,
-                    text=text,
-                    confidence=conf,
-                    bbox=bbox,
-                    script=script,
+                    token_id=tok.token_id, text=tok.text, confidence=tok.confidence,
+                    bbox=list(tok.bbox), polygon=getattr(tok, "polygon", None),
+                    script=getattr(tok, "script", "unknown"),
+                    raw_pixel_height=getattr(tok, "raw_pixel_height", None),
+                    model_name=getattr(tok, "model_name", ""),
                 )
-            )
+                for tok in ocr_result.tokens if tok.text.strip()
+            ]
+        except Exception as exc:
+            logger.warning("OCR inference failed: %s", exc)
+            raise HTTPException(503, "OCR processing failed. No assessment was created.") from exc
+        if not tokens:
+            raise HTTPException(422, "No readable text was detected. Retake a closer, sharper packaging photograph.")
         return tokens
-
-    def _generate_synthetic_tokens(self, img_bgr: np.ndarray) -> List[RulesOCRToken]:
-        """
-        Generates standard baseline tokens when OCR weights are offline.
-        Provides realistic FMCG packaging declarations for seamless offline verification.
-        """
-        h, w = img_bgr.shape[:2]
-        return [
-            RulesOCRToken(
-                token_id="tok_01",
-                text="MetroLens Premium Roasted Cashews",
-                confidence=0.99,
-                bbox=[w * 0.05, h * 0.05, w * 0.85, h * 0.12],
-                script="latin",
-            ),
-            RulesOCRToken(
-                token_id="tok_02",
-                text="Net Quantity: 200 g",
-                confidence=0.98,
-                bbox=[w * 0.05, h * 0.15, w * 0.50, h * 0.22],
-                script="latin",
-            ),
-            RulesOCRToken(
-                token_id="tok_03",
-                text="MRP ₹ 240.00 (inclusive of all taxes)",
-                confidence=0.97,
-                bbox=[w * 0.05, h * 0.25, w * 0.75, h * 0.32],
-                script="latin",
-            ),
-            RulesOCRToken(
-                token_id="tok_04",
-                text="Unit Sale Price: ₹ 1.20 / g",
-                confidence=0.96,
-                bbox=[w * 0.05, h * 0.35, w * 0.55, h * 0.42],
-                script="latin",
-            ),
-            RulesOCRToken(
-                token_id="tok_05",
-                text="Mfg Date: 08/2026",
-                confidence=0.98,
-                bbox=[w * 0.05, h * 0.45, w * 0.40, h * 0.52],
-                script="latin",
-            ),
-            RulesOCRToken(
-                token_id="tok_06",
-                text="Manufactured By: MetroLens Foods Pvt Ltd, New Delhi 110020",
-                confidence=0.95,
-                bbox=[w * 0.05, h * 0.55, w * 0.90, h * 0.65],
-                script="latin",
-            ),
-            RulesOCRToken(
-                token_id="tok_07",
-                text="Consumer Care: 1800-11-4000, care@metrolens.in",
-                confidence=0.96,
-                bbox=[w * 0.05, h * 0.68, w * 0.80, h * 0.75],
-                script="latin",
-            ),
-            RulesOCRToken(
-                token_id="tok_08",
-                text="Country of Origin: India",
-                confidence=0.99,
-                bbox=[w * 0.05, h * 0.78, w * 0.45, h * 0.85],
-                script="latin",
-            ),
-        ]
-
-    def _estimate_numeral_font_height(
-        self,
-        tokens: List[RulesOCRToken],
-        scale: Optional[MetricScaleResult],
-    ) -> Optional[float]:
-        """Estimates measured font height in millimeters from Net Quantity token bounding box via Member 2 CV."""
-        if not scale or not scale.is_calibrated or not scale.scale_factor_mm_per_px:
-            return None
-
-        # Search for net quantity token
-        for tok in tokens:
-            t_lower = tok.text.lower()
-            if any(k in t_lower for k in ("net", "qty", "quantity", "शुद्ध")):
-                bx1, by1, bx2, by2 = tok.bbox
-                res = measure_font_height(
-                    bounding_box=(bx1, by1, bx2, by2),
-                    calibration=scale.scale_factor_mm_per_px,
-                    measurement_type=FontMeasurementType.BOUNDING_BOX_HEIGHT,
-                )
-                if res.status == FontMeasurementStatus.SUCCESS and res.measured_mm:
-                    # Typical capital numeral is ~70% of total line bounding box height
-                    return round(res.measured_mm * 0.70, 2)
-        return None
 
     def _generate_evidence_crops(
         self,
@@ -618,26 +493,28 @@ class PipelineOrchestrator:
                 bx1, by1, bx2, by2 = matched_tok.bbox
                 # Add 8px padding
                 pad = 8
-                x1 = max(0, int(min(bx1, bx2) - pad))
-                y1 = max(0, int(min(by1, by2) - pad))
+                x1 = min(img_w, max(0, int(min(bx1, bx2) - pad)))
+                y1 = min(img_h, max(0, int(min(by1, by2) - pad)))
                 x2 = min(img_w, int(max(bx1, bx2) + pad))
                 y2 = min(img_h, int(max(by1, by2) + pad))
-                w = max(10, x2 - x1)
-                h = max(10, y2 - y1)
+                if x2 <= x1 or y2 <= y1:
+                    continue
+                w = x2 - x1
+                h = y2 - y1
 
                 cropped = pil_image.crop((x1, y1, x2, y2))
+                cropped.thumbnail((640, 320))
                 buf = io.BytesIO()
                 cropped.save(buf, format="JPEG", quality=85)
                 b64_data = base64.b64encode(buf.getvalue()).decode("ascii")
                 data_uri = f"data:image/jpeg;base64,{b64_data}"
 
                 measured_h = None
-                if scale and scale.scale_factor_mm_per_px:
-                    measured_h = round((h * 0.70) * scale.scale_factor_mm_per_px, 2)
 
                 crops.append(
                     EvidenceCrop(
                         field_name=field_name,
+                        source_token_id=matched_tok.token_id,
                         label=label,
                         bbox_px=[x1, y1, w, h],
                         measured_height_mm=measured_h,
@@ -697,9 +574,10 @@ class PipelineOrchestrator:
                 if status == "FAIL":
                     missing.append(key)
             else:
-                details[key] = "PASS"
+                details[key] = "NOT_APPLICABLE" if result.overall_verdict == ComplianceState.EXEMPTED.value else "REVIEW"
 
-        r6_overall = "FAIL" if missing else "PASS"
+        r6_overall = "FAIL" if missing else ("REVIEW" if "REVIEW" in details.values() else (
+            "NOT_APPLICABLE" if all(v == "NOT_APPLICABLE" for v in details.values()) else "PASS"))
         r6_status = Rule6MandatoryStatus(
             overall_status=r6_overall,
             missing_declarations=missing,
@@ -708,34 +586,48 @@ class PipelineOrchestrator:
 
         # 2. USP Audit
         usp_rec = evals_by_rule.get("LMPC-R06-USP-001")
-        if usp_rec:
-            usp_compliant = usp_rec.is_compliant
-            usp_notes = usp_rec.notes
-        else:
-            usp_compliant = True
-            usp_notes = None
+        not_evaluated_status = "NOT_APPLICABLE" if result.overall_verdict == ComplianceState.EXEMPTED.value else "REVIEW"
+        usp_status = usp_rec.status if usp_rec else not_evaluated_status
+        usp_compliant = usp_status == "PASS"
+        usp_notes = usp_rec.notes if usp_rec else "This check was not evaluated."
+        expected_usp = None
+        discrepancy_pct = None
+        denominator = None
+        if decl.net_quantity_value and decl.net_quantity_unit and decl.mrp_inr:
+            denominator, quantity, _ = self.rule_engine.usp_validator.determine_statutory_denominator(
+                decl.net_quantity_value, decl.net_quantity_unit,
+            )
+            if quantity and quantity > 0:
+                expected = (Decimal(str(decl.mrp_inr)) / quantity).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                expected_usp = float(expected)
+                if expected > 0 and decl.declared_usp_value is not None:
+                    discrepancy_pct = float(abs(Decimal(str(decl.declared_usp_value)) - expected) / expected * 100)
 
         usp_audit = USPAudit(
+            status=usp_status,
             is_compliant=usp_compliant,
             declared_usp=decl.declared_usp_value,
-            expected_usp=decl.declared_usp_value,
-            discrepancy_pct=0.0,
-            standard_denominator=decl.declared_usp_unit or "g",
+            expected_usp=expected_usp,
+            discrepancy_pct=discrepancy_pct,
+            standard_denominator=denominator,
             notes=usp_notes,
         )
 
         # 3. Font Height Audit
         font_rec = evals_by_rule.get("LMPC-R07-FONT-001")
         pdp_area = scale.pdp_area_sqcm if (scale and scale.is_calibrated) else None
-        font_compliant = font_rec.is_compliant if font_rec else True
-        font_deficit = font_rec.deficit_mm if font_rec else 0.0
+        font_status = font_rec.status if font_rec else not_evaluated_status
+        font_compliant = font_status == "PASS"
+        font_deficit = font_rec.deficit_mm if font_rec else None
         bod_applied = font_rec.benefit_of_doubt_applied if font_rec else False
 
         font_audit = FontHeightAudit(
+            status=font_status,
+            notes=font_rec.notes if font_rec else "This check was not evaluated.",
             is_compliant=font_compliant,
             pdp_area_cm2=pdp_area,
-            statutory_min_height_mm=2.0 if pdp_area else None,
-            measured_net_qty_height_mm=2.25 if pdp_area else None,
+            statutory_min_height_mm=None,
+            measured_net_qty_height_mm=None,
             deficit_mm=font_deficit,
             benefit_of_doubt_applied=bod_applied,
         )

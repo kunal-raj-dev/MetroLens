@@ -16,10 +16,8 @@ Validates defensive posture against:
 import io
 from pathlib import Path
 import pytest
-from fastapi.testclient import TestClient
 from PIL import Image
 
-from apps.api.main import app
 from apps.api.middleware.security import ImageSecurityValidator
 from apps.api.errors import (
     MetroLensAPIException,
@@ -31,7 +29,9 @@ from apps.api.errors import (
     ImageResolutionTooLowError,
 )
 
-client = TestClient(app)
+@pytest.fixture
+def client(guarded_api):
+    return guarded_api.client
 
 
 class TestImageIngestionSecurityGate:
@@ -75,23 +75,23 @@ class TestImageIngestionSecurityGate:
 class TestAPISecurityEndpoints:
     """Verifies API gateway defensive responses against adversarial requests."""
 
-    def test_empty_file_upload_returns_4xx(self):
+    def test_empty_file_upload_returns_4xx(self, client):
         response = client.post(
             "/api/v1/inspect",
-            files={"image": ("empty.jpg", b"", "image/jpeg")},
+            files={"file": ("empty.jpg", b"", "image/jpeg")},
         )
         assert response.status_code in [400, 422]
 
-    def test_corrupt_file_upload_returns_structured_error(self):
+    def test_corrupt_file_upload_returns_structured_error(self, client):
         response = client.post(
             "/api/v1/inspect",
-            files={"image": ("corrupt.jpg", b"MALFORMED_HEADER_BYTES", "image/jpeg")},
+            files={"file": ("corrupt.jpg", b"MALFORMED_HEADER_BYTES", "image/jpeg")},
         )
-        assert response.status_code in [400, 422]
+        assert response.status_code == 415
         data = response.json()
         assert "error" in data or "detail" in data
 
-    def test_path_traversal_filename_sanitized(self):
+    def test_path_traversal_filename_sanitized(self, client, guarded_api):
         """Filenames containing traversal vectors must either be rejected (400) or sanitized."""
         buf = io.BytesIO()
         img = Image.new("RGB", (800, 600), color="white")
@@ -101,14 +101,14 @@ class TestAPISecurityEndpoints:
         traversal_name = "../../../../etc/passwd"
         response = client.post(
             "/api/v1/inspect",
-            files={"image": (traversal_name, valid_bytes, "image/jpeg")},
+            files={"file": (traversal_name, valid_bytes, "image/jpeg")},
         )
-        # Rejection (400) or sanitized processing (200) without escaping spool
-        assert response.status_code in [200, 400, 422]
-        if response.status_code == 200:
-            assert "inspection_id" in response.json()
+        assert response.status_code == 200
+        assert response.json()["image_metadata"]["filename"] == "passwd"
+        session = guarded_api.spool.get_session(response.json()["inspection_id"])
+        assert session.raw_image_path.is_relative_to(guarded_api.spool.base_dir)
 
-    def test_null_byte_filename_sanitized(self):
+    def test_null_byte_filename_sanitized(self, client):
         """Filenames with null bytes must be rejected (400) or sanitized."""
         buf = io.BytesIO()
         img = Image.new("RGB", (800, 600), color="white")
@@ -118,23 +118,24 @@ class TestAPISecurityEndpoints:
         null_byte_name = "test.jpg\x00.exe"
         response = client.post(
             "/api/v1/inspect",
-            files={"image": (null_byte_name, valid_bytes, "image/jpeg")},
+            files={"file": (null_byte_name, valid_bytes, "image/jpeg")},
         )
-        assert response.status_code in [200, 400, 422]
+        assert response.status_code == 200
+        assert "\x00" not in response.json()["image_metadata"]["filename"]
 
-    def test_pdf_report_malformed_json_rejected(self):
+    def test_pdf_report_malformed_json_rejected(self, client):
         """POST /api/v1/report/pdf must reject invalid JSON with 422."""
         response = client.post(
             "/api/v1/report/pdf",
             content=b"{malformed_json_payload: null",
             headers={"Content-Type": "application/json"},
         )
-        assert response.status_code in [400, 422, 429]
+        assert response.status_code == 400
 
-    def test_pdf_report_missing_required_fields(self):
+    def test_pdf_report_missing_required_fields(self, client):
         """Rejects incomplete payloads without internal 500 error."""
         response = client.post(
             "/api/v1/report/pdf",
             json={"unexpected_field": "val"},
         )
-        assert response.status_code in [400, 422, 429]
+        assert response.status_code == 400

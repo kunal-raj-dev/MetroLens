@@ -45,21 +45,13 @@ export class MockInspectionAdapter implements IInspectionClient {
       );
     }
 
+    if (options?.signal?.aborted) throw new InspectionClientError("Demonstration canceled.", "TIMEOUT");
     // 2. Simulate statutory pipeline latency
     await new Promise((resolve, reject) => {
-      const timer = setTimeout(resolve, this.simulatedDelayMs);
+      const onAbort = () => { clearTimeout(timer); reject(new InspectionClientError("Demonstration canceled.", "TIMEOUT")); };
+      const timer = setTimeout(() => { options?.signal?.removeEventListener("abort", onAbort); resolve(undefined); }, this.simulatedDelayMs);
 
-      if (options?.signal) {
-        options.signal.addEventListener("abort", () => {
-          clearTimeout(timer);
-          reject(
-            new InspectionClientError(
-              "Inspection operation was canceled by the officer.",
-              "TIMEOUT"
-            )
-          );
-        });
-      }
+      options?.signal?.addEventListener("abort", onAbort, { once: true });
     });
 
     // 3. Resolve synthetic fixture based on file
@@ -108,7 +100,7 @@ export class MockInspectionAdapter implements IInspectionClient {
       fieldName: input.fieldName,
       updatedReviewStatus: input.decision,
       operatorNotes: input.notes || null,
-      statusMessage: `Inspector review decision (${input.decision}) recorded in audit trail [SYNTHETIC DEMO].`,
+      statusMessage: `SYNTHETIC DEMO: review (${input.decision}) updated in this browser session. No officer audit record was created.`,
       timestamp: new Date().toISOString(),
     };
   }

@@ -1,5 +1,6 @@
+import { resolveApiBaseUrl, apiHeaders } from "./apiConfig";
 /**
- * MetroLens AI™ - Report Client Interface & Implementation
+ * MetroLens AIâ„¢ - Report Client Interface & Implementation
  * Subsystem: Member 5 (Web Frontend)
  * 
  * Provides an authoritative, tamper-evident assessment report retrieval
@@ -98,10 +99,7 @@ export class ReportClient implements IReportClient {
   private isGenerating = false;
 
   constructor(baseUrl?: string) {
-    this.baseUrl =
-      baseUrl ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:8000";
+    this.baseUrl = resolveApiBaseUrl(baseUrl);
   }
 
   /**
@@ -142,7 +140,8 @@ export class ReportClient implements IReportClient {
     if (!header) return this.sanitizeFilename("", fallbackId);
     const match = header.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
     const raw = match ? match[1] : "";
-    return this.sanitizeFilename(decodeURIComponent(raw), fallbackId);
+    try { return this.sanitizeFilename(decodeURIComponent(raw), fallbackId); }
+    catch { return this.sanitizeFilename(raw, fallbackId); }
   }
 
   /**
@@ -152,7 +151,9 @@ export class ReportClient implements IReportClient {
     inspectionId: string,
     options?: GenerateReportOptions
   ): Promise<ReportDownloadResult> {
-    if (!inspectionId || !inspectionId.trim()) {
+    if (!this.baseUrl) throw new ReportClientError("Report service is not configured.", "ENDPOINT_UNAVAILABLE");
+    if (options?.signal?.aborted) throw new ReportClientError("Report request canceled.", "CANCELED");
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(inspectionId || "")) {
       throw new ReportClientError(
         "A valid inspection identifier is required to generate a report.",
         "INVALID_INSPECTION_ID",
@@ -161,7 +162,7 @@ export class ReportClient implements IReportClient {
     }
 
     // Anti-double-click guard
-    if (this.isGenerating && this.activeInspectionId === inspectionId) {
+    if (this.isGenerating) {
       throw new ReportClientError(
         "A report generation request for this inspection is already in progress.",
         "ALREADY_GENERATING"
@@ -184,18 +185,17 @@ export class ReportClient implements IReportClient {
       const response = await fetch(`${this.baseUrl}/api/v1/report/pdf`, {
         method: "POST",
         headers: {
+          ...apiHeaders(),
           "Content-Type": "application/json",
           Accept: "application/pdf, application/json",
         },
         body: JSON.stringify({
           inspection_id: inspectionId,
-          officer_notes: options?.officerNotes || "Legal Metrology Officer packaging audit report.",
+          officer_notes: options?.officerNotes || "Preliminary image-based assessment for human review.",
           include_raw_image: options?.includeRawImage ?? true,
         }),
         signal: controller.signal,
       });
-
-      clearTimeout(timeoutTimer);
 
       // Stale report protection: if user navigated away to another inspection, discard
       if (this.activeInspectionId !== inspectionId) {
@@ -213,7 +213,7 @@ export class ReportClient implements IReportClient {
             {
               statusCode: response.status,
               remediationHint:
-                "The Member 4 backend report route has not been deployed. Report generation requires backend PDF compiler.",
+                "A retained live inspection is required. The record may have expired, or the report service may be unavailable.",
             }
           );
         }
@@ -273,6 +273,7 @@ export class ReportClient implements IReportClient {
         );
       }
 
+      if (controller.signal.aborted || this.activeInspectionId !== inspectionId) throw new ReportClientError("Report request canceled.", "CANCELED");
       // 4. Resolve filename
       const disposition = response.headers.get("content-disposition");
       const filename = this.extractFilenameFromHeader(disposition, inspectionId);
@@ -325,6 +326,7 @@ export class ReportClient implements IReportClient {
         }
       );
     } finally {
+      clearTimeout(timeoutTimer);
       if (options?.signal) {
         options.signal.removeEventListener("abort", onCallerAbort);
       }

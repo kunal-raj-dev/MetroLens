@@ -42,8 +42,9 @@ def test_rule_6_all_mandatory_declarations_pass(engine):
     assert all(r.status == "PASS" for r in records)
 
     result = engine.evaluate(decl)
-    assert result.overall_verdict == ComplianceState.COMPLIANT
-    assert result.verdict_badge_color == "green"
+    assert result.overall_verdict == ComplianceState.UNCERTAIN
+    assert result.verdict_badge_color == "amber"
+    assert next(r for r in result.rule_evaluations if r.rule_id == "LMPC-R07-FONT-001").status == "REVIEW"
 
 
 def test_rule_6_1_e_missing_tax_qualifier_fails(engine):

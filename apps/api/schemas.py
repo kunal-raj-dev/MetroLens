@@ -38,7 +38,7 @@ class ImageMetadata(BaseModel):
     filename: str = Field(..., description="Original filename of uploaded asset")
     width_px: int = Field(..., description="Image horizontal width in pixels")
     height_px: int = Field(..., description="Image vertical height in pixels")
-    sha256_hash: str = Field(..., min_length=64, max_length=64, description="Cryptographic SHA-256 digest of clean raw image")
+    sha256_hash: str = Field(..., min_length=64, max_length=64, description="SHA-256 digest of the exact original uploaded bytes")
     is_quality_valid: bool = Field(..., description="Whether image satisfies pre-flight blur and glare quality thresholds")
     blur_score: float = Field(..., description="Laplacian variance sharpness score")
     glare_percentage: float = Field(..., description="Percentage of pixels exhibiting specular glare (luminance >= 250)")
@@ -94,7 +94,7 @@ class Rule6MandatoryStatus(BaseModel):
     """Aggregate status of Rule 6(1) mandatory packaging declarations."""
     model_config = ConfigDict(extra="ignore")
 
-    overall_status: str = Field(..., description="'PASS' | 'FAIL'")
+    overall_status: str = Field(..., description="PASS | FAIL | REVIEW | NOT_APPLICABLE")
     missing_declarations: List[str] = Field(default_factory=list, description="List of omitted mandatory statutory fields")
     details: Dict[str, str] = Field(default_factory=dict, description="Detailed field-level verdicts")
 
@@ -102,6 +102,7 @@ class Rule6MandatoryStatus(BaseModel):
 class USPAudit(BaseModel):
     """Audit outcome of Rule 6(11) Unit Sale Price computation and standard unit denominator."""
     model_config = ConfigDict(extra="ignore")
+    status: str = Field("REVIEW", description="PASS | FAIL | REVIEW | NOT_APPLICABLE")
 
     is_compliant: bool = Field(..., description="Whether USP satisfies statutory arithmetic and denominator rules")
     declared_usp: Optional[float] = Field(None, description="Observed declared USP value")
@@ -114,6 +115,8 @@ class USPAudit(BaseModel):
 class FontHeightAudit(BaseModel):
     """Audit outcome of Rule 7 Tables I & II minimum numeral height compliance."""
     model_config = ConfigDict(extra="ignore")
+    status: str = Field("REVIEW", description="PASS | FAIL | REVIEW | NOT_APPLICABLE")
+    notes: Optional[str] = None
 
     is_compliant: bool = Field(..., description="Whether font height meets or exceeds statutory threshold")
     pdp_area_cm2: Optional[float] = Field(None, description="Principal display panel area used for table lookup")
@@ -156,11 +159,30 @@ class EvidenceCrop(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     field_name: str = Field(..., description="Declaration field identifier (e.g., 'mrp', 'net_quantity', 'usp')")
+    source_token_id: Optional[str] = Field(None, description="Actual OCR token used to select this crop")
     label: str = Field(..., description="Human-readable evidence description")
     bbox_px: List[int] = Field(..., description="Bounding box [x, y, width, height] in pixel coordinates")
     measured_height_mm: Optional[float] = Field(None, description="Calibrated height in millimeters")
     confidence: float = Field(default=1.0, ge=0.0, le=1.0, description="Extraction confidence score")
     crop_base64: str = Field(..., description="Base64 encoded data URI (e.g., 'data:image/jpeg;base64,...')")
+
+
+class OCRBoundingBox(BaseModel):
+    """OCR axis-aligned bounds in the sanitized image's pixel coordinates."""
+    x_min: float
+    y_min: float
+    x_max: float
+    y_max: float
+
+
+class OCRObservation(BaseModel):
+    """Text emitted by OCR, preserving its measured confidence and geometry."""
+    token_id: str
+    text: str
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    bounding_box: OCRBoundingBox
+    polygon: Optional[List[List[float]]] = None
+    script: str
 
 
 class TelemetryStages(BaseModel):
@@ -185,21 +207,21 @@ class TelemetryInfo(BaseModel):
 
 class InspectionResponse(BaseModel):
     """
-    Authoritative synchronous inspection response dossier.
-    Conforms strictly to docs/API_CONTRACT.md Section 3.1.
+    Synchronous preliminary screening result from one photographed package panel.
     """
     model_config = ConfigDict(extra="ignore")
 
     inspection_id: str = Field(..., description="Unique inspection identifier (e.g., 'INSP-20260905-8741')")
     timestamp: str = Field(..., description="ISO 8601 UTC timestamp of inspection completion")
-    state: str = Field(..., description="5-State overall compliance outcome")
-    summary_reason: str = Field(..., description="Authoritative statutory summary of inspection outcome")
+    state: str = Field(..., description="Preliminary screening or review outcome")
+    summary_reason: str = Field(..., description="Evidence limits and reason for the screening outcome")
     image_metadata: ImageMetadata = Field(..., description="Forensic metadata and quality scores")
     calibration: CalibrationInfo = Field(..., description="Metric scale calibration parameters")
     declarations: DeclarationsInfo = Field(..., description="Extracted canonical packaging declarations")
     rule_evaluations: RuleEvaluationsGroup = Field(..., description="Statutory rule evaluation outcomes")
     improvement_notice: Optional[ImprovementNoticeInfo] = Field(None, description="Jan Vishwas improvement notice if non-compliant")
     evidence_crops: List[EvidenceCrop] = Field(default_factory=list, description="Visual evidence crops for UI rendering")
+    ocr_observations: List[OCRObservation] = Field(default_factory=list, description="All actual OCR observations, separate from derived declaration labels")
     telemetry: TelemetryInfo = Field(..., description="Latency telemetry breakdown")
 
 
@@ -242,8 +264,8 @@ class HealthResponse(BaseModel):
 class ReportPdfRequest(BaseModel):
     """POST /api/v1/report/pdf request body matching API Contract 3.3."""
     inspection_id: str = Field(..., description="Identifier of completed inspection to render")
-    officer_notes: Optional[str] = Field(None, description="Optional inspecting officer annotations")
-    include_raw_image: bool = Field(True, description="Whether to embed packaging thumbnail in PDF")
+    officer_notes: Optional[str] = Field(None, max_length=2000, description="Unverified operator annotations, rendered as plain text")
+    include_raw_image: bool = Field(True, description="Include a resized sanitized packaging reference image and evidence crops; the original input digest is retained")
 
 
 class EMaapSyncRequest(BaseModel):

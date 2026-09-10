@@ -454,7 +454,8 @@ def test_case_17_usp_exemption_mrp_equals_usp(engine):
         declared_usp_unit=None,
     )
     res = engine.evaluate(decl, inspection_id="CASE-17")
-    assert res.overall_verdict == ComplianceState.COMPLIANT
+    assert res.overall_verdict == ComplianceState.UNCERTAIN
+    assert next(r for r in res.rule_evaluations if r.rule_id == "LMPC-R07-FONT-001").status == "REVIEW"
     usp_eval = next(r for r in res.rule_evaluations if r.rule_id == "LMPC-R06-USP-001")
     assert usp_eval.is_compliant is True
     assert "proviso (c)" in usp_eval.notes.lower()
@@ -521,8 +522,9 @@ def test_case_20_cement_fertilizer_rule_3_exception(engine):
         declared_usp_unit="kg",
     )
     res = engine.evaluate(decl, inspection_id="CASE-20")
-    # Cement is NOT excluded -> evaluated under Chapter II retail rules -> COMPLIANT
-    assert res.overall_verdict == ComplianceState.COMPLIANT
+    # Cement is not excluded; font height still requires measurement.
+    assert res.overall_verdict == ComplianceState.UNCERTAIN
+    assert next(r for r in res.rule_evaluations if r.rule_id == "LMPC-R07-FONT-001").status == "REVIEW"
 
 
 # ---------------------------------------------------------------------------
@@ -561,8 +563,9 @@ def test_case_22_gsr_881e_pan_masala_non_exemption(engine):
         consumer_care_phone="1800-44-1122",
     )
     res = engine.evaluate(decl, inspection_id="CASE-22")
-    # Must NOT be exempt; must evaluate declarations
-    assert res.overall_verdict == ComplianceState.COMPLIANT
+    # Must not be exempt; unmeasured font height prevents overall compliance.
+    assert res.overall_verdict == ComplianceState.UNCERTAIN
+    assert next(r for r in res.rule_evaluations if r.rule_id == "LMPC-R07-FONT-001").status == "REVIEW"
     gsr_eval = next(r for r in res.rule_evaluations if r.rule_id == "LMPC-R26-GSR881E-CARVEOUT")
     assert gsr_eval.is_compliant is True
 

@@ -1,16 +1,7 @@
-"""
-Multi-Page Statutory Inspection Dossier Compiler
-================================================
-Generates comprehensive 4-page court-admissible inspection dossiers conforming
-to the Legal Metrology Act, 2009, Packaged Commodities Rules, 2011, and the
-Bharatiya Sakshya Adhiniyam, 2023 (BSA).
+"""Render a multipage, unsigned draft from supplied packaging observations.
 
-Dossier Structure:
-    - Page 1: Executive Adjudication Summary & Packaging Inspection Exhibit
-    - Page 2: Statutory Rule Compliance Matrix & Numeral Font Height Audit
-    - Page 3: Visual Forensic Evidence Crops & Tamper Authentication
-    - Page 4: Section 36(1) Jan Vishwas Improvement Notice & Compounding Ladder
-"""
+The document displays observations and images for human review. It does not
+authenticate evidence, determine penalties, or issue statutory notices."""
 
 from __future__ import annotations
 
@@ -21,6 +12,8 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 from PIL import Image as PILImage
+from .text_safety import DRAFT_NOTICE, join_markup, markup, text
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -75,7 +68,7 @@ class MultiPageDossierPayload:
     evidence_exhibits: List[DossierEvidenceExhibit]
     improvement_notice_details: Optional[Dict[str, Any]] = None
     forensic_ela_bytes: Optional[bytes] = None
-    forensic_tamper_verdict: str = "CLEAN"
+    forensic_tamper_verdict: str = "NOT_ASSESSED"
 
 
 class MultiPageDossierCompiler:
@@ -162,21 +155,21 @@ class MultiPageDossierCompiler:
             fontName="Helvetica-Bold",
         )
 
-        story: List[Any] = []
+        story: List[Any] = [Paragraph(text(DRAFT_NOTICE), body_style), Spacer(1, 8)]
 
         # ===================================================================
         # PAGE 1: EXECUTIVE SUMMARY & PACKAGING EXHIBIT
         # ===================================================================
-        story.append(Paragraph("DIRECTORATE OF LEGAL METROLOGY", title_style))
+        story.append(Paragraph("METROLENS ASSISTIVE DRAFT", title_style))
         story.append(
             Paragraph(
-                "MINISTRY OF CONSUMER AFFAIRS, FOOD AND PUBLIC DISTRIBUTION, GOVT. OF INDIA",
+                "Preliminary packaging assessment prepared by MetroLens",
                 subtitle_style,
             )
         )
         story.append(Spacer(1, 2 * mm))
         story.append(
-            Paragraph("OFFICIAL STATUTORY INSPECTION ASSESSMENT DOSSIER", h2_style)
+            Paragraph("ASSISTIVE DRAFT INSPECTION ASSESSMENT DOSSIER", h2_style)
         )
         story.append(Spacer(1, 1 * mm))
         story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#0B2545")))
@@ -185,20 +178,20 @@ class MultiPageDossierCompiler:
         # Metadata Header Table
         meta_data = [
             [
-                Paragraph(f"<b>Docket UUID:</b> <code>{payload.inspection_id}</code>", cell_style),
-                Paragraph(f"<b>Inspection Date/Time:</b> {payload.timestamp_ist}", cell_style),
+                Paragraph(text(markup('<b>Docket UUID:</b> <code>{0}</code>', payload.inspection_id)), cell_style),
+                Paragraph(text(markup('<b>Inspection Date/Time:</b> {0}', payload.timestamp_ist)), cell_style),
             ],
             [
                 Paragraph(
-                    f"<b>Officer:</b> {payload.inspector_name} (Badge: {payload.badge_number})",
+                    text(markup('<b>Officer:</b> {0} (Badge: {1})', payload.inspector_name, payload.badge_number)),
                     cell_style,
                 ),
-                Paragraph(f"<b>Jurisdiction:</b> {payload.district}, {payload.state}", cell_style),
+                Paragraph(text(markup('<b>Jurisdiction:</b> {0}, {1}', payload.district, payload.state)), cell_style),
             ],
             [
-                Paragraph(f"<b>Commodity Type:</b> {payload.commodity_category}", cell_style),
+                Paragraph(text(markup('<b>Commodity Type:</b> {0}', payload.commodity_category)), cell_style),
                 Paragraph(
-                    f"<b>Raw Image SHA-256:</b> <code>{payload.raw_image_sha256[:20]}...</code>",
+                    text(markup('<b>Raw Image SHA-256:</b> <code>{0}...</code>', payload.raw_image_sha256[:20])),
                     cell_style,
                 ),
             ],
@@ -223,9 +216,9 @@ class MultiPageDossierCompiler:
         banner_bg = colors.HexColor("#D4EDDA") if is_pass else colors.HexColor("#F8D7DA")
         banner_fg = colors.HexColor("#155724") if is_pass else colors.HexColor("#721C24")
         verdict_text = (
-            "STATUTORY VERDICT: ALL MANDATORY DECLARATIONS CONFORMANT"
+            "IMAGE-BASED ASSESSMENT: ALL MANDATORY DECLARATIONS CONFORMANT"
             if is_pass
-            else "STATUTORY VERDICT: NON-COMPLIANCE DETECTED - IMPROVEMENT NOTICE REQUIRED"
+            else "IMAGE-BASED ASSESSMENT: NON-COMPLIANCE DETECTED - IMPROVEMENT NOTICE REQUIRED"
         )
         v_style = ParagraphStyle(
             "VerdictStyle",
@@ -236,7 +229,7 @@ class MultiPageDossierCompiler:
             alignment=1,
             textColor=banner_fg,
         )
-        t_verdict = Table([[Paragraph(verdict_text, v_style)]], colWidths=[180 * mm])
+        t_verdict = Table([[Paragraph(text(verdict_text), v_style)]], colWidths=[180 * mm])
         t_verdict.setStyle(
             TableStyle(
                 [
@@ -263,22 +256,18 @@ class MultiPageDossierCompiler:
             story.append(rl_img)
             story.append(Spacer(1, 1 * mm))
             caption = (
-                f"<i>Exhibit 1.0: Primary Photograph of Packaging Exhibit (Scale: {disp_w/mm:.1f}mm x {disp_h/mm:.1f}mm). "
-                f"Principal Display Panel Area: {payload.pdp_area_sqcm or 'N/A'} sq cm.</i>"
+                markup('<i>Exhibit 1.0: Primary Photograph of Packaging Exhibit (Scale: {0:.1f}mm x {1:.1f}mm). Principal Display Panel Area: {2} sq cm.</i>', disp_w / mm, disp_h / mm, payload.pdp_area_sqcm or 'N/A')
             )
-            story.append(Paragraph(caption, cell_style))
+            story.append(Paragraph(text(caption), cell_style))
         except Exception:
             story.append(Paragraph("<i>[Image display unavailable]</i>", cell_style))
 
         story.append(Spacer(1, 4 * mm))
         # Statutory Summary Note
         p1_note = (
-            "<b>Adjudication Preamble:</b> This automated inspection dossier was executed in accordance with "
-            "Rule 33 of the Legal Metrology (Packaged Commodities) Rules, 2011 and Section 36(1) of the Legal "
-            "Metrology Act, 2009 (as amended by the Jan Vishwas Act). Photographic artifacts have been cryptographically "
-            "sealed to guarantee chain of custody under Section 63 of the Bharatiya Sakshya Adhiniyam, 2023."
+            markup('<b>Assessment scope:</b> This assistive draft summarizes supplied observations. It does not establish legal non-compliance, certify custody, or issue a notice.')
         )
-        story.append(Paragraph(p1_note, body_style))
+        story.append(Paragraph(text(p1_note), body_style))
 
         # ===================================================================
         # PAGE 2: STATUTORY COMPLIANCE MATRIX & FONT AUDIT
@@ -308,22 +297,18 @@ class MultiPageDossierCompiler:
         for item in payload.declarations_table:
             c_flag = item.get("is_compliant", False)
             status_text = (
-                "<font color='#155724'><b>PASS</b></font>"
-                if c_flag
-                else "<font color='#721C24'><b>FAIL</b></font>"
+                markup("<font color='#155724'><b>PASS</b></font>") if c_flag else markup("<font color='#721C24'><b>FAIL</b></font>")
             )
             matrix_rows.append(
                 [
-                    Paragraph(item.get("citation", "Rule 6"), cell_style),
-                    Paragraph(item.get("bilingual_label", item.get("term_key", "")), cell_style),
+                    Paragraph(text(item.get('citation', 'Rule 6')), cell_style),
+                    Paragraph(text(item.get('bilingual_label', item.get('term_key', ''))), cell_style),
                     Paragraph(
-                        BilingualTypographyEngine.sanitize_for_pdf(
-                            item.get("declared_value", "NOT DETECTED")
-                        ),
+                        text(BilingualTypographyEngine.sanitize_for_pdf(item.get('declared_value', 'NOT DETECTED'))),
                         cell_style,
                     ),
-                    Paragraph(status_text, cell_style),
-                    Paragraph(item.get("specific_defect") or "Meets statutory requirements", cell_style),
+                    Paragraph(text(status_text), cell_style),
+                    Paragraph(text(item.get('specific_defect') or 'No explanation supplied; review required'), cell_style),
                 ]
             )
 
@@ -349,15 +334,9 @@ class MultiPageDossierCompiler:
         story.append(Paragraph("Principal Display Panel (PDP) & Numeral Font Height Audit", h2_style))
         story.append(Spacer(1, 2 * mm))
         pdp_txt = (
-            f"• <b>Calculated PDP Area:</b> {payload.pdp_area_sqcm or 'Indeterminate'} cm²<br/>"
-            f"• <b>Optical Calibration Factor:</b> {payload.metric_scale_mm_per_px or 'Uncalibrated'} mm/pixel<br/>"
-            "• <b>Statutory Standard:</b> Under Table I of Rule 7(1), packages with PDP area between 100 cm² and 500 cm² "
-            "require a minimum numeral height of <b>2.0 mm</b> (or <b>4.0 mm</b> if embossed/blown). Packages exceeding "
-            "500 cm² require a minimum numeral height of <b>4.0 mm</b>.<br/>"
-            "• <b>GSR 881(E) Unit Sale Price (USP) Requirement:</b> All packaged commodities exceeding 1 kg/1 L must "
-            "display USP in terms of 'per kg' or 'per L'. Packages under 1 kg/1 L must display USP in 'per g' or 'per ml'."
+            markup("• <b>Calculated PDP Area:</b> {0} cm²<br/>• <b>Optical Calibration Factor:</b> {1} mm/pixel<br/>• <b>Statutory Standard:</b> Under Table I of Rule 7(1), packages with PDP area between 100 cm² and 500 cm² require a minimum numeral height of <b>2.0 mm</b> (or <b>4.0 mm</b> if embossed/blown). Packages exceeding 500 cm² require a minimum numeral height of <b>4.0 mm</b>.<br/>• <b>GSR 881(E) Unit Sale Price (USP) Requirement:</b> All packaged commodities exceeding 1 kg/1 L must display USP in terms of 'per kg' or 'per L'. Packages under 1 kg/1 L must display USP in 'per g' or 'per ml'.", payload.pdp_area_sqcm or 'Indeterminate', payload.metric_scale_mm_per_px or 'Uncalibrated')
         )
-        story.append(Paragraph(pdp_txt, body_style))
+        story.append(Paragraph(text(pdp_txt), body_style))
 
         # ===================================================================
         # PAGE 3: FORENSIC EVIDENCE EXHIBITS & CROPS
@@ -366,7 +345,7 @@ class MultiPageDossierCompiler:
         story.append(Paragraph("PAGE 3: VISUAL FORENSIC EVIDENCE EXHIBITS", h2_style))
         story.append(
             Paragraph(
-                "High-Resolution Cropped Macro Panels with Cryptographic Verification",
+                "Supplied image crops and observations; authenticity not certified",
                 subtitle_style,
             )
         )
@@ -383,14 +362,9 @@ class MultiPageDossierCompiler:
                     ex_img = Paragraph("<i>[Exhibit image error]</i>", cell_style)
 
                 ex_details = (
-                    f"<b>Exhibit 3.{idx}: {ex.title}</b><br/>"
-                    f"<b>Declaration Category:</b> {ex.declaration_type}<br/>"
-                    f"<b>Extracted Text:</b> <code>{BilingualTypographyEngine.sanitize_for_pdf(ex.ocr_text)}</code><br/>"
-                    f"<b>Measured Font Height:</b> {ex.font_height_mm or 'N/A'} mm "
-                    f"(Min Required: {ex.required_min_height_mm or 'N/A'} mm)<br/>"
-                    f"<b>Defect Assessment:</b> {ex.defect_reason or 'None'}"
+                    markup('<b>Exhibit 3.{0}: {1}</b><br/><b>Declaration Category:</b> {2}<br/><b>Extracted Text:</b> <code>{3}</code><br/><b>Measured Font Height:</b> {4} mm (Min Required: {5} mm)<br/><b>Defect Assessment:</b> {6}', idx, ex.title, ex.declaration_type, BilingualTypographyEngine.sanitize_for_pdf(ex.ocr_text), ex.font_height_mm or 'N/A', ex.required_min_height_mm or 'N/A', ex.defect_reason or 'None')
                 )
-                t_ex = Table([[ex_img, Paragraph(ex_details, cell_style)]], colWidths=[65 * mm, 115 * mm])
+                t_ex = Table([[ex_img, Paragraph(text(ex_details), cell_style)]], colWidths=[65 * mm, 115 * mm])
                 t_ex.setStyle(
                     TableStyle(
                         [
@@ -417,18 +391,16 @@ class MultiPageDossierCompiler:
         story.append(Paragraph("Digital Media Authentication & Forensic Tamper Gate", h2_style))
         story.append(Spacer(1, 1 * mm))
         ela_summary = (
-            f"• <b>Error Level Analysis (ELA) Verdict:</b> <b>{payload.forensic_tamper_verdict}</b><br/>"
-            "• <b>Decompression Bomb Firewall:</b> PASSED (&lt; 64 Megapixels)<br/>"
-            "• <b>Container Sanitization:</b> EXIF/GPS metadata stripped to protect privacy; zero unauthorized script chunks."
+            markup('<b>Reported forensic assessment:</b> {0}<br/>This compiler does not independently verify capture authenticity, ingestion controls, or metadata sanitization.', payload.forensic_tamper_verdict)
         )
-        story.append(Paragraph(ela_summary, body_style))
+        story.append(Paragraph(text(ela_summary), body_style))
 
         # ===================================================================
         # PAGE 4: SECTION 36(1) JAN VISHWAS NOTICE & COMPOUNDING LADDER
         # ===================================================================
         story.append(PageBreak())
         story.append(
-            Paragraph("PAGE 4: STATUTORY NOTICE & ADJUDICATION LADDER", h2_style)
+            Paragraph("PAGE 4: PROPOSED FOLLOW-UP FOR HUMAN REVIEW", h2_style)
         )
         story.append(
             Paragraph(
@@ -442,25 +414,11 @@ class MultiPageDossierCompiler:
 
         if not is_pass:
             # Section 36(1) Formal Improvement Notice Box
-            cure_days = 15
-            deadline_date = (datetime.datetime.now() + datetime.timedelta(days=cure_days)).strftime("%d-%b-%Y")
 
             notice_p = (
-                "<b>STATUTORY IMPROVEMENT NOTICE</b><br/>"
-                "<i>Issued under Section 36(1) of the Legal Metrology Act, 2009 (as amended by the Jan Vishwas Act, 2023)</i><br/><br/>"
-                f"<b>TO:</b> The Manufacturer / Packer / Importer of Commodity Docket <code>{payload.inspection_id}</code><br/>"
-                f"<b>NOTICE REFERENCE:</b> IN/LM/{payload.district[:3].upper()}/{payload.inspection_id[:8]}<br/>"
-                f"<b>DATE OF ISSUANCE:</b> {payload.timestamp_ist}<br/>"
-                f"<b>STATUTORY CURE PERIOD:</b> <b>{cure_days} Calendar Days (Compliance Due By: {deadline_date})</b><br/><br/>"
-                "WHEREAS an automated and officer-supervised inspection of your pre-packaged commodity established "
-                "the statutory non-compliances detailed on Page 2 and Page 3 of this Dossier;<br/>"
-                "NOW THEREFORE, in accordance with the amended provisions of Section 36(1), you are hereby given an opportunity "
-                f"to <b>cure and rectify the said non-compliances within {cure_days} days</b> from the date of this Notice.<br/>"
-                "If the defective packaging is rectified within the stipulated cure period, no compounding fee or further "
-                "prosecution proceedings shall be initiated. Failure to remedy within the cure period shall result in automatic "
-                "escalation to the Adjudicating Officer under Section 48 for statutory penalty determination."
+                markup('<b>DRAFT IMPROVEMENT NOTICE — NOT ISSUED</b><br/>Inspection reference: {0}<br/>An authorized officer must verify the evidence and applicable law, determine any cure period, and approve and serve any notice. This document creates no deadline, penalty, or automatic escalation.', payload.inspection_id)
             )
-            t_notice = Table([[Paragraph(notice_p, cell_style)]], colWidths=[180 * mm])
+            t_notice = Table([[Paragraph(text(notice_p), cell_style)]], colWidths=[180 * mm])
             t_notice.setStyle(
                 TableStyle(
                     [
@@ -474,56 +432,18 @@ class MultiPageDossierCompiler:
             story.append(t_notice)
             story.append(Spacer(1, 4 * mm))
 
-        # Compounding Penalty Ladder Schedule
-        story.append(Paragraph("Statutory Penalty Ladder (Jan Vishwas Act, 2026 — Section 36(1))", h2_style))
-        ladder_data = [
-            [
-                Paragraph("<b>Offense Classification</b>", cell_bold),
-                Paragraph("<b>Statutory Section</b>", cell_bold),
-                Paragraph("<b>Civil Penalty Quantum</b>", cell_bold),
-                Paragraph("<b>Judicial Terms</b>", cell_bold),
-            ],
-            [
-                Paragraph("First Statutory Non-Compliance", cell_style),
-                Paragraph("Section 36(1)", cell_style),
-                Paragraph("Improvement Notice (<b>₹0 initial fine</b>)", cell_style),
-                Paragraph("Reasonable cure period (15 days demonstration default); compounding under Sec 48 if unrectified", cell_style),
-            ],
-            [
-                Paragraph("Second Non-Compliance (Repeat Offense)", cell_style),
-                Paragraph("Section 36(1) & 48A", cell_style),
-                Paragraph("Penalty up to <b>Rs. 5,00,000</b>", cell_style),
-                Paragraph("Adjudication under Section 48A; non-compoundable under Sec 48(2)", cell_style),
-            ],
-            [
-                Paragraph("Subsequent Non-Compliance (3rd+ Offense)", cell_style),
-                Paragraph("Section 36(1) & 48A", cell_style),
-                Paragraph("Penalty: <b>Rs. 25,00,000 to Rs. 50,00,000</b>", cell_style),
-                Paragraph("Adjudication under Section 48A for repeat offenders", cell_style),
-            ],
-        ]
-        t_ladder = Table(ladder_data, colWidths=[45 * mm, 35 * mm, 45 * mm, 55 * mm])
-        t_ladder.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EEF4F8")),
-                    ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
-                    ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
-                    ("TOPPADDING", (0, 0), (-1, -1), 3),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-                ]
-            )
-        )
-        story.append(t_ladder)
+        story.append(Paragraph("Further Action Requires Authorized Review", h2_style))
+        story.append(Paragraph(
+            "This draft does not determine penalties, compounding eligibility, or statutory deadlines. "
+            "An authorized reviewer must verify the evidence, jurisdiction, prior history and current "
+            "applicable law before preparing or serving any notice.", body_style))
         story.append(Spacer(1, 6 * mm))
 
         # Final Sign-Off Block
         sign_block = [
             [
                 Paragraph(
-                    f"<b>Inspecting Officer:</b> {payload.inspector_name}<br/>"
-                    f"<b>Badge Number:</b> {payload.badge_number}<br/>"
-                    f"<b>Office:</b> Directorate of Legal Metrology, {payload.district}, {payload.state}",
+                    text(markup('<b>Supplied operator (unverified):</b> {0}<br/><b>Badge Number:</b> {1}<br/><b>Office:</b> Directorate of Legal Metrology, {2}, {3}', payload.inspector_name, payload.badge_number, payload.district, payload.state)),
                     cell_style,
                 ),
                 Paragraph(

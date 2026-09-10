@@ -10,9 +10,6 @@ Verifies:
 import json
 from datetime import datetime, timezone
 import pytest
-from fastapi.testclient import TestClient
-
-from apps.api.main import app
 from nirikshak_shared.models.contracts import (
     InspectionRequest,
     InspectionResult,
@@ -36,8 +33,8 @@ from nirikshak_rules_engine import (
 
 
 @pytest.fixture
-def api_client():
-    return TestClient(app)
+def api_client(guarded_api):
+    return guarded_api.client
 
 
 @pytest.fixture
@@ -68,12 +65,12 @@ def test_rule_engine_to_shared_contracts_mapping(statutory_engine):
     )
 
     result: ComplianceEvaluationResult = statutory_engine.evaluate(decl, inspection_id="INSP-INTEG-001")
-    assert result.overall_verdict == ComplianceState.COMPLIANT
+    assert result.overall_verdict == ComplianceState.UNCERTAIN
 
     # Convert to shared contracts
     shared_rule_evals = []
     for rec in result.rule_evaluations:
-        verdict_enum = RuleVerdict.PASS if rec.is_compliant else RuleVerdict.FAIL
+        verdict_enum = RuleVerdict(rec.status)
         shared_rule_evals.append(
             RuleEvaluation(
                 rule_id=rec.rule_id,
@@ -87,15 +84,16 @@ def test_rule_engine_to_shared_contracts_mapping(statutory_engine):
         )
 
     assert len(shared_rule_evals) >= 8
+    assert next(r for r in shared_rule_evals if r.rule_id == "LMPC-R07-FONT-001").verdict == RuleVerdict.REVIEW
 
     # Create canonical InspectionResult
     inspection_result = InspectionResult(
         inspection_id=result.inspection_id,
-        status=InspectionStatus.SUCCESS,
+        status=InspectionStatus.NEEDS_HUMAN_REVIEW,
         image_sha256="a" * 64,
-        overall_verdict=OverallVerdict.COMPLIANT,
+        overall_verdict=OverallVerdict.INCONCLUSIVE,
         quality_gate_passed=True,
-        calibration_status=CalibrationStatus.CALIBRATED,
+        calibration_status=CalibrationStatus.UNCALIBRATED,
         rule_evaluations=shared_rule_evals,
     )
 
@@ -103,14 +101,15 @@ def test_rule_engine_to_shared_contracts_mapping(statutory_engine):
     dumped_json = inspection_result.model_dump_json()
     parsed_dict = json.loads(dumped_json)
     assert parsed_dict["inspection_id"] == "INSP-INTEG-001"
-    assert parsed_dict["overall_verdict"] == "COMPLIANT"
+    assert parsed_dict["overall_verdict"] == "INCONCLUSIVE"
+    assert parsed_dict["status"] == "NEEDS_HUMAN_REVIEW"
+    assert parsed_dict["calibration_status"] == "UNCALIBRATED"
     assert len(parsed_dict["rule_evaluations"]) >= 8
 
 
-def test_fastapi_inspection_roundtrip(api_client, statutory_engine):
+def test_structured_inspection_cannot_invent_completed_evidence(api_client):
     """
-    Verifies that FastAPI /api/v1/inspections accepts an InspectionRequest
-    and successfully serializes an InspectionResult containing rule evaluations.
+    Caller-provided IDs and digests cannot create a completed assessment.
     """
     request_payload = {
         "inspection_id": "INSP-API-TEST-002",
@@ -119,10 +118,8 @@ def test_fastapi_inspection_roundtrip(api_client, statutory_engine):
     }
 
     response = api_client.post("/api/v1/inspections", json=request_payload)
-    assert response.status_code == 202
-    data = response.json()
-    assert data["inspection_id"] == "INSP-API-TEST-002"
-    assert data["status"] == "SUCCESS"
+    assert response.status_code == 501
+    assert api_client.get("/api/v1/inspections/INSP-API-TEST-002").status_code == 404
 
 
 def test_non_compliant_engine_notice_serialization(statutory_engine):

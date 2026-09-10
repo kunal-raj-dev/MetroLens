@@ -3,12 +3,19 @@ Smoke test for nirikshak-api FastAPI application.
 """
 
 from fastapi.testclient import TestClient
+import pytest
 from apps.api.main import app
 
-client = TestClient(app)
+@pytest.fixture
+def client(monkeypatch):
+    from apps.api.middleware.rate_limit import rate_limiter
+    key = "local-smoke-test-service-key-" + "x" * 40
+    monkeypatch.setenv("METROLENS_API_KEY", key)
+    rate_limiter.reset_all()
+    return TestClient(app, headers={"Authorization": f"Bearer {key}"})
 
 
-def test_health_check():
+def test_health_check(client):
     response = client.get("/health")
     assert response.status_code == 200
     data = response.json()
@@ -16,15 +23,12 @@ def test_health_check():
     assert data["service"] in ["nirikshak-api", "metrolens-api"]
 
 
-def test_get_inspection_endpoint():
+def test_get_unknown_inspection_never_fabricates_a_result(client):
     response = client.get("/api/v1/inspections/insp_123")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["inspection_id"] == "insp_123"
-    assert data["status"] == "SUCCESS"
+    assert response.status_code == 404
 
 
-def test_inspect_upload_endpoint_valid_image():
+def test_inspect_upload_rejects_image_below_minimum_resolution(client):
     import cv2
     import numpy as np
     import io
@@ -41,22 +45,19 @@ def test_inspect_upload_endpoint_valid_image():
     response = client.post(
         "/api/v1/inspect",
         files={"file": file_payload},
-        data={"anchor_type": "AUTO", "officer_id": "TEST-OFFICER-42"},
+        data={"anchor_type": "NONE"},
     )
-    assert response.status_code == 200
+    assert response.status_code == 422
     data = response.json()
-    assert "inspection_id" in data
-    assert data["quality_gate_passed"] is True
-    assert "overall_verdict" in data
-    assert "telemetry" in data
+    assert data["error"]["code"] == "IMAGE_RESOLUTION_TOO_LOW"
 
 
-def test_inspect_upload_corrupt_payload():
+def test_inspect_upload_corrupt_payload(client):
     corrupt_bytes = b"NOT_A_VALID_IMAGE_HEADER_AT_ALL"
     response = client.post(
         "/api/v1/inspect",
         files={"file": ("bad.jpg", corrupt_bytes, "image/jpeg")},
     )
-    assert response.status_code == 400
-    assert "detail" in response.json()
+    assert response.status_code == 415
+    assert response.json()["error"]["code"] == "UNSUPPORTED_MEDIA_TYPE"
 

@@ -1,19 +1,8 @@
-"""
-End-to-End Judicial Prosecution & Enforcement Scenarios Test Suite
-==================================================================
-Comprehensive scenario test suite simulating realistic multi-party statutory
-enforcement workflows under the Legal Metrology Act, 2009, Packaged Commodities
-Rules, 2011, and Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS).
+"""Isolated reporting, geometry, and legacy enforcement-helper regressions.
 
-Scenarios Covered:
-------------------
-1. Short-Weight Edible Oil Seizure & BNSS Complaint Filing before Judicial Magistrate.
-2. FMCG Rule 6 Declaration Omission & Section 48 Compounding with Cyber Treasury Reconciliation.
-3. Industrial Recidivist (IS 1489 Cement): 3-Year Lookback Bar & Mandatory Criminal Trial.
-4. E-Commerce Dark Store Raid & Section 49 Form I Corporate Director Liability Attribution.
-5. Unregistered Corporate Packer: Arraignment of Managing Director under Section 49(1) Proviso.
-6. Multi-Node Cluster Failover & Event Sourcing Audit Chain Replay.
-7. Full-Spectrum Physical Metrology Inspection Pipeline (Unwrapping + Stroke Profiling + Barcode + PDF).
+These fixtures exercise helper modules, not a mounted officer, prosecution,
+government integration, or complete physical-metrology workflow. Passing tests
+does not verify statutory sources or establish production legal authority.
 """
 
 import datetime

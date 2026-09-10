@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import os
+import secrets
 import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -61,9 +62,13 @@ class OfficerTokenManager:
     """
 
     def __init__(self, signing_secret_key: Optional[bytes] = None) -> None:
-        self.signing_secret_key = signing_secret_key or os.environ.get(
-            "METROLENS_AUTH_SECRET", "DEV_AUTH_SECRET_KEY_METROLENS_2026"
-        ).encode("utf-8")
+        configured = os.environ.get("METROLENS_AUTH_SECRET")
+        key = signing_secret_key if signing_secret_key is not None else (
+            configured.encode("utf-8") if configured is not None else secrets.token_bytes(32)
+        )
+        if len(key) < 32:
+            raise ValueError("Token signing keys must contain at least 32 bytes.")
+        self.signing_secret_key = key
 
     def issue_token(
         self,
@@ -99,6 +104,8 @@ class OfficerTokenManager:
         Returns:
             Tuple of (Optional[OfficerSessionContext], Optional[error_reason])
         """
+        if len(token_str) > 8192 or not token_str.isascii():
+            return None, "Invalid token encoding or length."
         parts = token_str.strip().split(".")
         if len(parts) != 2:
             return None, "Invalid token structure (expected payload.signature)."
@@ -123,11 +130,20 @@ class OfficerTokenManager:
         except Exception as exc:
             return None, f"Failed to parse token payload: {str(exc)}"
 
-        exp = float(data.get("exp", 0))
+        try:
+            if not isinstance(data, dict):
+                return None, "Invalid token payload."
+            exp = float(data.get("exp", 0))
+            issued_at = float(data.get("iat", 0))
+            import math
+            if not math.isfinite(exp) or not math.isfinite(issued_at) or not isinstance(data.get("roles", []), list):
+                return None, "Invalid token claims."
+        except (TypeError, ValueError):
+            return None, "Invalid token claims."
         if time.time() > exp:
             return None, "Officer session token has expired."
 
-        role_objs = [OfficerRole(r) for r in data.get("roles", []) if r in OfficerRole._value2member_map_]
+        role_objs = [OfficerRole(r) for r in data.get("roles", []) if isinstance(r, str) and r in OfficerRole._value2member_map_]
 
         context = OfficerSessionContext(
             officer_id=data.get("sub", ""),
@@ -135,7 +151,7 @@ class OfficerTokenManager:
             badge_number=data.get("badge", ""),
             jurisdiction_code=data.get("jurisdiction", ""),
             roles=role_objs,
-            issued_at_epoch=float(data.get("iat", 0)),
+            issued_at_epoch=issued_at,
             expires_at_epoch=exp,
         )
 

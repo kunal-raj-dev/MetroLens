@@ -1,30 +1,19 @@
-"""
-Nirikshak Evidentiary PDF Assessment Report Compiler.
-Generates official, court-admissible "Image-Based Compliance Assessment Report" PDF dossiers
-conforming to ADR-007, ADR-010, and docs/API_CONTRACT.md Section 3.3.
+"""Render unsigned, preliminary packaging-assessment PDFs from supplied inspection results.
 
-Features:
-1. Two-pass NumberedCanvas embedding "Page X of Y", running headers, and security micro-print borders.
-2. Cryptographic Chain of Custody (Section 63 BSA / 65B Indian Evidence Act):
-   - Raw image SHA-256 hash.
-   - Crop SHA-256 digests.
-   - UTC ISO-8601 timestamp.
-   - Ruleset commit SHA.
-   - Embedded QR code for cryptographic verification.
-3. 5-State Statutory Compliance Matrix (Rules 3, 6, 7, 11, 26 of LM(PC) Rules, 2011).
-4. Section 36(1) Jan Vishwas Act 2026 Improvement Notice official draft with 15-day cure window.
-5. Visual Evidence Crops rendering with bounding boxes and calibrated millimeter callouts.
-6. Statutory disclaimer under Section 15 of the Legal Metrology Act, 2009.
-7. Sub-500ms compilation speed on standard CPU hardware.
-"""
+Input digests and application timestamps are recorded references, not signatures or
+proof of lawful custody. Configured rule findings require authorized human review.
+Text values are escaped before entering ReportLab paragraph markup."""
 
 import io
 import time
 import hashlib
 import base64
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
+
+from .text_safety import DRAFT_NOTICE, join_markup, markup, text
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -81,42 +70,42 @@ class NumberedCanvas(canvas.Canvas):
 
     def draw_page_decorations(self, page_count: int):
         self.saveState()
+        page_width, page_height = self._pagesize
         self.setFont("Helvetica", 8)
         self.setFillColor(colors.HexColor("#495057"))
 
         # Running Header (Top)
         self.setStrokeColor(colors.HexColor("#1B365D"))
         self.setLineWidth(1.5)
-        self.line(40, 755, 572, 755)
+        self.line(40, page_height - 37, page_width - 40, page_height - 37)
 
         self.setFont("Helvetica-Bold", 8)
         self.setFillColor(colors.HexColor("#1B365D"))
-        self.drawString(40, 760, "GOVERNMENT OF INDIA • MINISTRY OF CONSUMER AFFAIRS • LEGAL METROLOGY DIVISION")
+        self.drawString(40, page_height - 32, "METROLENS • IMAGE-BASED PACKAGING ASSESSMENT • ASSISTIVE DRAFT")
 
         self.setFont("Helvetica", 7)
         self.setFillColor(colors.HexColor("#6C757D"))
-        self.drawRightString(572, 760, "MetroLens AI™ Evidentiary Perception System")
 
         # Running Footer (Bottom)
         self.setStrokeColor(colors.HexColor("#DEE2E6"))
         self.setLineWidth(0.75)
-        self.line(40, 42, 572, 42)
+        self.line(40, 42, page_width - 40, 42)
 
-        page_str = f"Page {self._pageNumber} of {page_count}"
-        self.drawString(40, 32, "Confidential • Legal Metrology Assessment Screening (Section 15, Act 1 of 2010)")
-        self.drawRightString(572, 32, page_str)
+        page_str = markup('Page {0} of {1}', self._pageNumber, page_count)
+        self.drawString(40, 32, "Preliminary image-based screening • Not a legal determination")
+        self.drawRightString(page_width - 40, 32, page_str)
 
         # Micro-print security watermark in bottom-center
         self.setFont("Helvetica", 6)
         self.setFillColor(colors.HexColor("#ADB5BD"))
-        self.drawCentredString(306, 22, "AUTHENTIC DIGITAL RECORD • SECTION 63 BSA / 65B IEA COMPLIANT • TAMPER SEAL VERIFIED")
+        self.drawCentredString(page_width / 2, 22, "UNSIGNED DRAFT • AUTHORIZED HUMAN REVIEW REQUIRED • NO STATUTORY NOTICE ISSUED")
 
         self.restoreState()
 
 
 class PDFReportCompiler:
     """
-    High-performance, court-admissible PDF report compiler.
+    High-performance, assistive draft PDF report compiler.
     Compiles full evidentiary dossiers in < 500ms on standard CPU.
     """
 
@@ -253,14 +242,14 @@ class PDFReportCompiler:
 
         return custom
 
-    def _sanitize_currency_symbol(self, text: Optional[str]) -> str:
+    def _sanitize_currency_symbol(self, value: object) -> str:
         """
         Safely maps Unicode Rupee glyph ('₹') to standard ASCII ('Rs. ')
         to guarantee 100% crash-free rendering regardless of host OS font availability.
         """
-        if not text:
-            return ""
-        return text.replace("₹", "Rs. ")
+        if value is None:
+            return "Not supplied"
+        return str(value).replace("₹", "Rs. ")
 
     def _generate_qr_flowable(self, verification_payload: str, size_inches: float = 1.0) -> RLImage:
         """Generates a tamper-evident QR code image flowable from payload string."""
@@ -289,40 +278,45 @@ class PDFReportCompiler:
         elements = []
 
         # Title Block
-        title_text = "METROLENS AI™ • EVIDENTIARY COMPLIANCE ASSESSMENT REPORT"
-        elements.append(Paragraph(title_text, self.styles["DocTitle"]))
+        title_text = "METROLENS • PRELIMINARY PACKAGING ASSESSMENT"
+        elements.append(Paragraph(text(title_text), self.styles["DocTitle"]))
         sub_text = (
-            "Statutory Inspection & Metrological Verification Screening Report under "
-            "the Legal Metrology Act, 2009 & Packaged Commodities Rules, 2011"
+            "Automated image-based screening using configured packaging rules. "
+            "All findings require authorized human review and verification of applicable law."
         )
-        elements.append(Paragraph(sub_text, self.styles["DocSubtitle"]))
+        elements.append(Paragraph(text(sub_text), self.styles["DocSubtitle"]))
 
         # Metadata & QR Code Header Grid
-        now_utc = result.timestamp_utc or datetime.now(timezone.utc).isoformat()
-        clean_sha = result.sha256_hash or ("0" * 64)
-        verification_url = f"https://emaap.gov.in/verify?insp={result.inspection_id}&sha={clean_sha[:16]}"
-        qr_flowable = self._generate_qr_flowable(verification_url, size_inches=1.1)
+        now_utc = result.timestamp_utc or "Not recorded"
+        clean_sha = result.sha256_hash or "Not recorded"
+        # Local identifiers only: this QR is not an official verification service.
+        verification_payload = json.dumps({
+            "document_type": "assistive_draft",
+            "inspection_id": result.inspection_id,
+            "input_sha256": clean_sha,
+        }, ensure_ascii=True)
+        qr_flowable = self._generate_qr_flowable(verification_payload, size_inches=1.1)
 
         meta_rows = [
             [
                 Paragraph("<b>Inspection ID:</b>", self.styles["TableCellBold"]),
-                Paragraph(str(result.inspection_id), self.styles["TableCell"]),
+                Paragraph(text(str(result.inspection_id)), self.styles["TableCell"]),
                 Paragraph("<b>Date & Time (UTC):</b>", self.styles["TableCellBold"]),
-                Paragraph(now_utc[:19].replace("T", " "), self.styles["TableCell"]),
+                Paragraph(text(now_utc[:19].replace('T', ' ')), self.styles["TableCell"]),
                 qr_flowable,
             ],
             [
-                Paragraph("<b>Inspecting Officer:</b>", self.styles["TableCellBold"]),
-                Paragraph(officer_id or "OFFICER-CENTRAL-01", self.styles["TableCell"]),
+                Paragraph("<b>Operator (unverified):</b>", self.styles["TableCellBold"]),
+                Paragraph(text(officer_id or 'Not verified'), self.styles["TableCell"]),
                 Paragraph("<b>Jurisdiction Code:</b>", self.styles["TableCellBold"]),
-                Paragraph(jurisdiction_code or "DL-CENTRAL-ZONE", self.styles["TableCell"]),
+                Paragraph(text(jurisdiction_code or 'Not verified'), self.styles["TableCell"]),
                 "",
             ],
             [
                 Paragraph("<b>Ruleset Version:</b>", self.styles["TableCellBold"]),
-                Paragraph("2026.09-JanVishwas-v1.0", self.styles["TableCell"]),
-                Paragraph("<b>Evidence Standard:</b>", self.styles["TableCellBold"]),
-                Paragraph("Sec 63 BSA / 65B IEA", self.styles["TableCell"]),
+                Paragraph("Not recorded", self.styles["TableCell"]),
+                Paragraph("<b>Document Status:</b>", self.styles["TableCellBold"]),
+                Paragraph("Unsigned assistive draft", self.styles["TableCell"]),
                 "",
             ],
         ]
@@ -347,22 +341,22 @@ class PDFReportCompiler:
         verdict = getattr(result.overall_verdict, "value", str(result.overall_verdict))
         if verdict in ("COMPLIANT", ComplianceState.GREEN.value):
             badge_color = self.COLOR_COMPLIANT
-            badge_text = "STATUTORY VERDICT: COMPLIANT (NO IMAGE-VERIFIABLE INFRACTIONS)"
+            badge_text = "IMAGE-BASED ASSESSMENT: NO IMAGE-VERIFIABLE VIOLATION DETECTED"
         elif verdict in ("NON_COMPLIANT", ComplianceState.RED.value):
             badge_color = self.COLOR_VIOLATION
-            badge_text = "STATUTORY VERDICT: POTENTIAL NON-COMPLIANCE DETECTED"
-        elif verdict in ("DEVIATION_DETECTED", ComplianceState.AMBER.value):
+            badge_text = "IMAGE-BASED ASSESSMENT: POTENTIAL NON-COMPLIANCE DETECTED"
+        elif verdict in ("DEVIATION_DETECTED", "UNCERTAIN", ComplianceState.AMBER.value):
             badge_color = self.COLOR_REVIEW
-            badge_text = "STATUTORY VERDICT: STATUTORY DEVIATION DETECTED (MANUAL REVIEW REQUIRED)"
+            badge_text = "IMAGE-BASED ASSESSMENT: MANUAL REVIEW REQUIRED"
         elif verdict in ("EXEMPTED", ComplianceState.BLUE.value):
             badge_color = self.COLOR_EXEMPT
-            badge_text = "STATUTORY VERDICT: STATUTORY EXEMPTION APPLIED (RULE 3 / RULE 26)"
+            badge_text = "IMAGE-BASED ASSESSMENT: STATUTORY EXEMPTION APPLIED (RULE 3 / RULE 26)"
         else:
             badge_color = self.COLOR_GRAY
-            badge_text = f"STATUTORY VERDICT: {verdict}"
+            badge_text = markup('IMAGE-BASED ASSESSMENT: {0}', verdict)
 
         badge_table = Table(
-            [[Paragraph(badge_text, self.styles["VerdictBadge"])]],
+            [[Paragraph(text(badge_text), self.styles["VerdictBadge"])]],
             colWidths=[532],
             style=[
                 ("BACKGROUND", (0, 0), (-1, -1), badge_color),
@@ -378,7 +372,7 @@ class PDFReportCompiler:
         # Executive Summary Callout
         summary_clean = self._sanitize_currency_symbol(result.primary_legal_summary)
         summary_box = Table(
-            [[Paragraph(f"<b>Executive Summary:</b> {summary_clean}", self.styles["Body"])]],
+            [[Paragraph(text(markup('<b>Executive Summary:</b> {0}', summary_clean)), self.styles["Body"])]],
             colWidths=[532],
             style=[
                 ("BACKGROUND", (0, 0), (-1, -1), self.COLOR_BG_LIGHT),
@@ -396,29 +390,29 @@ class PDFReportCompiler:
 
     def _build_chain_of_custody_section(self, result: ComplianceEvaluationResult) -> List[Any]:
         """Constructs Section 63 BSA / 65B IEA cryptographic integrity block."""
-        elements = [Paragraph("1. Cryptographic Chain of Custody & Tamper Evidence", self.styles["SectionHeading"])]
+        elements = [Paragraph("1. Recorded Evidence References", self.styles["SectionHeading"])]
 
-        sha_clean = result.sha256_hash or ("0" * 64)
+        sha_clean = result.sha256_hash or "Not recorded"
         records = [
             [
                 Paragraph("<b>Evidence Property</b>", self.styles["TableHead"]),
-                Paragraph("<b>Cryptographic Verification Value</b>", self.styles["TableHead"]),
-                Paragraph("<b>Legal Standing</b>", self.styles["TableHead"]),
+                Paragraph("<b>Recorded Value</b>", self.styles["TableHead"]),
+                Paragraph("<b>Interpretation</b>", self.styles["TableHead"]),
             ],
             [
                 Paragraph("Raw Image SHA-256 Digest", self.styles["TableCellBold"]),
-                Paragraph(f"<font face='Courier' size=6.5>{sha_clean}</font>", self.styles["TableCell"]),
-                Paragraph("Original Master Image", self.styles["TableCell"]),
+                Paragraph(text(markup("<font face='Courier' size=6.5>{0}</font>", sha_clean)), self.styles["TableCell"]),
+                Paragraph("Input bytes; source authenticity unverified", self.styles["TableCell"]),
             ],
             [
-                Paragraph("Digital Evidence Signature", self.styles["TableCellBold"]),
-                Paragraph(f"<font face='Courier' size=6.5>{hashlib.sha256((result.inspection_id + sha_clean).encode()).hexdigest()}</font>", self.styles["TableCell"]),
-                Paragraph("HMAC Authenticity Seal", self.styles["TableCell"]),
+                Paragraph("Inspection Reference Digest", self.styles["TableCellBold"]),
+                Paragraph(text(markup("<font face='Courier' size=6.5>{0}</font>", hashlib.sha256((result.inspection_id + sha_clean).encode()).hexdigest())), self.styles["TableCell"]),
+                Paragraph("Unkeyed checksum; no signature", self.styles["TableCell"]),
             ],
             [
                 Paragraph("Perception Engine Timestamp", self.styles["TableCellBold"]),
-                Paragraph(str(result.timestamp_utc or "UTC Timestamp"), self.styles["TableCell"]),
-                Paragraph("Clock Synchronized", self.styles["TableCell"]),
+                Paragraph(text(str(result.timestamp_utc or 'UTC Timestamp')), self.styles["TableCell"]),
+                Paragraph("Recorded by application; unverified clock", self.styles["TableCell"]),
             ],
         ]
 
@@ -459,29 +453,29 @@ class PDFReportCompiler:
                 ],
             ]
         else:
-            scale_str = f"{scale.scale_factor_mm_per_px:.4f} mm/px" if scale.scale_factor_mm_per_px else "Uncalibrated"
-            pdp_str = f"{scale.pdp_area_sqcm:.1f} cm²" if scale.pdp_area_sqcm else "N/A"
+            scale_str = markup('{0:.4f} mm/px', scale.scale_factor_mm_per_px) if scale.scale_factor_mm_per_px else "Uncalibrated"
+            pdp_str = markup('{0:.1f} cm²', scale.pdp_area_sqcm) if scale.pdp_area_sqcm else "N/A"
             anchor_str = scale.anchor_type_detected.replace("_", " ").title() if scale.anchor_type_detected else "None"
-            tilt_str = f"{scale.tilt_angle_deg:.1f}°" if scale.tilt_angle_deg is not None else "0.0°"
+            tilt_str = markup('{0:.1f}°', scale.tilt_angle_deg) if scale.tilt_angle_deg is not None else "0.0°"
 
             rows = [
                 [
                     Paragraph("<b>Calibration Status:</b>", self.styles["TableCellBold"]),
-                    Paragraph("Calibrated" if scale.is_calibrated else "Uncalibrated", self.styles["TableCell"]),
+                    Paragraph(text('Calibrated' if scale.is_calibrated else 'Uncalibrated'), self.styles["TableCell"]),
                     Paragraph("<b>Scale Factor ($S$):</b>", self.styles["TableCellBold"]),
-                    Paragraph(scale_str, self.styles["TableCell"]),
+                    Paragraph(text(scale_str), self.styles["TableCell"]),
                 ],
                 [
                     Paragraph("<b>Anchor Target:</b>", self.styles["TableCellBold"]),
-                    Paragraph(anchor_str, self.styles["TableCell"]),
+                    Paragraph(text(anchor_str), self.styles["TableCell"]),
                     Paragraph("<b>Computed PDP Area:</b>", self.styles["TableCellBold"]),
-                    Paragraph(f"<b>{pdp_str}</b>", self.styles["TableCellBold"]),
+                    Paragraph(text(markup('<b>{0}</b>', pdp_str)), self.styles["TableCellBold"]),
                 ],
                 [
                     Paragraph("<b>Surface Tilt:</b>", self.styles["TableCellBold"]),
-                    Paragraph(tilt_str, self.styles["TableCell"]),
+                    Paragraph(text(tilt_str), self.styles["TableCell"]),
                     Paragraph("<b>Cylindrical Curvature:</b>", self.styles["TableCellBold"]),
-                    Paragraph("Yes (Vertical Invariance Applied)" if scale.is_cylindrical else "No (Planar Face)", self.styles["TableCell"]),
+                    Paragraph(text('Yes (Vertical Invariance Applied)' if scale.is_cylindrical else 'No (Planar Face)'), self.styles["TableCell"]),
                 ],
             ]
 
@@ -526,17 +520,17 @@ class PDFReportCompiler:
             elif r.status == "EXEMPT":
                 status_p = Paragraph("<font color='#0056B3'><b>EXEMPT</b></font>", self.styles["TableCell"])
             else:
-                status_p = Paragraph(f"<b>{r.status}</b>", self.styles["TableCell"])
+                status_p = Paragraph(text(markup('<b>{0}</b>', r.status)), self.styles["TableCell"])
 
-            obs_clean = self._sanitize_currency_symbol(r.observed_value or "None")
-            req_clean = self._sanitize_currency_symbol(r.required_value or "None")
+            obs_clean = self._sanitize_currency_symbol(r.observed_value)
+            req_clean = self._sanitize_currency_symbol(r.required_value)
 
             table_rows.append([
-                Paragraph(r.rule_title, self.styles["TableCellBold"]),
-                Paragraph(r.statutory_reference, self.styles["TableCell"]),
+                Paragraph(text(r.rule_title), self.styles["TableCellBold"]),
+                Paragraph(text(r.statutory_reference), self.styles["TableCell"]),
                 status_p,
-                Paragraph(obs_clean, self.styles["TableCell"]),
-                Paragraph(req_clean, self.styles["TableCell"]),
+                Paragraph(text(obs_clean), self.styles["TableCell"]),
+                Paragraph(text(req_clean), self.styles["TableCell"]),
             ])
 
         table = Table(
@@ -561,28 +555,25 @@ class PDFReportCompiler:
         if not notice or not notice.recommended:
             return []
 
-        elements = [Paragraph("4. Statutory Improvement Notice (Jan Vishwas Act, 2026)", self.styles["SectionHeading"])]
+        elements = [Paragraph("4. Proposed Improvement Notice for Review", self.styles["SectionHeading"])]
 
         grounds_clean = self._sanitize_currency_symbol(notice.statutory_grounds)
         itemized = notice.itemized_violations or []
-        items_p = "<br/>".join(f"• {self._sanitize_currency_symbol(v)}" for v in itemized) if itemized else grounds_clean
+        items_p = join_markup("<br/>", (markup('• {0}', self._sanitize_currency_symbol(v)) for v in itemized)) if itemized else grounds_clean
 
         notice_box_content = [
-            Paragraph("<b>OFFICE OF THE LEGAL METROLOGY OFFICER • STATUTORY IMPROVEMENT NOTICE</b>", self.styles["LegalNoticeHeader"]),
+            Paragraph("<b>DRAFT IMPROVEMENT NOTICE • FOR AUTHORIZED HUMAN REVIEW</b>", self.styles["LegalNoticeHeader"]),
             Paragraph(
-                f"<b>ISSUED UNDER:</b> {notice.act_provision}<br/>"
-                f"<b>STATUTORY CURE WINDOW:</b> <b>{notice.cure_period_days} CALENDAR DAYS</b> from date of service.<br/>"
-                f"<b>COMPLIANCE AUTHORITY:</b> {notice.compounding_authority}",
+                text(markup('<b>SUPPLIED PROVISION:</b> {0}<br/><b>PROPOSED CURE WINDOW (UNVERIFIED):</b> {1} calendar days.<br/><b>PROPOSED AUTHORITY (UNVERIFIED):</b> {2}', notice.act_provision, notice.cure_period_days, notice.compounding_authority)),
                 self.styles["LegalNoticeText"],
             ),
             Spacer(1, 4),
-            Paragraph(f"<b>ITEMIZED STATUTORY GROUNDS:</b><br/>{items_p}", self.styles["LegalNoticeText"]),
+            Paragraph(text(markup('<b>ITEMIZED STATUTORY GROUNDS:</b><br/>{0}', items_p)), self.styles["LegalNoticeText"]),
             Spacer(1, 4),
             Paragraph(
-                "<b>NOTICE OF STATUTORY OBLIGATION:</b> The manufacturer/packer is hereby directed to rectify "
-                "the above declaration defect(s) within the reasonable cure period specified in this Improvement Notice "
-                "(15 days demonstration default). Failure to rectify shall initiate compounding proceedings or administrative "
-                "adjudication under Section 48 / 48A.",
+                "<b>DRAFT ONLY:</b> This report does not issue or serve a notice. An authorized officer must "
+                "verify the evidence and applicable law, determine any cure period, and approve and issue any "
+                "statutory notice. No proceedings or deadlines are initiated by this document.",
                 self.styles["LegalNoticeText"],
             ),
         ]
@@ -629,10 +620,10 @@ class PDFReportCompiler:
                 cell_items.append(Paragraph("[Visual Evidence Bounding Box]", self.styles["TableCell"]))
 
             cell_items.append(Spacer(1, 2))
-            bbox_str = f"[{', '.join(map(str, c.bbox_px))}]"
-            h_str = f"{c.measured_height_mm:.2f} mm" if c.measured_height_mm is not None else "Uncalibrated"
-            cell_items.append(Paragraph(f"<b>{c.label}</b>", self.styles["TableCellBold"]))
-            cell_items.append(Paragraph(f"Field: {c.field_name} | Height: {h_str}<br/>BBox: {bbox_str}", self.styles["TableCell"]))
+            bbox_str = markup('[{0}]', ', '.join(map(str, c.bbox_px)))
+            h_str = markup('{0:.2f} mm', c.measured_height_mm) if c.measured_height_mm is not None else "Uncalibrated"
+            cell_items.append(Paragraph(text(markup('<b>{0}</b>', c.label)), self.styles["TableCellBold"]))
+            cell_items.append(Paragraph(text(markup('Field: {0} | Height: {1}<br/>BBox: {2}', c.field_name, h_str, bbox_str)), self.styles["TableCell"]))
             crop_cells.append(cell_items)
 
         # Pair into 2-column table
@@ -665,12 +656,12 @@ class PDFReportCompiler:
     def _build_disclaimer_and_signature_section(self) -> List[Any]:
         """Constructs statutory disclaimer under Section 15 and official signature block."""
         elements = [
-            Paragraph("6. Statutory Disclaimer & Authentication Block", self.styles["SectionHeading"]),
+            Paragraph("6. Human Review and Limitations", self.styles["SectionHeading"]),
             Paragraph(
-                "<b>STATUTORY DISCLAIMER:</b> This assessment report constitutes an objective, automated image-based "
-                "screening conducted pursuant to Section 15 of the Legal Metrology Act, 2009. The findings herein "
-                "serve as preliminary metrological evidence. Final statutory determination, compounding authority, "
-                "and penalty adjudication remain the exclusive jurisdiction of the designated Legal Metrology Officer.",
+                "<b>PRELIMINARY SCREENING:</b> This unsigned draft summarizes application results and can contain "
+                "OCR or rule-evaluation errors. It does not establish compliance, authenticate evidence, verify "
+                "an officer, or issue a notice. An authorized reviewer must inspect the original packaging, "
+                "check the applicable law and calibration, and approve any subsequent action.",
                 self.styles["Disclaimer"],
             ),
             Spacer(1, 10),
@@ -686,7 +677,7 @@ class PDFReportCompiler:
                 [
                     Paragraph("<b>Badge / ID No.:</b> ___________________", self.styles["TableCell"]),
                     "",
-                    Paragraph("<b>Date:</b> _____ / _____ / 2026", self.styles["TableCell"]),
+                    Paragraph("<b>Date:</b> _____ / _____ / _____", self.styles["TableCell"]),
                 ],
             ],
             colWidths=[200, 132, 200],
@@ -706,14 +697,18 @@ class PDFReportCompiler:
         officer_id: Optional[str] = None,
         jurisdiction_code: Optional[str] = None,
         include_evidence_crops: bool = True,
+        officer_notes: Optional[str] = None,
+        reference_image_bytes: Optional[bytes] = None,
     ) -> bytes:
         """
-        Compiles the complete court-admissible assessment report into PDF bytes.
+        Compiles the complete assistive draft assessment report into PDF bytes.
 
         Returns:
             Binary PDF byte stream.
         """
         start_time = time.perf_counter()
+        if officer_notes is not None and len(officer_notes) > 2000:
+            raise ValueError("Operator notes must not exceed 2000 characters.")
         buffer = io.BytesIO()
 
         # Letter page size with 40pt (0.55 inch) margins
@@ -724,15 +719,43 @@ class PDFReportCompiler:
             rightMargin=40,
             topMargin=45,
             bottomMargin=45,
-            title=f"MetroLens Report {result.inspection_id}",
-            author="MetroLens AI Legal Metrology Perception System",
-            subject="Statutory Compliance Assessment",
+            title=f"MetroLens draft {result.inspection_id}",
+            author="MetroLens",
+            subject="Unsigned preliminary packaging assessment",
         )
 
-        flowables: List[Any] = []
+        flowables: List[Any] = [Paragraph(text(DRAFT_NOTICE), self.styles["Disclaimer"]), Spacer(1, 8)]
 
         # 1. Header & Administrative Metadata
         flowables.extend(self._build_header_section(result, officer_id, jurisdiction_code))
+
+        if officer_notes and officer_notes.strip():
+            flowables.append(Paragraph("Supplied Operator Notes (Unverified)", self.styles["SectionHeading"]))
+            flowables.append(Paragraph(text(officer_notes.strip()), self.styles["Body"]))
+            flowables.append(Spacer(1, 8))
+
+        if reference_image_bytes is not None:
+            # Accept only retained bytes, never a filename or URL. Bound dimensions
+            # before decoding, then embed a compact image with no copied metadata.
+            with PILImage.open(io.BytesIO(reference_image_bytes)) as source_image:
+                width, height = source_image.size
+                if width < 1 or height < 1 or max(width, height) > 8000 or width * height > 40_000_000:
+                    raise ValueError("Reference image exceeds the supported dimensions.")
+                source_image.thumbnail((1200, 1200))
+                pixels = source_image.convert("RGB")
+                clean = PILImage.new("RGB", pixels.size)
+                clean.paste(pixels)
+                reference_buffer = io.BytesIO()
+                clean.save(reference_buffer, format="JPEG", quality=85)
+                width, height = clean.size
+            scale = min(360 / width, 240 / height)
+            flowables.append(Paragraph("Packaging Reference Image", self.styles["SectionHeading"]))
+            flowables.append(RLImage(io.BytesIO(reference_buffer.getvalue()), width=width * scale, height=height * scale))
+            flowables.append(Paragraph(
+                "Sanitized reference copy, resized for this draft. The input digest below refers to the original uploaded bytes.",
+                self.styles["Disclaimer"],
+            ))
+            flowables.append(Spacer(1, 8))
 
         # 2. Cryptographic Chain of Custody
         flowables.extend(self._build_chain_of_custody_section(result))

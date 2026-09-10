@@ -1,20 +1,7 @@
-﻿"""
-District Metrology Enforcement & Recidivism Intelligence Report Generator
-========================================================================
-Compiles multi-establishment executive intelligence dossiers for District Magistrates,
-State Controllers of Legal Metrology, and the Ministry of Consumer Affairs.
+"""Render an unsigned draft summary of supplied district enforcement statistics.
 
-Features:
----------
-1. Zonal Enforcement Metrics: Total inspections, compliance rate, notices issued,
-   compounding revenue collected, and court prosecutions instituted.
-2. Sectoral Analysis: Granular breakdown across Packaged Food, Industrial Goods (Cement/Paints),
-   E-Commerce Fulfillment Centers, and Cosmetics.
-3. High-Risk Corporate Recidivist Roster: Identifies repeat violators barred from Section 48
-   compounding and escalated for criminal trial under Section 36 / Section 48(2).
-4. Form I Director Liability Audit: Highlights corporate entities operating without valid
-   Rule 29 director nominations, exposing Managing Directors to criminal liability.
-"""
+The renderer does not verify the supplied records, perform enforcement actions,
+or submit reports to government recipients."""
 
 from __future__ import annotations
 
@@ -23,6 +10,8 @@ import io
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
+
+from .text_safety import DRAFT_NOTICE, join_markup, markup, text
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -192,21 +181,18 @@ class DistrictEnforcementReportCompiler:
             bottomMargin=35,
         )
 
-        story: List[Any] = []
+        story: List[Any] = [Paragraph(text(DRAFT_NOTICE), self.styles["BodyDark"]), Spacer(1, 8)]
 
         # 1. State Emblem & Government Header
         story.append(
             Paragraph(
-                f"GOVERNMENT OF {payload.state_name.upper()}<br/>"
-                f"CONTROLLER OF LEGAL METROLOGY & CONSUMER AFFAIRS<br/>"
-                f"DISTRICT METROLOGY INTELLIGENCE REPORT: {payload.district_name.upper()}",
+                text(markup('METROLENS ASSISTIVE DRAFT — REGION: {0}<br/>Supplied enforcement information; not an official government report<br/>DISTRICT METROLOGY INTELLIGENCE REPORT: {1}', payload.state_name.upper(), payload.district_name.upper())),
                 self.styles["DocHeader"],
             )
         )
         story.append(
             Paragraph(
-                f"Reporting Window: {payload.reporting_period_start.strftime('%d-%b-%Y')} to "
-                f"{payload.reporting_period_end.strftime('%d-%b-%Y')} | Ref: {payload.report_reference_id}",
+                text(markup('Reporting Window: {0} to {1} | Ref: {2}', payload.reporting_period_start.strftime('%d-%b-%Y'), payload.reporting_period_end.strftime('%d-%b-%Y'), payload.report_reference_id)),
                 self.styles["DocSubHeader"],
             )
         )
@@ -219,11 +205,11 @@ class DistrictEnforcementReportCompiler:
         )
         kpi_data = [
             [
-                Paragraph(f"<b>{payload.total_inspections}</b>", self.styles["KpiValue"]),
-                Paragraph(f"<b>{overall_compliance:.1f}%</b>", self.styles["KpiValue"]),
-                Paragraph(f"<b>₹{payload.total_compounding_revenue_inr:,.0f}</b>", self.styles["KpiValue"]),
-                Paragraph(f"<b>{payload.court_prosecutions_filed}</b>", self.styles["KpiValue"]),
-                Paragraph(f"<b>{payload.seizures_executed_count}</b>", self.styles["KpiValue"]),
+                Paragraph(text(markup('<b>{0}</b>', payload.total_inspections)), self.styles["KpiValue"]),
+                Paragraph(text(markup('<b>{0:.1f}%</b>', overall_compliance)), self.styles["KpiValue"]),
+                Paragraph(text(markup('<b>₹{0:,.0f}</b>', payload.total_compounding_revenue_inr)), self.styles["KpiValue"]),
+                Paragraph(text(markup('<b>{0}</b>', payload.court_prosecutions_filed)), self.styles["KpiValue"]),
+                Paragraph(text(markup('<b>{0}</b>', payload.seizures_executed_count)), self.styles["KpiValue"]),
             ],
             [
                 Paragraph("Total Inspections", self.styles["KpiLabel"]),
@@ -259,12 +245,12 @@ class DistrictEnforcementReportCompiler:
         sector_rows = [sector_headers]
         for s in payload.sector_metrics:
             sector_rows.append([
-                Paragraph(s.sector_name, self.styles["TableCell"]),
-                Paragraph(str(s.inspections_count), self.styles["TableCell"]),
-                Paragraph(str(s.violations_count), self.styles["TableCell"]),
-                Paragraph(f"{s.compliance_percentage:.1f}%", self.styles["TableCellBold"]),
-                Paragraph(f"₹{s.compounding_fees_inr:,.2f}", self.styles["TableCell"]),
-                Paragraph(str(s.prosecutions_count), self.styles["TableCellBold"]),
+                Paragraph(text(s.sector_name), self.styles["TableCell"]),
+                Paragraph(text(str(s.inspections_count)), self.styles["TableCell"]),
+                Paragraph(text(str(s.violations_count)), self.styles["TableCell"]),
+                Paragraph(text(markup('{0:.1f}%', s.compliance_percentage)), self.styles["TableCellBold"]),
+                Paragraph(text(markup('₹{0:,.2f}', s.compounding_fees_inr)), self.styles["TableCell"]),
+                Paragraph(text(str(s.prosecutions_count)), self.styles["TableCellBold"]),
             ])
 
         sector_table = Table(sector_rows, colWidths=[150, 65, 65, 75, 95, 75])
@@ -299,15 +285,15 @@ class DistrictEnforcementReportCompiler:
         ]
         recid_rows = [recid_headers]
         for r in payload.recidivist_entities:
-            form_i_badge = "VALID" if r.has_valid_form_i_nomination else "<b>NONE (MD Liable)</b>"
+            form_i_badge = 'VALID' if r.has_valid_form_i_nomination else markup('<b>NOT SUPPLIED</b>')
             recid_rows.append([
-                Paragraph(f"<b>{r.entity_name}</b><br/>{r.cin_or_gstin}", self.styles["TableCell"]),
-                Paragraph(r.registered_district, self.styles["TableCell"]),
-                Paragraph(str(r.prior_violations_count), self.styles["TableCellBold"]),
-                Paragraph(r.most_recent_offence_date.strftime("%d-%b-%Y"), self.styles["TableCell"]),
-                Paragraph("; ".join(r.statutory_sections_violated), self.styles["TableCell"]),
-                Paragraph(form_i_badge, self.styles["TableCell"]),
-                Paragraph(f"<b>{r.status_action_taken}</b>", self.styles["TableCellBold"]),
+                Paragraph(text(markup('<b>{0}</b><br/>{1}', r.entity_name, r.cin_or_gstin)), self.styles["TableCell"]),
+                Paragraph(text(r.registered_district), self.styles["TableCell"]),
+                Paragraph(text(str(r.prior_violations_count)), self.styles["TableCellBold"]),
+                Paragraph(text(r.most_recent_offence_date.strftime('%d-%b-%Y')), self.styles["TableCell"]),
+                Paragraph(text('; '.join(r.statutory_sections_violated)), self.styles["TableCell"]),
+                Paragraph(text(form_i_badge), self.styles["TableCell"]),
+                Paragraph(text(markup('<b>{0}</b>', r.status_action_taken)), self.styles["TableCellBold"]),
             ])
 
         recid_table = Table(recid_rows, colWidths=[125, 75, 40, 60, 95, 60, 70])
@@ -326,37 +312,26 @@ class DistrictEnforcementReportCompiler:
 
         # 5. Executive Enforcement Directives
         story.append(Paragraph("<b>3. DIRECTIVES FOR SPECIAL METROLOGY MAGISTRATES & CONTROLLER</b>", self.styles["SectionHeading"]))
-        rec_text = ""
-        for idx, rec in enumerate(payload.executive_recommendations, start=1):
-            rec_text += f"<b>{idx}.</b> {rec}<br/>"
+        rec_text = join_markup("<br/>", (
+            markup('<b>{0}.</b> {1}', idx, rec)
+            for idx, rec in enumerate(payload.executive_recommendations, start=1)
+        ))
         if not rec_text:
             rec_text = (
-                "<b>1.</b> Mandatory institution of criminal proceedings under Section 36(1) for all entities flagged "
-                "with prior violations within 36 months.<br/>"
-                "<b>2.</b> Immediate issuance of Form I summons to Managing Directors of non-compliant corporate entities "
-                "where no nominated officer exists under Rule 29.<br/>"
-                "<b>3.</b> Enhanced random surprise inspections at automated distribution centers and dark stores."
+                markup('No recommendations supplied. Any enforcement action requires authorized human review of evidence and applicable law.')
             )
-        story.append(Paragraph(rec_text, self.styles["BodyDark"]))
+        story.append(Paragraph(text(rec_text), self.styles["BodyDark"]))
         story.append(Spacer(1, 18))
 
         # 6. Officer Attestation & Digital Verification Block
         auth_data = [
             [
                 Paragraph(
-                    f"<b>SUBMITTED BY:</b><br/><br/>"
-                    f"<b>{payload.reporting_officer_name}</b><br/>"
-                    f"{payload.reporting_officer_designation}<br/>"
-                    f"Division: {payload.controller_division}<br/>"
-                    f"Date: {datetime.date.today().strftime('%d-%b-%Y')}",
+                    text(markup('<b>SUPPLIED REPORTER (UNVERIFIED):</b><br/><br/><b>{0}</b><br/>{1}<br/>Division: {2}<br/>Date: {3}', payload.reporting_officer_name, payload.reporting_officer_designation, payload.controller_division, datetime.date.today().strftime('%d-%b-%Y'))),
                     self.styles["TableCell"],
                 ),
                 Paragraph(
-                    f"<b>FORWARDED TO:</b><br/><br/>"
-                    f"1. District Magistrate, {payload.district_name}<br/>"
-                    f"2. Controller of Legal Metrology, {payload.state_name}<br/>"
-                    f"3. Special Public Prosecutor (Consumer Protection)<br/>"
-                    f"Official Digital Seal: VERIFIED",
+                    text(markup('<b>PROPOSED RECIPIENTS (NOT SENT):</b><br/><br/>1. District Magistrate, {0}<br/>2. Controller of Legal Metrology, {1}<br/>3. Special Public Prosecutor (Consumer Protection)<br/>Unsigned draft; no digital seal verified', payload.district_name, payload.state_name)),
                     self.styles["TableCellBold"],
                 ),
             ]

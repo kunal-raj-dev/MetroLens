@@ -98,14 +98,16 @@ class UnsupportedMediaTypeError(MetroLensAPIException):
 
 
 class DecompressionBombError(MetroLensAPIException):
-    """HTTP 422: Image dimensions exceed 64 Megapixels (MAX_IMAGE_PIXELS)."""
-    def __init__(self, width: int, height: int, total_pixels: int, max_pixels: int = 64_000_000):
+    """HTTP 422: Image exceeds the pixel-count or per-side safety limit."""
+    def __init__(self, width: int, height: int, total_pixels: int,
+                 max_pixels: int = 40_000_000, max_dimension: int = 8000):
         super().__init__(
             status_code=getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", 422),
             code="DECOMPRESSION_BOMB_DETECTED",
-            message=f"Image dimension ({width}x{height} = {total_pixels:,} pixels) exceeds the 64 Megapixel safety cap.",
-            remediation="Upload a standard smartphone or camera resolution photograph (under 64 Megapixels).",
-            details={"width": width, "height": height, "total_pixels": total_pixels, "max_pixels": max_pixels},
+            message=f"Image dimensions ({width}x{height} = {total_pixels:,} pixels) exceed the safety limits of {max_pixels / 1_000_000:g} megapixels or {max_dimension} pixels per side.",
+            remediation=f"Resize the photograph to at most {max_pixels / 1_000_000:g} megapixels and {max_dimension} pixels per side.",
+            details={"width": width, "height": height, "total_pixels": total_pixels,
+                     "max_pixels": max_pixels, "max_dimension": max_dimension},
         )
 
 
@@ -218,4 +220,3 @@ def register_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(MetroLensAPIException, metrolens_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, generic_exception_handler)
-

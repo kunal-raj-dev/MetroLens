@@ -268,7 +268,8 @@ def test_usp_engine_integration(engine):
         declared_usp_unit="g",
     )
     res_compliant = engine.evaluate(decl_compliant)
-    assert res_compliant.overall_verdict == ComplianceState.COMPLIANT
+    assert res_compliant.overall_verdict == ComplianceState.UNCERTAIN
+    assert next(r for r in res_compliant.rule_evaluations if r.rule_id == "LMPC-R07-FONT-001").status == "REVIEW"
     usp_eval = next(r for r in res_compliant.rule_evaluations if r.rule_id == "LMPC-R06-USP-001")
     assert usp_eval.is_compliant is True
 

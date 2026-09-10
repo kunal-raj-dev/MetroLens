@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useId } from "react";
 import { X } from "lucide-react";
 
 export interface DialogProps {
@@ -22,15 +22,33 @@ export function Dialog({
 }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+  const descriptionId = useId();
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (isOpen) {
       previousActiveElement.current = document.activeElement as HTMLElement;
       dialogRef.current?.focus();
+      const previousOverflow = document.body.style.overflow;
 
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
-          onClose();
+          onCloseRef.current();
+        }
+        if (e.key === "Tab") {
+          const nodes = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex="0"]'
+          ) || []).filter(node => node.getClientRects().length > 0);
+          const first = nodes[0];
+          const last = nodes[nodes.length - 1];
+          if (!first) { e.preventDefault(); return; }
+          if (e.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+            e.preventDefault(); last.focus();
+          } else if (!e.shiftKey && (document.activeElement === last || document.activeElement === dialogRef.current)) {
+            e.preventDefault(); first.focus();
+          }
         }
       };
 
@@ -39,11 +57,11 @@ export function Dialog({
 
       return () => {
         document.removeEventListener("keydown", handleKeyDown);
-        document.body.style.overflow = "unset";
+        document.body.style.overflow = previousOverflow;
         previousActiveElement.current?.focus();
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -52,8 +70,8 @@ export function Dialog({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-md animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="dialog-title"
-      aria-describedby={description ? "dialog-description" : undefined}
+      aria-labelledby={titleId}
+      aria-describedby={description ? descriptionId : undefined}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -61,20 +79,20 @@ export function Dialog({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`relative w-full max-w-xl rounded-stadium border border-black/[0.08] bg-white p-8 sm:p-10 shadow-deep focus:outline-none ${className}`}
+        className={`relative w-full max-w-xl max-h-[90dvh] overflow-y-auto rounded-stadium border border-black/[0.08] bg-white p-6 sm:p-10 shadow-deep focus:outline-none ${className}`}
       >
         <div className="flex items-start justify-between gap-4 pb-6 border-b border-black/[0.06]">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-eyebrow text-signal-orange">
               <span className="w-1.5 h-1.5 rounded-full bg-signal-orange" />
-              REGULATORY STANDARD OPERATING PROCEDURE
+              IMAGE ASSESSMENT GUIDE
             </div>
-            <h3 id="dialog-title" className="text-2xl font-medium tracking-headline text-ink">
+            <h3 id={titleId} className="text-2xl font-medium tracking-headline text-ink">
               {title}
             </h3>
             {description && (
               <p
-                id="dialog-description"
+                id={descriptionId}
                 className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal"
               >
                 {description}

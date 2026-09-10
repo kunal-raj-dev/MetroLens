@@ -203,7 +203,7 @@ export function ComplianceDashboard({
               {reviewTokens > 0 ? (
                 <span className="text-amber-600 font-medium">{reviewTokens} require review</span>
               ) : (
-                <span className="text-emerald-700 font-medium">All high certainty</span>
+                <span className="text-emerald-700 font-medium">{totalTokens > 0 ? "Review extracted text against the image" : "No text evidence available"}</span>
               )}
             </div>
           </div>
@@ -239,7 +239,7 @@ export function ComplianceDashboard({
               <div className="space-y-1">
                 <div className="text-[10px] uppercase tracking-eyebrow text-slate-500">Model Confidence</div>
                 <div className="text-xs font-semibold text-ink">
-                  {(selectedToken.confidence * 100).toFixed(1)}%{" "}
+                  {selectedToken.confidence == null ? "Not supplied" : `${(selectedToken.confidence * 100).toFixed(1)}%`}{" "}
                   <span className="text-slate-500 font-normal">
                     ({selectedToken.script || "latin"})
                   </span>
@@ -262,7 +262,7 @@ export function ComplianceDashboard({
         {declarationCount > 0 && (
           <div className="space-y-2.5">
             <div className="text-xs font-bold uppercase tracking-eyebrow text-slate-500">
-              Verified Rule 6 Declarations ({declarationCount})
+              Extracted Declarations ({declarationCount})
             </div>
             <div className="flex flex-wrap gap-2">
               {Object.entries(inspection.declarations).map(([key, decl]) => (

@@ -38,7 +38,7 @@ export interface BoundingBoxModel {
 export interface OCRTokenModel {
   id: string; // canonical token_id
   text: string;
-  confidence: number;
+  confidence: number | null;
   boundingBox: BoundingBoxModel;
   polygon: [number, number][]; // 4-point clockwise vertices in original input image pixel space
   language?: string | null;
@@ -52,7 +52,7 @@ export interface DeclarationModel {
   label: string;
   rawText: string;
   normalizedValue?: any;
-  confidence: number;
+  confidence: number | null;
   isMandatory: boolean;
   isPresent: boolean;
   boundingBox?: BoundingBoxModel | null;

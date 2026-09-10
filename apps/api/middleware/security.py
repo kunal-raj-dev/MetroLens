@@ -5,7 +5,7 @@ and enterprise cybersecurity standards:
 1. File size enforcement (< 15.0 MB -> HTTP 413).
 2. Pure in-memory magic-byte inspection (JPEG, PNG, WebP -> HTTP 415).
 3. Pre-decode streaming header dimension parser (Zero-allocation bomb defense -> HTTP 422).
-4. Pillow decompression bomb limit (MAX_IMAGE_PIXELS = 64,000,000 -> HTTP 422).
+4. Pillow decompression bomb limit (MAX_IMAGE_PIXELS = 40,000,000 -> HTTP 422).
 5. Minimum resolution boundary check (>= 800x600 -> HTTP 422).
 6. Complete EXIF / IPTC / XMP privacy sanitization (GPS & serial stripping).
 7. Cryptographic SHA-256 integrity digest computation.
@@ -29,7 +29,8 @@ from apps.api.errors import (
 
 # Statutory and Engineering Safety Limits
 MAX_UPLOAD_SIZE_BYTES: int = 15 * 1024 * 1024  # 15.0 MB
-MAX_DECOMPRESSION_PIXELS: int = 64_000_000     # 64 Megapixels (ADR-013)
+MAX_DECOMPRESSION_PIXELS: int = 40_000_000     # Stricter SECURITY.md cap
+MAX_IMAGE_DIMENSION: int = 8000
 MIN_IMAGE_WIDTH: int = 800                      # Minimum width for reliable OCR
 MIN_IMAGE_HEIGHT: int = 600                     # Minimum height for reliable OCR
 
@@ -178,7 +179,7 @@ class ImageSecurityValidator:
             InvalidImagePayloadError: If stream is empty or invalid.
             ImageTooLargeError: If size > 15MB.
             UnsupportedMediaTypeError: If magic bytes are invalid.
-            DecompressionBombError: If pixels > 64MP.
+            DecompressionBombError: If pixels > 40MP.
             ImageCorruptedError: If pixel stream is invalid/unparseable.
             ImageResolutionTooLowError: If width < 800 or height < 600.
         """
@@ -201,7 +202,7 @@ class ImageSecurityValidator:
         if fast_dims:
             w_fast, h_fast = fast_dims
             total_px_fast = w_fast * h_fast
-            if total_px_fast > MAX_DECOMPRESSION_PIXELS:
+            if total_px_fast > MAX_DECOMPRESSION_PIXELS or max(w_fast, h_fast) > MAX_IMAGE_DIMENSION:
                 raise DecompressionBombError(
                     width=w_fast,
                     height=h_fast,
@@ -216,21 +217,12 @@ class ImageSecurityValidator:
                 total_pixels = width * height
 
                 # Double check decompression bomb limit
-                if total_pixels > MAX_DECOMPRESSION_PIXELS:
+                if total_pixels > MAX_DECOMPRESSION_PIXELS or max(width, height) > MAX_IMAGE_DIMENSION:
                     raise DecompressionBombError(
                         width=width,
                         height=height,
                         total_pixels=total_pixels,
                         max_pixels=MAX_DECOMPRESSION_PIXELS,
-                    )
-
-                # Stage 6: Minimum Resolution Verification
-                if width < MIN_IMAGE_WIDTH or height < MIN_IMAGE_HEIGHT:
-                    raise ImageResolutionTooLowError(
-                        width=width,
-                        height=height,
-                        min_width=MIN_IMAGE_WIDTH,
-                        min_height=MIN_IMAGE_HEIGHT,
                     )
 
                 # Stage 7: Privacy Sanitization (EXIF & Metadata Stripping)
@@ -250,6 +242,22 @@ class ImageSecurityValidator:
                 # Convert to clean RGB if Palette or other mode
                 if sanitized_img.mode not in ("RGB", "RGBA"):
                     sanitized_img = sanitized_img.convert("RGB")
+
+                # Copy pixels into a new image so encoders cannot implicitly retain
+                # EXIF, ICC profiles, text chunks, or other source metadata.
+                clean_image = Image.new(sanitized_img.mode, sanitized_img.size)
+                clean_image.paste(sanitized_img)
+                sanitized_img = clean_image
+                width, height = sanitized_img.size
+
+                # Stage 6: Minimum Resolution Verification
+                if width < MIN_IMAGE_WIDTH or height < MIN_IMAGE_HEIGHT:
+                    raise ImageResolutionTooLowError(
+                        width=width,
+                        height=height,
+                        min_width=MIN_IMAGE_WIDTH,
+                        min_height=MIN_IMAGE_HEIGHT,
+                    )
 
                 # Re-encode to clean in-memory buffer without EXIF metadata
                 out_buffer = io.BytesIO()
@@ -275,10 +283,12 @@ class ImageSecurityValidator:
                     had_gps_data=had_gps,
                 )
 
+        except Image.DecompressionBombError as err:
+            raise ImageCorruptedError(reason="Image exceeds safe decoder limits") from err
         except (UnidentifiedImageError, ValueError, OSError) as err:
             if isinstance(err, (DecompressionBombError, ImageResolutionTooLowError, ImageTooLargeError, UnsupportedMediaTypeError)):
                 raise
-            raise ImageCorruptedError(reason=str(err))
+            raise ImageCorruptedError(reason="Invalid or incomplete raster data") from err
 
 
 validate_and_sanitize_image_upload = ImageSecurityValidator.sanitize_and_verify

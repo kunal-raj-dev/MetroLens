@@ -139,7 +139,7 @@ export function DeclarationTable({
                   </td>
 
                   <td className="py-3.5 px-3 whitespace-nowrap font-mono text-slate-600">
-                    {(decl.confidence * 100).toFixed(1)}%
+                    {decl.confidence == null ? "Not supplied" : `${(decl.confidence * 100).toFixed(1)}%`}
                   </td>
 
                   <td className="py-3.5 px-3 whitespace-nowrap font-mono text-slate-600">
@@ -223,7 +223,7 @@ export function DeclarationTable({
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 mb-3 font-mono">
-                <div>Confidence: {(decl.confidence * 100).toFixed(1)}%</div>
+                <div>Confidence: {decl.confidence == null ? "Not supplied" : `${(decl.confidence * 100).toFixed(1)}%`}</div>
                 <div>Height: {decl.measuredHeightMm ? `${decl.measuredHeightMm.toFixed(2)} mm` : "N/A"}</div>
               </div>
 

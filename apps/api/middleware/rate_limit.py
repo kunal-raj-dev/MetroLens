@@ -28,7 +28,11 @@ class InMemoryRateLimiter:
         requests_per_window: int = 10,
         window_seconds: int = 60,
         cleanup_interval_seconds: int = 300,
+        max_clients: int = 4096,
     ):
+        if max_clients < 1:
+            raise ValueError("Rate limiter capacity must be positive.")
+        self.max_clients = max_clients
         self.requests_per_window = requests_per_window
         self.window_seconds = window_seconds
         self.cleanup_interval_seconds = cleanup_interval_seconds
@@ -52,6 +56,12 @@ class InMemoryRateLimiter:
                 self._sweep_stale_buckets(now)
                 self._last_cleanup = now
 
+            if client_id not in self._buckets and len(self._buckets) >= self.max_clients:
+                self._sweep_stale_buckets(now)
+                if len(self._buckets) >= self.max_clients:
+                    # Keep existing quotas intact and reject new peers until space
+                    # expires; evicting a live bucket would let it reset its quota.
+                    return False, max(1, int(self.window_seconds))
             timestamps = self._buckets.setdefault(client_id, [])
 
             # Evict timestamps outside sliding window
@@ -129,11 +139,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if path in self.exempt_paths or path.startswith("/docs") or path.startswith("/redoc"):
             return await call_next(request)
 
-        # 2. Check for explicit test bypass header
-        if request.headers.get("X-Bypass-Rate-Limit") == "true":
-            return await call_next(request)
-
-        # 3. Extract client IP (respecting proxy forward headers)
+        # Use only the server's validated peer address; clients cannot grant exemptions.
         client_ip = self._extract_client_ip(request)
 
         # 3. Rate limit check
@@ -152,11 +158,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     @staticmethod
     def _extract_client_ip(request: Request) -> str:
-        """Resolves client IP from X-Forwarded-For or socket peer."""
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            # First IP in comma-separated proxy chain is original client
-            return forwarded.split(",")[0].strip()
+        """Use the socket peer. Proxy trust must be configured at the ASGI server."""
         if request.client:
             return request.client.host
         return "127.0.0.1"

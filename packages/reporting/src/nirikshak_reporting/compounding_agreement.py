@@ -1,18 +1,7 @@
-﻿"""
-Section 48 Statutory Compounding Deed & Discharge Order Generator
-================================================================
-Renders legally enforceable bilingual Compounding Agreements and Orders of Discharge
-under Section 48 and Section 48A of the Legal Metrology Act, 2009.
+"""Render a draft compounding summary from supplied case and payment information.
 
-Legal & Administrative Importance:
-----------------------------------
-When an offender admits to an initial contravention of Rule 6, 7, 18, or 26 of the
-Legal Metrology (Packaged Commodities) Rules, 2011, and deposits the assessed compounding
-fee into the Government Cyber Treasury (Head: 0435 - Weights & Measures), the Controller
-or Authorized Officer issues a formal Order of Discharge.
-This document operates as a statutory bar under Section 48(3) against subsequent criminal
-prosecution for the specific offence compounded.
-"""
+This library does not verify payment, authority, statutory eligibility, or identity,
+and does not issue an order or discharge."""
 
 from __future__ import annotations
 
@@ -21,6 +10,8 @@ import io
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+from .text_safety import DRAFT_NOTICE, join_markup, markup, text
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -161,18 +152,18 @@ class CompoundingAgreementCompiler:
             bottomMargin=40,
         )
 
-        story: List[Any] = []
+        story: List[Any] = [Paragraph(text(DRAFT_NOTICE), self.styles["LegalBody"]), Spacer(1, 8)]
 
         # 1. Official Seal & Emblem Header
         story.append(
             Paragraph(
-                f"GOVERNMENT OF {data.state_government_name.upper()}<br/>DEPARTMENT OF CONSUMER AFFAIRS, FOOD & CIVIL SUPPLIES",
+                text(markup('METROLENS ASSISTIVE DRAFT — REGION: {0}<br/>Prepared by MetroLens; no government endorsement or issue', data.state_government_name.upper())),
                 self.styles["EmblemHeader"],
             )
         )
         story.append(
             Paragraph(
-                f"LEGAL METROLOGY WING — CONTROLLER OF LEGAL METROLOGY<br/>DIVISION: {data.authorized_officer_station.upper()}",
+                text(markup('LEGAL METROLOGY WING — CONTROLLER OF LEGAL METROLOGY<br/>DIVISION: {0}', data.authorized_officer_station.upper())),
                 self.styles["SubEmblemHeader"],
             )
         )
@@ -182,7 +173,7 @@ class CompoundingAgreementCompiler:
         # 2. Statutory Title
         story.append(
             Paragraph(
-                "STATUTORY ORDER OF COMPOUNDING & DISCHARGE<br/>"
+                "DRAFT COMPOUNDING & DISCHARGE FORM<br/>"
                 "<u>UNDER SECTION 48 READ WITH SECTION 48A OF THE LEGAL METROLOGY ACT, 2009</u>",
                 self.styles["DeedTitle"],
             )
@@ -191,12 +182,12 @@ class CompoundingAgreementCompiler:
         # 3. Reference and Date Bar
         ref_table_data = [
             [
-                Paragraph(f"<b>Order No:</b> {data.order_number}", self.styles["TableText"]),
-                Paragraph(f"<b>Date of Order:</b> {data.date_of_order.strftime('%d-%b-%Y')}", self.styles["TableTextBold"]),
+                Paragraph(text(markup('<b>Order No:</b> {0}', data.order_number)), self.styles["TableText"]),
+                Paragraph(text(markup('<b>Date of Order:</b> {0}', data.date_of_order.strftime('%d-%b-%Y'))), self.styles["TableTextBold"]),
             ],
             [
-                Paragraph(f"<b>Case Ref:</b> {data.case_reference}", self.styles["TableText"]),
-                Paragraph(f"<b>Inspection Ref:</b> {data.inspection_id}", self.styles["TableText"]),
+                Paragraph(text(markup('<b>Case Ref:</b> {0}', data.case_reference)), self.styles["TableText"]),
+                Paragraph(text(markup('<b>Inspection Ref:</b> {0}', data.inspection_id)), self.styles["TableText"]),
             ],
         ]
         ref_table = Table(ref_table_data, colWidths=[260, 250])
@@ -215,22 +206,9 @@ class CompoundingAgreementCompiler:
 
         # 4. Narrative Recital (Whereas clauses)
         preamble = (
-            f"<b>WHEREAS</b>, an inspection was conducted on <b>{data.date_of_offence_commission.strftime('%d-%m-%Y')}</b> "
-            f"at the premises / establishment situated at <i>{data.inspection_location}</i>, wherein sample packaged commodities "
-            f"manufactured / packed / offered for sale by <b>M/s {data.offender_entity_name}</b> (represented by its "
-            f"Director/Proprietor <b>Shri/Smt. {data.director_or_proprietor_name}</b>) were inspected by the authorized "
-            f"Legal Metrology Officer;<br/><br/>"
-            f"<b>AND WHEREAS</b>, the said packaged commodities were found in contravention of the statutory provisions, "
-            f"specifically: <b>{'; '.join(data.statutory_offences_compounded)}</b>, punishable under Section 36(1) / "
-            f"Section 36(2) of the Legal Metrology Act, 2009;<br/><br/>"
-            f"<b>AND WHEREAS</b>, the said offender has formally made an application in writing under Section 48(1) "
-            f"of the Legal Metrology Act, 2009 admitting the commission of the said contravention, and requesting that "
-            f"the offence be compounded without recourse to prosecution before the Judicial Magistrate;<br/><br/>"
-            f"<b>AND WHEREAS</b>, verification of the statewide Central Compounding Ledger confirms that the offender has "
-            f"<u>not</u> committed or compounded the same or similar offence within a period of three (3) years preceding "
-            f"this date, and is consequently eligible for compounding under Section 48(2) of the said Act;"
+            markup('<b>DRAFT CASE SUMMARY:</b><br/>Supplied inspection date: {0}; location: {1}; entity: {2}; representative: {3}.<br/>Alleged provisions: {4}.<br/>These statements, officer authority, admission, and eligibility for compounding require independent verification.', data.date_of_offence_commission.strftime('%d-%m-%Y'), data.inspection_location, data.offender_entity_name, data.director_or_proprietor_name, '; '.join(data.statutory_offences_compounded))
         )
-        story.append(Paragraph(preamble, self.styles["LegalBody"]))
+        story.append(Paragraph(text(preamble), self.styles["LegalBody"]))
         story.append(Spacer(1, 10))
 
         # 5. Treasury Payment Details Box
@@ -239,14 +217,14 @@ class CompoundingAgreementCompiler:
 
         treasury_data = [
             [Paragraph("<b>Particulars</b>", self.styles["TableTextBold"]), Paragraph("<b>Details / Treasury Record</b>", self.styles["TableTextBold"])],
-            [Paragraph("Offender Legal Name", self.styles["TableText"]), Paragraph(data.offender_entity_name, self.styles["TableTextBold"])],
-            [Paragraph("CIN / Registration & GSTIN", self.styles["TableText"]), Paragraph(f"{data.offender_cin_or_reg} / {data.offender_gstin}", self.styles["TableText"])],
-            [Paragraph("PAN Number", self.styles["TableText"]), Paragraph(data.offender_pan, self.styles["TableText"])],
-            [Paragraph("Statutory Compounding Fee Assessed", self.styles["TableText"]), Paragraph(f"<b>₹ {data.compounding_fee_inr:,.2f}</b>", self.styles["TableTextBold"])],
-            [Paragraph("Cyber Treasury e-Challan No.", self.styles["TableText"]), Paragraph(data.treasury_challan_number, self.styles["TableTextBold"])],
-            [Paragraph("Bank UTR / Transaction Ref", self.styles["TableText"]), Paragraph(data.bank_utr_reference, self.styles["TableText"])],
-            [Paragraph("Date of Treasury Realization", self.styles["TableText"]), Paragraph(data.treasury_payment_date.strftime('%d-%b-%Y'), self.styles["TableText"])],
-            [Paragraph("Treasury Head of Account", self.styles["TableText"]), Paragraph(data.treasury_head_of_account, self.styles["TableText"])],
+            [Paragraph("Offender Legal Name", self.styles["TableText"]), Paragraph(text(data.offender_entity_name), self.styles["TableTextBold"])],
+            [Paragraph("CIN / Registration & GSTIN", self.styles["TableText"]), Paragraph(text(markup('{0} / {1}', data.offender_cin_or_reg, data.offender_gstin)), self.styles["TableText"])],
+            [Paragraph("PAN Number", self.styles["TableText"]), Paragraph(text(data.offender_pan), self.styles["TableText"])],
+            [Paragraph("Statutory Compounding Fee Assessed", self.styles["TableText"]), Paragraph(text(markup('<b>₹ {0:,.2f}</b>', data.compounding_fee_inr)), self.styles["TableTextBold"])],
+            [Paragraph("Cyber Treasury e-Challan No.", self.styles["TableText"]), Paragraph(text(data.treasury_challan_number), self.styles["TableTextBold"])],
+            [Paragraph("Bank UTR / Transaction Ref", self.styles["TableText"]), Paragraph(text(data.bank_utr_reference), self.styles["TableText"])],
+            [Paragraph("Date of Treasury Realization", self.styles["TableText"]), Paragraph(text(data.treasury_payment_date.strftime('%d-%b-%Y')), self.styles["TableText"])],
+            [Paragraph("Treasury Head of Account", self.styles["TableText"]), Paragraph(text(data.treasury_head_of_account), self.styles["TableText"])],
         ]
         t_table = Table(treasury_data, colWidths=[180, 330])
         t_table.setStyle(
@@ -264,27 +242,16 @@ class CompoundingAgreementCompiler:
 
         # 6. Operative Order & Statutory Discharge
         operative_order = (
-            f"<b><u>ORDER OF DISCHARGE UNDER SECTION 48(3)</u></b><br/>"
-            f"NOW THEREFORE, in exercise of the powers conferred under Section 48(1) of the Legal Metrology Act, 2009, "
-            f"the undersigned, having verified the realization of the full compounding fee of <b>₹{data.compounding_fee_inr:,.2f}</b> "
-            f"into the Government Treasury, hereby <b>COMPOUNDS</b> the aforesaid offences. In terms of Section 48(3) of the said Act, "
-            f"no further prosecution or legal proceeding shall be initiated against the said offender in respect of the "
-            f"offences specified herein.<br/><br/>"
-            f"<b>IMPORTANT STATUTORY CAUTION UNDER SECTION 48(2):</b><br/>"
-            f"The offender is hereby formally put on notice that this compounding is recorded in the Central Legal Metrology "
-            f"Ledger. If the offender commits the same or similar offence at any time within a period of <b>three (3) years</b> "
-            f"from this date, the subsequent offence shall be <b>STRICTLY NON-COMPOUNDABLE</b>, and the offender shall be "
-            f"mandatorily prosecuted before the Court of the Judicial Magistrate First Class with statutory imprisonment "
-            f"and enhanced fines under Section 36 and Section 48A."
+            markup('<b>PROPOSED COMPOUNDING — NO ORDER ISSUED:</b><br/>Supplied amount: Rs. {0:,.2f}. Payment realization, statutory eligibility, and any disposition require authorized human verification. This draft does not record a discharge, update a government ledger, or prevent or initiate proceedings.', data.compounding_fee_inr)
         )
-        story.append(Paragraph(operative_order, self.styles["LegalBody"]))
+        story.append(Paragraph(text(operative_order), self.styles["LegalBody"]))
         story.append(Spacer(1, 20))
 
         # 7. Signature & Seal Block
         sig_data = [
             [
-                Paragraph("<b>ACCEPTED & UNDERTAKEN BY OFFENDER:</b><br/><br/><br/>(Authorized Signatory & Seal)<br/>M/s " + data.offender_entity_name, self.styles["TableText"]),
-                Paragraph(f"<b>ORDER PASSED BY:</b><br/><br/><br/><b>({data.authorized_officer_name})</b><br/>{data.authorized_officer_designation}<br/>Office of Controller of Legal Metrology<br/>Seal of Office", self.styles["TableTextBold"]),
+                Paragraph(text(markup('{0}{1}', markup('<b>PROPOSED SIGNATORY (UNVERIFIED):</b><br/><br/><br/>(Authorized Signatory & Seal)<br/>M/s '), data.offender_entity_name)), self.styles["TableText"]),
+                Paragraph(text(markup('<b>PROPOSED OFFICER (UNVERIFIED):</b><br/><br/><br/><b>({0})</b><br/>{1}<br/>Office of Controller of Legal Metrology<br/>Seal of Office', data.authorized_officer_name, data.authorized_officer_designation)), self.styles["TableTextBold"]),
             ]
         ]
         sig_table = Table(sig_data, colWidths=[255, 255])

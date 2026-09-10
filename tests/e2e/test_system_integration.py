@@ -1,345 +1,198 @@
-"""
-MetroLens AI: System Integration End-to-End Test Suite (E2E-001 to E2E-015).
-Validates real end-to-end integration across all 5 member layers:
-Image -> Validation Gate -> Quality Filter -> Calibration -> OCR -> Semantic Normalizer -> Rule Engine -> PDF Dossier.
+"""API integration checks with test-only OCR and quality outputs.
 
-Tests:
-E2E-001: Valid image full pipeline execution
-E2E-002: Corrupted/invalid image format rejection
-E2E-003: Optical quality gate failure rejection
-E2E-004: Uncalibrated mode without mm fabrication
-E2E-005: OCR perception success with token geometry
-E2E-006: OCR uncertainty / low confidence review trigger
-E2E-007: Statutory declaration entity extraction
-E2E-008: Fully compliant packaging Rule PASS verdict
-E2E-009: Statutory deficit triggering Non-Compliance & Improvement Notice
-E2E-010: Metrological uncertainty triggering Manual Review
-E2E-011: Multilingual Devanagari Hindi Unicode preservation
-E2E-012: Numeric currency and Unit Sale Price arithmetic validation
-E2E-013: Synthetic demo mode transparent disclosure
-E2E-014: Multi-inspection session state reset without data leakage
-E2E-015: Technical failure distinct from statutory non-compliance
+The guarded_api fixture exercises the real upload validator, calibration,
+normalizer, rules engine, evidence store, and PDF renderer. These tests do not
+measure real OCR accuracy, camera behavior, or deployed/browser performance.
+The explicitly named quality component test runs the actual blur detector.
 """
 
 import hashlib
-import io
-import json
-import time
+import importlib
+from types import SimpleNamespace
+
 import cv2
 import numpy as np
 import pytest
-from fastapi.testclient import TestClient
-
-from apps.api.main import app
-from apps.api.schemas import InspectionResponse
-from nirikshak_vision import evaluate_image_quality
-from nirikshak_rules_engine.normalizer import TokenNormalizer
-from nirikshak_rules_engine.rule_engine import StatutoryRuleEngine
-
-client = TestClient(app, headers={"X-Bypass-Rate-Limit": "true"})
 
 
-def _create_synthetic_image(
-    width: int = 1000,
-    height: int = 800,
-    bg_color: int = 245,
-    blur: bool = False,
-    include_declarations: bool = True,
-) -> bytes:
-    """Generates an in-memory test packaging image meeting min 800x600 resolution."""
-    img = np.full((height, width, 3), bg_color, dtype=np.uint8)
-
-    # Simulated packaging border
-    cv2.rectangle(img, (40, 40), (width - 40, height - 40), (60, 40, 30), 3)
-
-    if include_declarations:
-        cv2.putText(img, "METROLENS PREMIUM CASHEWS", (80, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
-        cv2.putText(img, "Net Quantity: 200 g", (80, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-        cv2.putText(img, "MRP Rs 240.00 (incl. of all taxes)", (80, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-        cv2.putText(img, "USP Rs 1.20 / g", (80, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-        cv2.putText(img, "Mfg Date: 08/2026", (80, 340), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-        cv2.putText(img, "Mfd By: MetroLens Foods Pvt Ltd, Delhi 110020", (80, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
-        cv2.putText(img, "Care: care@metrolens.in, 1800-11-4000", (80, 460), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
-        cv2.putText(img, "Country of Origin: India", (80, 520), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-
-        # Draw ₹10 coin anchor reference
-        cv2.circle(img, (width - 150, height - 150), 60, (0, 180, 220), 4)
-        cv2.putText(img, "10", (width - 165, height - 140), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 120, 180), 2)
-
-    if blur:
-        img = cv2.GaussianBlur(img, (51, 51), 0)
-
-    _, encoded = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
-    return encoded.tobytes()
+def _pipeline_module():
+    return importlib.import_module("apps.api.services.pipeline_orchestrator")
 
 
-# =========================================================================
-# E2E-001: Valid Image Full Pipeline Execution
-# =========================================================================
-def test_e2e_001_valid_image():
-    """Valid packaging image completes synchronous inspection returning HTTP 200."""
-    img_bytes = _create_synthetic_image()
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("e2e_valid.jpg", img_bytes, "image/jpeg")},
-        data={"anchor_type": "INR_10_COIN", "mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
+def test_api_001_upload_retrieve_and_report(guarded_api):
+    data = guarded_api.upload()
     assert data["inspection_id"].startswith("INSP-")
-    assert data["image_metadata"]["is_quality_valid"] is True
-    assert len(data["image_metadata"]["sha256_hash"]) == 64
-    assert data["telemetry"]["total_duration_ms"] < 2500.0
+    assert data["image_metadata"]["sha256_hash"] == hashlib.sha256(guarded_api.image_bytes).hexdigest()
+    retained = guarded_api.client.get(f'/api/v1/inspections/{data["inspection_id"]}')
+    assert retained.status_code == 200 and retained.json() == data
+    report = guarded_api.client.post("/api/v1/report/pdf", json={"inspection_id": data["inspection_id"]})
+    assert report.status_code == 200, report.text
+    assert report.headers["content-type"] == "application/pdf"
+    assert report.content.startswith(b"%PDF-") and len(report.content) > 1000
+    audit = guarded_api.client.get(f'/api/v1/audit/verify/{data["inspection_id"]}')
+    assert audit.status_code == 200 and audit.json()["status"] == "LOCAL_HASHES_MATCH"
 
 
-# =========================================================================
-# E2E-002: Invalid Image Format Rejection
-# =========================================================================
-def test_e2e_002_invalid_image():
-    """Corrupted / non-image byte stream is rejected with HTTP 400."""
-    corrupted_bytes = b"NOT_A_REAL_IMAGE_DATA_HEADER"
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("bad.jpg", corrupted_bytes, "image/jpeg")},
-    )
-    assert resp.status_code == 400
+def test_api_002_invalid_image_has_no_assessment(guarded_api):
+    response = guarded_api.client.post("/api/v1/inspect",
+        files={"file": ("bad.jpg", b"NOT_A_REAL_IMAGE_DATA_HEADER", "image/jpeg")})
+    assert response.status_code == 415
+    assert "inspection_id" not in response.json()
+    assert not list(guarded_api.spool.base_dir.iterdir())
 
 
-# =========================================================================
-# E2E-003: Quality Failure Detection
-# =========================================================================
-def test_e2e_003_quality_failure():
-    """Severely blurred image is detected by the quality gate."""
-    blurred_bytes = _create_synthetic_image(blur=True)
-    nparr = np.frombuffer(blurred_bytes, np.uint8)
-    img_bgr = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    q_res = evaluate_image_quality(img_bgr)
-    assert q_res.passed is False
-    assert q_res.is_blurry is True
-    assert any("blurry" in r.lower() for r in q_res.failure_reasons)
+def test_component_003_severe_blur_detector():
+    from nirikshak_vision import evaluate_image_quality
+    image = np.full((800, 1000, 3), 180, dtype=np.uint8)
+    cv2.putText(image, "PACKAGING TEXT", (80, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 3)
+    blurred = cv2.GaussianBlur(image, (51, 51), 0)
+    result = evaluate_image_quality(blurred)
+    assert result.passed is False
+    assert result.is_blurry is True
 
 
-# =========================================================================
-# E2E-004: Calibration Unavailable Handling
-# =========================================================================
-def test_e2e_004_calibration_unavailable():
-    """Packaging without reference anchor executes with is_calibrated=False without fabricating mm."""
-    img_bytes = _create_synthetic_image()
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("uncalib.jpg", img_bytes, "image/jpeg")},
-        data={"anchor_type": "NONE", "mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
+def test_api_003_quality_rejection_stops_before_ocr(guarded_api, monkeypatch):
+    module = _pipeline_module()
+    monkeypatch.setattr(module, "check_image_quality", lambda image: SimpleNamespace(
+        passed=False, laplacian_variance=0.0, glare_ratio=0.0))
+    monkeypatch.setattr(module.pipeline_orchestrator, "_get_ocr_service",
+                        lambda: pytest.fail("Rejected image must not invoke OCR"))
+    response = guarded_api.client.post("/api/v1/inspect",
+        files={"file": ("blurred.png", guarded_api.image_bytes, "image/png")})
+    assert response.status_code == 422
+    assert not list(guarded_api.spool.base_dir.iterdir())
+
+
+def test_api_004_uncalibrated_image_has_no_physical_measurements(guarded_api):
+    data = guarded_api.upload()
     assert data["calibration"]["is_calibrated"] is False
     assert data["calibration"]["scale_mm_per_px"] is None
+    assert data["calibration"]["pdp_area_cm2"] is None
+    assert data["rule_evaluations"]["font_height_audit"]["measured_net_qty_height_mm"] is None
 
 
-# =========================================================================
-# E2E-005: OCR Success & Geometry
-# =========================================================================
-def test_e2e_005_ocr_success():
-    """Legible packaging tokens return bounding box geometry in original pixel space."""
-    img_bytes = _create_synthetic_image()
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("ocr_test.jpg", img_bytes, "image/jpeg")},
-        data={"anchor_type": "INR_10_COIN", "mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert len(data["evidence_crops"]) > 0
+def test_api_005_injected_ocr_geometry_is_preserved(guarded_api):
+    tokens = guarded_api.set_tokens()
+    data = guarded_api.upload()
+    observed = {item["token_id"]: item for item in data["ocr_observations"]}
+    assert set(observed) == {token.token_id for token in tokens}
+    for token in tokens:
+        assert observed[token.token_id]["text"] == token.text
+        box = observed[token.token_id]["bounding_box"]
+        assert [box[key] for key in ("x_min", "y_min", "x_max", "y_max")] == token.bbox
+    assert data["evidence_crops"]
     for crop in data["evidence_crops"]:
-        assert len(crop["bbox_px"]) == 4
+        assert crop["source_token_id"] in observed
+        x, y, width, height = crop["bbox_px"]
+        assert 0 <= x < x + width <= 800
+        assert 0 <= y < y + height <= 600
 
 
-# =========================================================================
-# E2E-006: OCR Uncertainty Review Trigger
-# =========================================================================
-def test_e2e_006_ocr_uncertainty():
-    """Low contrast / faded packaging flags review requirement."""
-    normalizer = TokenNormalizer()
-    engine = StatutoryRuleEngine()
-    # Ambiguous tokens without MRP or tax qualifier
-    decl = normalizer.normalize([{"text": "Faded Label Brand", "confidence": 0.45}])
-    res = engine.evaluate(decl=decl, inspection_id="INSP-UNCERTAIN-001")
-    assert res.overall_verdict in ("NON_COMPLIANT", "REVIEW")
+def test_api_006_low_confidence_requires_review(guarded_api):
+    tokens = guarded_api.set_tokens()
+    tokens[0].confidence = 0.45
+    data = guarded_api.upload()
+    assert data["state"] == "MANUAL_REVIEW_REQUIRED"
+    assert data["rule_evaluations"]["usp_audit"]["status"] == "REVIEW"
+    assert data["improvement_notice"] is None
 
 
-# =========================================================================
-# E2E-007: Statutory Declaration Extraction
-# =========================================================================
-def test_e2e_007_declaration_extraction():
-    """Rule 6 mandatory declarations are normalized into typed fields."""
-    img_bytes = _create_synthetic_image()
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("decl_test.jpg", img_bytes, "image/jpeg")},
-        data={"anchor_type": "INR_10_COIN", "mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS"},
-    )
-    assert resp.status_code == 200
-    decls = resp.json()["declarations"]
-    assert decls["commodity_name"] == "Premium Roasted Cashews"
-    assert decls["mrp_inr"] == 240.0
-    assert decls["net_quantity_value"] == 200.0
-    assert decls["net_quantity_unit"] == "g"
-    assert decls["tax_qualifier_present"] is True
+def test_api_007_declarations_come_from_injected_tokens(guarded_api):
+    declarations = guarded_api.upload()["declarations"]
+    assert declarations["commodity_name"] == "Premium Roasted Cashews"
+    assert declarations["mrp_inr"] == 240.0
+    assert declarations["net_quantity_value"] == 200.0
+    assert declarations["net_quantity_unit"] == "g"
+    assert declarations["tax_qualifier_present"] is True
 
 
-# =========================================================================
-# E2E-008: Fully Compliant Specimen Verdict
-# =========================================================================
-def test_e2e_008_rule_pass():
-    """Compliant specimen achieves overall PASS verdict across statutory checks."""
-    img_bytes = _create_synthetic_image()
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("compliant.jpg", img_bytes, "image/jpeg")},
-        data={"anchor_type": "INR_10_COIN", "mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["state"] == "COMPLIANT"
-    assert data["rule_evaluations"]["rule6_mandatory_status"]["overall_status"] == "PASS"
+def test_api_008_present_declarations_do_not_resolve_missing_metrology(guarded_api):
+    data = guarded_api.upload()
+    rules = data["rule_evaluations"]
+    assert rules["rule6_mandatory_status"]["overall_status"] == "PASS"
+    assert rules["font_height_audit"]["status"] == "REVIEW"
+    assert data["state"] in {"UNCERTAIN", "MANUAL_REVIEW_REQUIRED"}
 
 
-# =========================================================================
-# E2E-009: Potential Non-Compliance & Section 36(1) Notice
-# =========================================================================
-def test_e2e_009_potential_non_compliance():
-    """Statutory deficit generates Section 36(1) Improvement Notice with 15-day cure window."""
-    img_bytes = _create_synthetic_image()
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("non_comp.jpg", img_bytes, "image/jpeg")},
-        data={"anchor_type": "INR_10_COIN", "mock_fixture_key": "PKG-03-MISSING-TAX-QUALIFIER"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["state"] == "NON_COMPLIANT"
-    assert data["improvement_notice"] is not None
-    assert data["improvement_notice"]["cure_period_days"] == 15
-    assert "Section 36(1)" in data["improvement_notice"]["act_provision"]
+def test_api_009_single_panel_deficit_does_not_issue_notice(guarded_api):
+    guarded_api.set_tokens("PKG-03-MISSING-TAX-QUALIFIER")
+    data = guarded_api.upload()
+    assert data["declarations"]["tax_qualifier_present"] is False
+    assert data["state"] == "POTENTIAL_NON_COMPLIANCE"
+    assert data["improvement_notice"] is None
+    assert "panel" in data["summary_reason"].lower()
 
 
-# =========================================================================
-# E2E-010: Metrological Manual Review
-# =========================================================================
-def test_e2e_010_manual_review():
-    """Uncertain or borderline font height returns manual review requirement."""
-    engine = StatutoryRuleEngine()
-    from nirikshak_rules_engine.schemas import CanonicalDeclaration, MetricScaleResult, UnitType
-    decl = CanonicalDeclaration(
-        commodity_name="Cookies",
-        net_quantity_value=100.0,
-        net_quantity_unit=UnitType.GRAM,
-        mrp_inr=30.0,
-        tax_qualifier_present=True,
-        declared_usp_value=0.30,
-        declared_usp_unit=UnitType.GRAM,
-        mfg_month=6,
-        mfg_year=2026,
-        manufacturer_name="Bakery Ltd",
-        country_of_origin="India",
-        consumer_care_email="care@bakery.com",
-    )
-    # Scale with unknown area requires manual review for Rule 7
+def test_component_010_known_scale_with_unknown_area_requires_review():
+    from nirikshak_rules_engine import CanonicalDeclaration, MetricScaleResult, StatutoryRuleEngine, UnitType
+    declaration = CanonicalDeclaration(
+        commodity_name="Cookies", net_quantity_value=100.0, net_quantity_unit=UnitType.GRAM,
+        mrp_inr=30.0, tax_qualifier_present=True, declared_usp_value=0.30, declared_usp_unit="g",
+        mfg_month=6, mfg_year=2026, manufacturer_name="Bakery Ltd", country_of_origin="India",
+        consumer_care_email="care@bakery.com")
     scale = MetricScaleResult(is_calibrated=True, scale_factor_mm_per_px=0.1, pdp_area_sqcm=None)
-    res = engine.evaluate(decl=decl, scale=scale, inspection_id="INSP-REV-001", measured_font_height_mm=1.5)
-    font_rule = [r for r in res.rule_evaluations if r.rule_id == "LMPC-R07-FONT-001"][0]
-    assert font_rule.status in ("REVIEW", "PASS")
+    result = StatutoryRuleEngine().evaluate(decl=declaration, scale=scale,
+        inspection_id="INSP-REVIEW", measured_font_height_mm=1.5)
+    font = next(rule for rule in result.rule_evaluations if rule.rule_id == "LMPC-R07-FONT-001")
+    assert font.status == "REVIEW"
+    assert result.overall_verdict == "UNCERTAIN"
 
 
-# =========================================================================
-# E2E-011: Bilingual Devanagari Hindi Preservation
-# =========================================================================
-def test_e2e_011_unicode_hindi():
-    """Devanagari Hindi statutory declarations preserve full Unicode text."""
-    img_bytes = _create_synthetic_image()
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("hindi.jpg", img_bytes, "image/jpeg")},
-        data={"anchor_type": "INR_10_COIN", "mock_fixture_key": "PKG-02-BILINGUAL-HINDI-ATTA"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["state"] == "COMPLIANT"
+def test_api_011_hindi_observations_preserve_unicode(guarded_api):
+    tokens = guarded_api.set_tokens("PKG-02-BILINGUAL-HINDI-ATTA")
+    data = guarded_api.upload()
+    expected = [token.text for token in tokens if any(0x900 <= ord(char) <= 0x97f for char in token.text)]
+    assert expected
+    observed = [item["text"] for item in data["ocr_observations"]]
+    assert all(text in observed for text in expected)
     assert data["declarations"]["mrp_inr"] == 45.0
+    assert data["rule_evaluations"]["font_height_audit"]["status"] == "REVIEW"
 
 
-# =========================================================================
-# E2E-012: Numeric & Unit Sale Price Arithmetic
-# =========================================================================
-def test_e2e_012_numeric_text():
-    """Unit Sale Price arithmetic matches high-precision Decimal evaluation."""
-    from nirikshak_rules_engine.usp_validator import USPValidator
-    from nirikshak_rules_engine.schemas import CanonicalDeclaration, UnitType
-    val = USPValidator()
-    decl = CanonicalDeclaration(
-        mrp_inr=240.0,
-        net_quantity_value=200.0,
-        net_quantity_unit=UnitType.GRAM,
-        declared_usp_value=1.20,
-        declared_usp_unit=UnitType.GRAM,
-    )
-    rec = val.evaluate(decl)
-    assert rec.is_compliant is True
-    assert rec.status == "PASS"
+def test_api_012_unit_price_arithmetic_uses_observed_values(guarded_api):
+    data = guarded_api.upload()
+    assert data["declarations"]["mrp_inr"] == 240.0
+    assert data["declarations"]["net_quantity_value"] == 200.0
+    audit = data["rule_evaluations"]["usp_audit"]
+    assert audit["declared_usp"] == audit["expected_usp"] == 1.2
+    assert audit["status"] == "PASS"
 
 
-# =========================================================================
-# E2E-013: Synthetic Demo Mode Disclosure
-# =========================================================================
-def test_e2e_013_synthetic_demo():
-    """Fixture key mock execution clearly identifies fixture evaluation in telemetry."""
-    img_bytes = _create_synthetic_image()
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("synth_demo.jpg", img_bytes, "image/jpeg")},
-        data={"mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS"},
-    )
-    assert resp.status_code == 200
-    assert resp.json()["inspection_id"].startswith("INSP-")
+def test_api_013_http_fixture_override_is_rejected(guarded_api):
+    response = guarded_api.client.post("/api/v1/inspect",
+        files={"file": ("sample.png", guarded_api.image_bytes, "image/png")},
+        data={"mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS"})
+    assert response.status_code == 400
+    assert "inspection_id" not in response.json()
+    assert not list(guarded_api.spool.base_dir.iterdir())
 
 
-# =========================================================================
-# E2E-014: New Inspection Session Reset & State Isolation
-# =========================================================================
-def test_e2e_014_new_inspection_reset():
-    """Successive inspections generate distinct IDs and maintain clean state boundaries."""
-    img_bytes_a = _create_synthetic_image(bg_color=240)
-    img_bytes_b = _create_synthetic_image(bg_color=250)
-
-    resp_a = client.post(
-        "/api/v1/inspect",
-        files={"file": ("insp_a.jpg", img_bytes_a, "image/jpeg")},
-        data={"mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS"},
-    )
-    resp_b = client.post(
-        "/api/v1/inspect",
-        files={"file": ("insp_b.jpg", img_bytes_b, "image/jpeg")},
-        data={"mock_fixture_key": "PKG-02-BILINGUAL-HINDI-ATTA"},
-    )
-
-    data_a = resp_a.json()
-    data_b = resp_b.json()
-
-    assert data_a["inspection_id"] != data_b["inspection_id"]
-    assert data_a["declarations"]["mrp_inr"] == 240.0
-    assert data_b["declarations"]["mrp_inr"] == 45.0
+def test_api_014_successive_inspections_keep_independent_results(guarded_api):
+    first = guarded_api.upload()
+    guarded_api.set_tokens("PKG-02-BILINGUAL-HINDI-ATTA")
+    second = guarded_api.upload()
+    assert first["inspection_id"] != second["inspection_id"]
+    assert first["declarations"]["mrp_inr"] == 240.0
+    assert second["declarations"]["mrp_inr"] == 45.0
+    for expected in (first, second):
+        response = guarded_api.client.get(f'/api/v1/inspections/{expected["inspection_id"]}')
+        assert response.status_code == 200 and response.json() == expected
 
 
-# =========================================================================
-# E2E-015: Technical Failure Handling
-# =========================================================================
-def test_e2e_015_backend_error():
-    """Oversized or invalid file produces clean technical error rather than false legal verdict."""
-    oversized_bytes = b"X" * (16 * 1024 * 1024)  # 16 MB > 15MB limit
-    resp = client.post(
-        "/api/v1/inspect",
-        files={"file": ("huge.jpg", oversized_bytes, "image/jpeg")},
-    )
-    assert resp.status_code in (400, 413, 422)
-    # Must NOT return a legal compliance response
-    assert "overall_verdict" not in resp.json()
+def test_api_015_ocr_unavailable_is_technical_failure(guarded_api, monkeypatch):
+    monkeypatch.setattr(_pipeline_module().pipeline_orchestrator, "_get_ocr_service", lambda: None)
+    response = guarded_api.client.post("/api/v1/inspect",
+        files={"file": ("sample.png", guarded_api.image_bytes, "image/png")})
+    assert response.status_code == 503
+    assert "inspection_id" not in response.json()
+    assert "state" not in response.json()
+    assert not list(guarded_api.spool.base_dir.iterdir())
+
+
+def test_api_015_oversized_image_is_not_a_legal_verdict(guarded_api):
+    response = guarded_api.client.post("/api/v1/inspect",
+        files={"file": ("huge.jpg", b"x" * (15 * 1024 * 1024 + 1), "image/jpeg")})
+    assert response.status_code == 413
+    assert "inspection_id" not in response.json()
+    assert "state" not in response.json()
+    assert not list(guarded_api.spool.base_dir.iterdir())

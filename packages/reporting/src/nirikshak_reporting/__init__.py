@@ -1,8 +1,8 @@
-"""
-Nirikshak Reporting Package.
-Provides statutory inspection dossier generation, court-admissible ReportLab PDF compilation,
-Section 63 BSA 2023 legal affidavits, bilingual Devanagari typography, and multi-format exports.
-"""
+"""MetroLens draft reporting utilities.
+
+Reports summarize supplied application results for human review. This package
+does not by itself establish statutory authority, evidence authenticity, or
+court admissibility. Legacy simulation helpers remain library-only."""
 
 from .pdf_compiler import (
     PDFReportCompiler,

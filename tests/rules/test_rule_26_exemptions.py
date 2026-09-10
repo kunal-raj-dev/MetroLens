@@ -90,9 +90,10 @@ def test_rule_26_tobacco_strictly_non_exempt(engine):
     assert rec.rule_id == "LMPC-R26-GSR881E-CARVEOUT"
 
     result = engine.evaluate(decl)
-    # If all declarations are present, it is COMPLIANT, but NOT EXEMPTED
-    assert result.overall_verdict == ComplianceState.COMPLIANT
-    assert result.verdict_badge_color == "green"
+    # The package is not exempt, and unmeasured font height still needs review.
+    assert result.overall_verdict == ComplianceState.UNCERTAIN
+    assert result.verdict_badge_color == "amber"
+    assert next(r for r in result.rule_evaluations if r.rule_id == "LMPC-R07-FONT-001").status == "REVIEW"
 
 
 def test_rule_3_wholesale_bulk_exclusion_over_25kg(engine):
@@ -132,4 +133,5 @@ def test_rule_3_cement_up_to_50kg_exception(engine):
     # Cement is an exception, NOT excluded from mandatory declarations
     assert is_exempt is False
     result = engine.evaluate(decl)
-    assert result.overall_verdict == ComplianceState.COMPLIANT
+    assert result.overall_verdict == ComplianceState.UNCERTAIN
+    assert next(r for r in result.rule_evaluations if r.rule_id == "LMPC-R07-FONT-001").status == "REVIEW"

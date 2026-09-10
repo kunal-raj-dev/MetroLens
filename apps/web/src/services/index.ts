@@ -40,4 +40,4 @@ export function createInspectionClient(
 }
 
 // Export default singleton instance
-export const defaultInspectionClient: IInspectionClient = new MockInspectionAdapter();
+export const defaultInspectionClient: IInspectionClient = createInspectionClient();

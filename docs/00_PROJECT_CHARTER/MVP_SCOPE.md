@@ -24,7 +24,7 @@ Focuses on demonstrating end-to-end defensibility: guided capture $\rightarrow$ 
 - `packages/rules-engine/`
 
 ## Verification Requirements
-- MVP inspection pipeline latency targets CPU execution (TARGET — NOT VALIDATED; Status: `TBD — MEASURE` via `benchmarks/protocols/PROTO_LATENCY_EVAL.md`).
+- MVP inspection pipeline latency targets CPU execution (TARGET — NOT VALIDATED; Status: `TBD — MEASURE` via [Benchmark Protocol, PROTO-LATENCY-001](../07_DATA/BENCHMARK_PROTOCOL.md)).
 - Must produce verifiable PDF inspection dossier with complete cryptographic hashes.
 
 ---

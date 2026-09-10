@@ -11,15 +11,19 @@ Implements the zero-permanent storage architecture mandated by ADR-014 and docs/
 """
 
 import os
+import re
 import shutil
+import stat
 import tempfile
 import threading
 import time
 import uuid
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Optional, Dict, List, Any
+from pathlib import Path, PureWindowsPath
+from typing import Optional, Dict, Any
 from dataclasses import dataclass, field
+
+from apps.api.identifiers import validate_crop_name, validate_inspection_id
 
 
 DEFAULT_TTL_SECONDS: int = 3600  # 60 Minutes retention
@@ -70,12 +74,11 @@ class SpoolService:
     ):
         if base_dir is None:
             env_path = os.environ.get("METROLENS_SPOOL_DIR")
-            if env_path:
-                self.base_dir = Path(env_path).resolve()
-            else:
-                self.base_dir = Path(tempfile.gettempdir()) / "metrolens_uploads"
+            base_path = Path(env_path) if env_path else Path(tempfile.gettempdir()) / "metrolens_uploads"
         else:
-            self.base_dir = Path(base_dir).resolve()
+            base_path = Path(base_dir)
+        self._reject_link(base_path)
+        self.base_dir = base_path.resolve()
 
         self.ttl_seconds = ttl_seconds
         self.cleanup_interval_seconds = cleanup_interval_seconds
@@ -83,17 +86,115 @@ class SpoolService:
 
         # Active session registry
         self._sessions: Dict[str, SpoolSession] = {}
-        self._session_lock: threading.Lock = threading.Lock()
+        self._session_lock = threading.RLock()
 
         # Background daemon controls
         self._daemon_thread: Optional[threading.Thread] = None
         self._stop_event: threading.Event = threading.Event()
 
         # Initialize storage directory
+        self._checked_root()
         self.base_dir.mkdir(parents=True, exist_ok=True)
+        self._checked_root()
 
         if auto_start_daemon:
             self.start_cleanup_daemon()
+
+    @staticmethod
+    def _reject_link(path: Path) -> None:
+        """Reject symlinks and Windows reparse points, including junctions."""
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            return
+        if stat.S_ISLNK(info.st_mode) or (
+            getattr(info, "st_file_attributes", 0)
+            & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+        ):
+            raise ValueError("Spool paths must not contain links or reparse points")
+
+    def _checked_path(self, path: Path, inspection_id: Optional[str] = None) -> Path:
+        """Check lexical and resolved containment before touching a spool path.
+
+        Existing components are checked individually so even links pointing back
+        inside the spool cannot alias another inspection's files.
+        """
+        path = Path(path)
+        self._checked_root()
+        try:
+            relative = path.relative_to(self.base_dir)
+        except ValueError as error:
+            raise ValueError("Path is outside the spool root") from error
+        if not relative.parts or any(part in {".", ".."} for part in relative.parts):
+            raise ValueError("Path must identify a child of the spool root")
+        validate_inspection_id(relative.parts[0])
+        if inspection_id is not None and relative.parts[0] != validate_inspection_id(inspection_id):
+            raise ValueError("Path belongs to a different inspection")
+        component = self.base_dir
+        for part in relative.parts:
+            if (
+                re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", part) is None
+                or part.endswith(".")
+                or PureWindowsPath(part).is_reserved()
+            ):
+                raise ValueError("Spool path contains an unsafe filename")
+            component /= part
+            self._reject_link(component)
+        try:
+            resolved_relative = path.resolve().relative_to(self.base_dir)
+        except (ValueError, RuntimeError) as error:
+            raise ValueError("Resolved path is outside the spool root") from error
+        if resolved_relative != relative:
+            raise ValueError("Spool path changed its resolved location")
+        return path
+
+    def _checked_root(self) -> Path:
+        self._reject_link(self.base_dir)
+        if self.base_dir.resolve() != self.base_dir:
+            raise ValueError("Spool root changed its resolved location")
+        return self.base_dir
+
+    def _session_path(self, inspection_id: str) -> Path:
+        validate_inspection_id(inspection_id)
+        return self._checked_path(self.base_dir / inspection_id, inspection_id)
+
+    def _checked_session(self, session: SpoolSession, inspection_id: str) -> Path:
+        expected = self._session_path(inspection_id)
+        if session.inspection_id != inspection_id or session.session_dir != expected:
+            raise ValueError("Session directory does not match its inspection ID")
+        return expected
+
+    def _ensure_directory(self, path: Path) -> Path:
+        path = self._checked_path(path)
+        path.mkdir(parents=True, exist_ok=True)
+        return self._checked_path(path)
+
+    @staticmethod
+    def _image_extension(extension: str) -> str:
+        if not isinstance(extension, str) or re.fullmatch(r"\.?[A-Za-z0-9]{1,10}", extension) is None:
+            raise ValueError("Image extension must be a single alphanumeric suffix")
+        return "." + extension.lstrip(".").lower()
+
+    def _remove_session_directory(self, inspection_id: str) -> bool:
+        """Validate the entire tree before recursive deletion, without following links."""
+        session_dir = self._session_path(inspection_id)
+        if not session_dir.is_dir():
+            return False
+        pending = [session_dir]
+        while pending:
+            directory = self._checked_path(pending.pop(), inspection_id)
+            for entry in directory.iterdir():
+                entry = self._checked_path(entry, inspection_id)
+                if entry.is_dir():
+                    pending.append(entry)
+        # Recheck the entry point immediately before recursive deletion. Python's
+        # rmtree also refuses a top-level symlink and does not traverse junctions.
+        session_dir = self._session_path(inspection_id)
+        try:
+            shutil.rmtree(session_dir)
+        except OSError:
+            return False
+        return True
 
     @classmethod
     def get_instance(cls, **kwargs) -> "SpoolService":
@@ -118,16 +219,16 @@ class SpoolService:
         """
         with self._session_lock:
             removed_count = 0
+            self._checked_root()
             if not self.base_dir.exists():
                 return 0
 
             for entry in list(self.base_dir.iterdir()):
-                if entry.is_dir():
-                    try:
-                        shutil.rmtree(entry, ignore_errors=True)
+                try:
+                    if self._remove_session_directory(entry.name):
                         removed_count += 1
-                    except Exception:
-                        pass
+                except (OSError, ValueError):
+                    continue
 
             self._sessions.clear()
             return removed_count
@@ -136,20 +237,17 @@ class SpoolService:
         """
         Creates a new isolated session directory under the base spool root.
         """
-        if not inspection_id:
+        if inspection_id is None:
             now_str = datetime.now(timezone.utc).strftime("%Y%m%d")
             rand_suffix = uuid.uuid4().hex[:8].upper()
             inspection_id = f"INSP-{now_str}-{rand_suffix}"
 
-        session_dir = self.base_dir / inspection_id
-        session_dir.mkdir(parents=True, exist_ok=True)
-
-        session = SpoolSession(
-            inspection_id=inspection_id,
-            session_dir=session_dir,
-        )
-
         with self._session_lock:
+            session_dir = self._ensure_directory(self._session_path(inspection_id))
+            session = SpoolSession(
+                inspection_id=inspection_id,
+                session_dir=session_dir,
+            )
             self._sessions[inspection_id] = session
 
         return session
@@ -157,8 +255,10 @@ class SpoolService:
     def get_session(self, inspection_id: str) -> Optional[SpoolSession]:
         """Retrieves session record if it exists and has not expired."""
         with self._session_lock:
+            session_dir = self._session_path(inspection_id)
             session = self._sessions.get(inspection_id)
             if session:
+                self._checked_session(session, inspection_id)
                 if session.is_expired(self.ttl_seconds):
                     self._purge_session_internal(inspection_id)
                     return None
@@ -166,12 +266,12 @@ class SpoolService:
                 return session
 
             # Check if directory exists on disk even if not in memory (e.g. after worker restart)
-            session_dir = self.base_dir / inspection_id
             if session_dir.is_dir():
+                self._checked_path(session_dir, inspection_id)
                 mtime = session_dir.stat().st_mtime
                 age = time.time() - mtime
                 if age > self.ttl_seconds:
-                    shutil.rmtree(session_dir, ignore_errors=True)
+                    self._remove_session_directory(inspection_id)
                     return None
 
                 recovered_session = SpoolSession(
@@ -180,6 +280,11 @@ class SpoolService:
                     created_at_utc=mtime,
                     last_accessed_utc=time.time(),
                 )
+                report_path = self._checked_path(
+                    session_dir / f"metrolens_report_{inspection_id}.pdf", inspection_id
+                )
+                if report_path.is_file():
+                    recovered_session.pdf_report_path = report_path
                 self._sessions[inspection_id] = recovered_session
                 return recovered_session
 
@@ -190,69 +295,84 @@ class SpoolService:
         Writes data to a temporary file in the same directory and executes
         an atomic rename (os.replace) to prevent partial reads by concurrent processes.
         """
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        temp_path = target_path.with_name(f"{target_path.name}.{uuid.uuid4().hex[:6]}.tmp")
-        try:
-            with open(temp_path, "wb") as f:
-                f.write(content)
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(temp_path, target_path)
-            return target_path
-        finally:
-            if temp_path.exists():
-                try:
-                    temp_path.unlink()
-                except OSError:
-                    pass
+        with self._session_lock:
+            target_path = self._checked_path(target_path)
+            self._ensure_directory(target_path.parent)
+            temp_path = target_path.with_name(f"{target_path.name}.{uuid.uuid4().hex}.tmp")
+            created = False
+            try:
+                self._checked_path(temp_path)
+                with open(temp_path, "xb") as f:
+                    created = True
+                    f.write(content)
+                    f.flush()
+                    os.fsync(f.fileno())
+                self._checked_path(temp_path)
+                self._checked_path(target_path)
+                os.replace(temp_path, target_path)
+                return target_path
+            finally:
+                if created:
+                    try:
+                        self._checked_path(temp_path)
+                        temp_path.unlink(missing_ok=True)
+                    except (OSError, ValueError):
+                        pass
 
     def save_raw_image(self, inspection_id: str, content: bytes, extension: str = ".jpg") -> Path:
         """Saves original raw uploaded image bytes into the session spool."""
-        session = self.get_session(inspection_id) or self.create_session(inspection_id)
-        ext = extension if extension.startswith(".") else f".{extension}"
-        target_path = session.session_dir / f"raw_image{ext}"
-        self._write_file_atomically(target_path, content)
-        session.raw_image_path = target_path
-        session.touch()
-        return target_path
+        ext = self._image_extension(extension)
+        with self._session_lock:
+            session = self.get_session(inspection_id) or self.create_session(inspection_id)
+            target_path = session.session_dir / f"raw_image{ext}"
+            self._write_file_atomically(target_path, content)
+            session.raw_image_path = target_path
+            session.touch()
+            return target_path
 
     def save_sanitized_image(self, inspection_id: str, content: bytes, extension: str = ".jpg") -> Path:
         """Saves EXIF-stripped sanitized image bytes into the session spool."""
-        session = self.get_session(inspection_id) or self.create_session(inspection_id)
-        ext = extension if extension.startswith(".") else f".{extension}"
-        target_path = session.session_dir / f"sanitized_image{ext}"
-        self._write_file_atomically(target_path, content)
-        session.sanitized_image_path = target_path
-        session.touch()
-        return target_path
+        ext = self._image_extension(extension)
+        with self._session_lock:
+            session = self.get_session(inspection_id) or self.create_session(inspection_id)
+            target_path = session.session_dir / f"sanitized_image{ext}"
+            self._write_file_atomically(target_path, content)
+            session.sanitized_image_path = target_path
+            session.touch()
+            return target_path
 
     def save_crop(self, inspection_id: str, field_name: str, content: bytes) -> Path:
         """Saves a single evidence crop into the session spool."""
-        session = self.get_session(inspection_id) or self.create_session(inspection_id)
-        crops_dir = session.session_dir / "crops"
-        crops_dir.mkdir(parents=True, exist_ok=True)
-        safe_field = "".join(c for c in field_name if c.isalnum() or c in ("_", "-"))
-        target_path = crops_dir / f"{safe_field}.jpg"
-        self._write_file_atomically(target_path, content)
-        session.crop_paths[field_name] = target_path
-        session.touch()
-        return target_path
+        safe_field = validate_crop_name(field_name)
+        with self._session_lock:
+            session = self.get_session(inspection_id) or self.create_session(inspection_id)
+            crops_dir = self._ensure_directory(session.session_dir / "crops")
+            target_path = crops_dir / f"{safe_field}.jpg"
+            self._write_file_atomically(target_path, content)
+            session.crop_paths[field_name] = target_path
+            session.touch()
+            return target_path
 
     def save_pdf_report(self, inspection_id: str, pdf_bytes: bytes) -> Path:
         """Saves generated tamper-evident assessment report PDF into the session spool."""
-        session = self.get_session(inspection_id) or self.create_session(inspection_id)
-        target_path = session.session_dir / f"metrolens_report_{inspection_id}.pdf"
-        self._write_file_atomically(target_path, pdf_bytes)
-        session.pdf_report_path = target_path
-        session.touch()
-        return target_path
+        with self._session_lock:
+            session = self.get_session(inspection_id) or self.create_session(inspection_id)
+            target_path = session.session_dir / f"metrolens_report_{inspection_id}.pdf"
+            self._write_file_atomically(target_path, pdf_bytes)
+            session.pdf_report_path = target_path
+            session.touch()
+            return target_path
 
     def get_pdf_report(self, inspection_id: str) -> Optional[bytes]:
         """Retrieves PDF report binary if within the TTL retention window."""
-        session = self.get_session(inspection_id)
-        if not session or not session.pdf_report_path or not session.pdf_report_path.is_file():
-            return None
-        return session.pdf_report_path.read_bytes()
+        with self._session_lock:
+            session = self.get_session(inspection_id)
+            if not session or not session.pdf_report_path:
+                return None
+            report_path = self._checked_path(session.pdf_report_path, inspection_id)
+            if not report_path.is_file():
+                return None
+            return self._checked_path(report_path, inspection_id).read_bytes()
 
     def purge_session(self, inspection_id: str) -> bool:
         """Explicitly purges and deletes an inspection session directory."""
@@ -261,15 +381,14 @@ class SpoolService:
 
     def _purge_session_internal(self, inspection_id: str) -> bool:
         """Internal helper running within _session_lock."""
-        session = self._sessions.pop(inspection_id, None)
-        session_dir = session.session_dir if session else self.base_dir / inspection_id
-        if session_dir.exists():
-            try:
-                shutil.rmtree(session_dir, ignore_errors=True)
-                return True
-            except Exception:
-                return False
-        return False
+        self._session_path(inspection_id)
+        session = self._sessions.get(inspection_id)
+        if session is not None:
+            self._checked_session(session, inspection_id)
+        removed = self._remove_session_directory(inspection_id)
+        if removed or not self._session_path(inspection_id).exists():
+            self._sessions.pop(inspection_id, None)
+        return removed
 
     def purge_expired_sessions(self) -> int:
         """
@@ -286,35 +405,46 @@ class SpoolService:
                 if (now - s.created_at_utc) > self.ttl_seconds
             ]
             for iid in expired_ids:
-                if self._purge_session_internal(iid):
-                    purged += 1
+                try:
+                    if self._purge_session_internal(iid):
+                        purged += 1
+                except (OSError, ValueError):
+                    continue
 
             # 2. Sweep disk directory for untracked or orphaned directories
+            self._checked_root()
             if self.base_dir.exists():
                 for entry in list(self.base_dir.iterdir()):
-                    if entry.is_dir() and entry.name not in self._sessions:
-                        try:
+                    try:
+                        entry = self._session_path(entry.name)
+                        if entry.is_dir() and entry.name not in self._sessions:
                             mtime = entry.stat().st_mtime
                             if (now - mtime) > self.ttl_seconds:
-                                shutil.rmtree(entry, ignore_errors=True)
-                                purged += 1
-                        except Exception:
-                            pass
+                                if self._remove_session_directory(entry.name):
+                                    purged += 1
+                    except (OSError, ValueError):
+                        continue
 
         return purged
 
     def get_total_spool_size_bytes(self) -> int:
         """Computes total disk storage consumed by current spool directory."""
-        total = 0
-        if not self.base_dir.exists():
-            return 0
-        for root, _, files in os.walk(self.base_dir):
-            for f in files:
+        with self._session_lock:
+            total = 0
+            self._checked_root()
+            if not self.base_dir.exists():
+                return 0
+            pending = list(self.base_dir.iterdir())
+            while pending:
                 try:
-                    total += os.path.getsize(os.path.join(root, f))
-                except (OSError, FileNotFoundError):
-                    pass
-        return total
+                    entry = self._checked_path(pending.pop())
+                    if entry.is_dir():
+                        pending.extend(entry.iterdir())
+                    elif entry.is_file():
+                        total += self._checked_path(entry).stat().st_size
+                except (OSError, ValueError):
+                    continue
+            return total
 
     def enforce_quota(self) -> int:
         """
@@ -336,8 +466,11 @@ class SpoolService:
             for session in sorted_sessions:
                 if self.get_total_spool_size_bytes() <= (self.max_quota_bytes * 0.8):
                     break
-                if self._purge_session_internal(session.inspection_id):
-                    pruned_count += 1
+                try:
+                    if self._purge_session_internal(session.inspection_id):
+                        pruned_count += 1
+                except (OSError, ValueError):
+                    continue
 
         return pruned_count
 

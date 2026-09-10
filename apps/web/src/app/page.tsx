@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Button,
   Card,
@@ -55,16 +55,16 @@ import {
   SamplePackageItem,
 } from "@/features/inspection";
 import {
-  defaultInspectionClient,
+  createInspectionClient,
   defaultReportClient,
   InspectionClientMode,
 } from "@/services";
 
+import { resolveApiBaseUrl, setApiAccessKey } from "@/services/apiConfig";
+
 export default function OfficerWorkstationPage() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [activeVerdict, setActiveVerdict] =
-    useState<OverallVerdict>("COMPLIANT");
-  const [clientMode, setClientMode] = useState<InspectionClientMode>("live");
+  const [clientMode, setClientMode] = useState<InspectionClientMode>("mock");
   const [inspectionResult, setInspectionResult] =
     useState<FrontendInspectionModel | null>(null);
   const [uploadedImageSrc, setUploadedImageSrc] = useState<string | null>(null);
@@ -90,11 +90,28 @@ export default function OfficerWorkstationPage() {
     pointB: CaliperPoint | null;
   }>({ pointA: null, pointB: null });
 
-  // Handle Review Submission through service boundary
+  const inspectionClient = useMemo(() => createInspectionClient(clientMode), [clientMode]);
+  const [accessKey, setAccessKey] = useState("");
+  const [connectionMessage, setConnectionMessage] = useState<string | null>(null);
+  const [checkingConnection, setCheckingConnection] = useState(false);
+  const sessionVersion = useRef(0);
+  const reportAbort = useRef<AbortController | null>(null);
+  useEffect(() => () => { reportAbort.current?.abort(); setApiAccessKey(""); }, []);
+
+  const checkConnection = async () => {
+    setCheckingConnection(true);
+    const health = await inspectionClient.getHealth();
+    setConnectionMessage(health.message || health.status);
+    setCheckingConnection(false);
+  };
+
+  // Keep review results bound to the inspection that initiated them.
   const handleSubmitReview = async (input: ReviewSubmissionInput) => {
+    const version = sessionVersion.current;
     setIsSubmittingReview(true);
     try {
-      const result = await defaultInspectionClient.submitReview(input);
+      const result = await inspectionClient.submitReview(input);
+      if (version !== sessionVersion.current) return result;
 
       if (inspectionResult) {
         const updatedDeclarations = { ...inspectionResult.declarations };
@@ -130,6 +147,9 @@ export default function OfficerWorkstationPage() {
 
   // Clear workstation inspection state without incrementing resetTrigger
   const handleFileCleared = useCallback(() => {
+    sessionVersion.current += 1;
+    reportAbort.current?.abort();
+    setIsGeneratingReport(false);
     setInspectionResult(null);
     setUploadedImageSrc(null);
     setImageDimensions(null);
@@ -157,6 +177,8 @@ export default function OfficerWorkstationPage() {
     previewUrl: string,
     sample: SamplePackageItem
   ) => {
+    sessionVersion.current += 1;
+    reportAbort.current?.abort();
     // Clear old inspection result without clearing the incoming file
     setInspectionResult(null);
     setSelectedTokenId(null);
@@ -187,7 +209,10 @@ export default function OfficerWorkstationPage() {
 
   // 4. Download Assessment Report PDF
   const handleDownloadReport = async () => {
-    if (!inspectionResult || isGeneratingReport) return;
+    if (!inspectionResult || inspectionResult.isSynthetic || isGeneratingReport) return;
+    const version = sessionVersion.current;
+    const controller = new AbortController();
+    reportAbort.current = controller;
     setIsGeneratingReport(true);
     setReportError(null);
     setReportSuccess(null);
@@ -196,20 +221,23 @@ export default function OfficerWorkstationPage() {
       const res = await defaultReportClient.downloadAssessmentReport(
         inspectionResult.inspectionId,
         {
-          officerNotes: "Official Legal Metrology Packaging Assessment Report.",
+          officerNotes: "Image-based packaging assessment; subject to human review.",
+          signal: controller.signal,
           includeRawImage: true,
         }
       );
+      if (version !== sessionVersion.current) return;
       setReportSuccess(
         `Assessment report successfully compiled & downloaded (${(res.byteSize / 1024).toFixed(1)} KB).`
       );
     } catch (err: any) {
+      if (version !== sessionVersion.current) return;
       setReportError(
         err?.message ||
           "Report generation unavailable: Backend report endpoint POST /api/v1/report/pdf is offline."
       );
     } finally {
-      setIsGeneratingReport(false);
+      if (version === sessionVersion.current) setIsGeneratingReport(false);
     }
   };
 
@@ -227,16 +255,16 @@ export default function OfficerWorkstationPage() {
       <section className="pt-4 sm:pt-8 max-w-4xl space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-pill bg-white border border-black/[0.06] text-xs font-bold tracking-eyebrow uppercase text-slate-700 shadow-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-signal-orange" />
-          SOVEREIGN REGULATORY SURVEILLANCE
+          PACKAGING ASSESSMENT PROTOTYPE
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium tracking-headline text-ink leading-[1.08]">
-          Automated legal metrology verification for pre-packaged commodities.
+          Image-based packaging checks for human review.
         </h1>
 
         <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal max-w-2xl">
-          Transforming manual ruler-and-magnifier field audits into a mathematically verified,
-          tamper-evident inspection completed in under 2.5 seconds under the Legal Metrology Rules, 2011.
+          Review visible packaging declarations with image evidence and deterministic checks.
+          This prototype assists human review; it does not certify legal compliance or issue official notices.
         </p>
 
         <div className="flex flex-wrap items-center gap-4 pt-2">
@@ -268,14 +296,14 @@ export default function OfficerWorkstationPage() {
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-eyebrow text-slate-500">
               <span className="w-1.5 h-1.5 rounded-full bg-signal-light" />
-              THE METROLOGICAL CONSTELLATION
+              FROM PHOTOGRAPH TO EVIDENCE
             </div>
             <h2 className="text-2xl sm:text-3xl font-medium tracking-headline text-ink">
-              Four verified stages of objective legal adjudication
+              How image-based assessment works
             </h2>
           </div>
           <span className="text-xs text-slate-500 font-mono">
-            Zero Cloud AI in Adjudication
+            CPU-based OCR · Human review required
           </span>
         </div>
 
@@ -306,7 +334,7 @@ export default function OfficerWorkstationPage() {
                 </div>
                 {/* Attached Satellite Micro-CTA */}
                 <div
-                  className="absolute -bottom-1 -right-1 w-11 h-11 rounded-full bg-white border border-black/[0.08] shadow-halo flex items-center justify-center satellite-cta cursor-pointer"
+                  className="absolute -bottom-1 -right-1 w-11 h-11 rounded-full bg-white border border-black/[0.08] shadow-halo flex items-center justify-center satellite-cta"
                   title="Explore Quality Gate"
                 >
                   <ArrowRight className="w-4 h-4 text-signal-orange" />
@@ -321,8 +349,7 @@ export default function OfficerWorkstationPage() {
                   Frame Quality Gate
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                  Laplacian variance sharpness testing ($&gt;50.0$) and specular glare ratio checks
-                  ensure zero false accusations on degraded camera frames.
+                  Blur and glare checks identify images that need to be retaken before assessment.
                 </p>
               </div>
             </div>
@@ -336,7 +363,7 @@ export default function OfficerWorkstationPage() {
                   </div>
                 </div>
                 <div
-                  className="absolute -bottom-1 -right-1 w-11 h-11 rounded-full bg-white border border-black/[0.08] shadow-halo flex items-center justify-center satellite-cta cursor-pointer"
+                  className="absolute -bottom-1 -right-1 w-11 h-11 rounded-full bg-white border border-black/[0.08] shadow-halo flex items-center justify-center satellite-cta"
                   title="Explore Metric Scale"
                 >
                   <ArrowRight className="w-4 h-4 text-signal-orange" />
@@ -351,8 +378,8 @@ export default function OfficerWorkstationPage() {
                   Metric Scale Recovery
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                  Planar homography calibration using standard 27.0mm ₹10 coin anchors or manual
-                  2-point caliper lines locks physical mm/px scale.
+                  A visible reference can support scale estimation. Without verified panel geometry,
+                  font-size compliance requires manual measurement.
                 </p>
               </div>
             </div>
@@ -366,7 +393,7 @@ export default function OfficerWorkstationPage() {
                   </div>
                 </div>
                 <div
-                  className="absolute -bottom-1 -right-1 w-11 h-11 rounded-full bg-white border border-black/[0.08] shadow-halo flex items-center justify-center satellite-cta cursor-pointer"
+                  className="absolute -bottom-1 -right-1 w-11 h-11 rounded-full bg-white border border-black/[0.08] shadow-halo flex items-center justify-center satellite-cta"
                   title="Explore Rule Engine"
                 >
                   <ArrowRight className="w-4 h-4 text-signal-orange" />
@@ -381,8 +408,8 @@ export default function OfficerWorkstationPage() {
                   Deterministic Rule Engine
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                  Gazette clauses codified in pure deterministic Python. Audits Rule 6 mandatory
-                  fields, Rule 7 font heights, and Rule 6(11) Unit Sale Price math.
+                  Checks cover visible declarations and unit-sale-price arithmetic.
+                  An inspector must verify uncertain text, missing panels, and applicable exemptions.
                 </p>
               </div>
             </div>
@@ -400,7 +427,7 @@ export default function OfficerWorkstationPage() {
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-eyebrow text-slate-500">
               <span className="w-1.5 h-1.5 rounded-full bg-signal-orange" />
-              OFFICER WORKSTATION
+              ASSESSMENT WORKSPACE
             </div>
             <h2 id="workstation-heading" className="text-2xl sm:text-3xl font-medium tracking-headline text-ink">
               Interactive Compliance & Evidence Dashboard
@@ -418,7 +445,8 @@ export default function OfficerWorkstationPage() {
                     ? "bg-amber-100/80 text-amber-900 shadow-xs"
                     : "text-slate-500 hover:text-ink"
                 }`}
-                title="Switch to Synthetic Demo Mode (Offline Regression Sandbox)"
+                title="Explore demonstration results without uploading to a server"
+                aria-pressed={clientMode === "mock"}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                 SYNTHETIC DEMO
@@ -432,7 +460,8 @@ export default function OfficerWorkstationPage() {
                     ? "bg-emerald-100/80 text-emerald-900 shadow-xs"
                     : "text-slate-500 hover:text-ink"
                 }`}
-                title="Switch to Live Inspection Mode (FastAPI Gateway)"
+                title="Analyze an image with the configured backend"
+                aria-pressed={clientMode === "live"}
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
                 LIVE INSPECTION
@@ -441,7 +470,7 @@ export default function OfficerWorkstationPage() {
 
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-white text-xs text-ink font-medium border border-black/[0.06] shadow-sm">
               <Lock className="w-3.5 h-3.5 text-emerald-600" />
-              SHA-256 Custody Sealed
+              {inspectionResult && !inspectionResult.isSynthetic ? "Image digest recorded" : "No evidence recorded"}
             </span>
 
             {/* Workstation Actions: Report & Reset */}
@@ -451,8 +480,8 @@ export default function OfficerWorkstationPage() {
                   size="sm"
                   variant="primary"
                   onClick={handleDownloadReport}
-                  disabled={isGeneratingReport}
-                  title="Download verified Legal Metrology assessment dossier"
+                  disabled={isGeneratingReport || inspectionResult.isSynthetic}
+                  title={inspectionResult.isSynthetic ? "Reports are available only for real inspections" : "Download image-based assessment"}
                 >
                   <FileText className="w-3.5 h-3.5 mr-1" />
                   {isGeneratingReport ? "Compiling Report..." : "Download Report"}
@@ -472,14 +501,33 @@ export default function OfficerWorkstationPage() {
           </div>
         </div>
 
+        {clientMode === "live" && (
+          <Card className="p-5 space-y-3">
+            <h3 className="font-semibold">Live service access</h3>
+            <p className="text-sm text-slate-600">{resolveApiBaseUrl() ? "Enter the service access key supplied by the deployment owner. This grants service access; it does not verify an officer identity." : "Live analysis is not configured on this deployment. You can explore the synthetic examples below by selecting Synthetic Demo."}</p>
+            {resolveApiBaseUrl() && <>
+              <label htmlFor="service-access-key" className="block text-sm font-medium">Service access key</label>
+              <input id="service-access-key" type="password" autoComplete="off" value={accessKey}
+                className="rounded-xl border p-3 w-full max-w-md"
+                onChange={(event) => { setAccessKey(event.target.value); setApiAccessKey(event.target.value); }} />
+              <p className="text-xs text-slate-600">Kept in this tab&apos;s memory until cleared or closed. Images are sent to the configured inspection service when you click Inspect Package.</p>
+              <div className="flex gap-2"><Button size="sm" onClick={checkConnection} disabled={checkingConnection}>{checkingConnection ? "Checking…" : "Check connection"}</Button>
+                <Button size="sm" variant="secondary" onClick={() => { setAccessKey(""); setApiAccessKey(""); handleStartNewInspection(); }}>Clear access</Button></div>
+              {connectionMessage && <p role="status" className="text-sm">{connectionMessage}</p>}
+            </>}
+          </Card>
+        )}
+        {clientMode === "mock" && <Alert variant="warning" title="Synthetic demonstration">
+          These examples show prepared results. They do not analyze your photograph, establish compliance, or produce official reports. Select Live Inspection to analyze a real image.
+        </Alert>}
         {/* Synthetic Demonstration Fixtures Card (8 Fixtures) */}
-        <Card shape="stadium" variant="white" className="p-5 border border-black/[0.06] shadow-halo">
+        {clientMode === "mock" && <Card shape="stadium" variant="white" className="p-5 border border-black/[0.06] shadow-halo">
           <SamplePackageSelector
             selectedSampleId={selectedSampleId}
             onSelectSample={handleSelectSample}
             disabled={isGeneratingReport}
           />
-        </Card>
+        </Card>}
 
         {/* Report Notifications */}
         {reportSuccess && (
@@ -500,6 +548,21 @@ export default function OfficerWorkstationPage() {
           <div className="lg:col-span-5 space-y-6">
             <ImageUploadZone
               clientMode={clientMode}
+              allowUpload={clientMode === "live"}
+              inspectionDisabled={clientMode === "live" && (!resolveApiBaseUrl() || !accessKey)}
+              onFileChanging={() => {
+                sessionVersion.current += 1;
+                reportAbort.current?.abort();
+                setInspectionResult(null);
+                setUploadedImageSrc(null);
+                setImageDimensions(null);
+                setSelectedTokenId(null);
+                setSelectedFieldName(null);
+                setIsReviewModalOpen(false);
+                setReportError(null);
+                setReportSuccess(null);
+                setIsGeneratingReport(false);
+              }}
               onModeChange={handleModeToggle}
               externalFile={externalFile}
               resetTrigger={resetTrigger}
@@ -510,14 +573,13 @@ export default function OfficerWorkstationPage() {
               }}
               onInspectionComplete={(result) => {
                 setInspectionResult(result);
-                setActiveVerdict(result.verdict.status);
               }}
               onFileCleared={handleFileCleared}
             />
 
-            <Alert variant="info" title="Sovereign Enforcement Advisory">
+            <Alert variant="info" title="Capture guidance">
               Photographs must clearly include the Principal Display Panel (PDP) and any calibration
-              anchor. Ingestion processes files locally through client adapters.
+              anchor on the same flat plane. Include other panels in a separate assessment when declarations are not visible. Actual contents and product quality cannot be verified from a photograph.
             </Alert>
           </div>
 
@@ -533,7 +595,7 @@ export default function OfficerWorkstationPage() {
                     </div>
                     <div>
                       <div className="text-xs font-bold uppercase tracking-eyebrow text-slate-500">
-                        ENFORCEMENT DOSSIER
+                        IMAGE-BASED ASSESSMENT
                       </div>
                       <div className="text-sm font-semibold text-ink font-mono">
                         {inspectionResult.inspectionId}
@@ -545,10 +607,10 @@ export default function OfficerWorkstationPage() {
                     variant="primary"
                     size="sm"
                     onClick={handleDownloadReport}
-                    disabled={isGeneratingReport}
+                    disabled={isGeneratingReport || inspectionResult.isSynthetic}
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    {isGeneratingReport ? "Compiling PDF..." : "Download Official Report (PDF Dossier)"}
+                    {isGeneratingReport ? "Compiling PDF..." : "Download Assessment (PDF)"}
                   </Button>
                 </div>
 
@@ -615,10 +677,7 @@ export default function OfficerWorkstationPage() {
             ) : (
               /* Evidence Canvas Stadium Card Placeholder (Pre-Inspection State) */
               <div className="space-y-6">
-                <StatusIndicator
-                  verdict={activeVerdict}
-                  summaryReason="Standby mode. Ingest packaging image on the left to verify statutory declarations."
-                />
+                <Alert variant="info" title="No inspection yet">Select a demonstration example or upload an image in Live Inspection. No compliance result has been issued.</Alert>
 
                 <Card
                   shape="stadium"
@@ -639,7 +698,7 @@ export default function OfficerWorkstationPage() {
                   </div>
                   <div className="mt-6 flex items-center gap-2">
                     <span className="text-[11px] font-mono text-slate-400">
-                      Supports Member 1 Frozen OCR Quads (Original Image Pixel Space)
+                      Results apply only to the visible image evidence.
                     </span>
                   </div>
                 </Card>
@@ -649,103 +708,14 @@ export default function OfficerWorkstationPage() {
         </div>
       </section>
 
-      {/* Design System & Statutory Verification Matrix (Interactive Showcase) */}
-      <section
-        id="design-tokens"
-        aria-labelledby="design-tokens-heading"
-        className="space-y-6 pt-10 border-t border-black/[0.08]"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-eyebrow text-slate-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-signal-orange" />
-              MASTERCARD-INSPIRED DESIGN TOKENS
-            </div>
-            <h2 id="design-tokens-heading" className="text-2xl sm:text-3xl font-medium tracking-headline text-ink">
-              Multi-Modal Statutory States & UI Primitives
-            </h2>
-          </div>
-          <Badge variant="default" size="sm">
-            M5-1 Foundation Certified
-          </Badge>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Statutory State Switcher Card */}
-          <Card shape="stadium" variant="white" className="p-8 space-y-6">
-            <div className="space-y-1.5">
-              <h3 className="text-xl font-medium tracking-headline text-ink">
-                Statutory Verdict State Matrix
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 font-normal">
-                Click to inspect how each legal state communicates via Color + Icon + Label + Plain Language Explanation.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2.5">
-              {(
-                [
-                  "COMPLIANT",
-                  "NON_COMPLIANT",
-                  "SUSPECT_REVIEW",
-                  "INCONCLUSIVE",
-                ] as OverallVerdict[]
-              ).map((verdict) => (
-                <Button
-                  key={verdict}
-                  size="sm"
-                  variant={activeVerdict === verdict ? "primary" : "secondary"}
-                  onClick={() => setActiveVerdict(verdict)}
-                >
-                  {verdict}
-                </Button>
-              ))}
-            </div>
-
-            <div className="pt-2">
-              <StatusIndicator verdict={activeVerdict} size="compact" />
-            </div>
-          </Card>
-
-          {/* Component Primitives Showcase */}
-          <Card shape="stadium" variant="white" className="p-8 space-y-6">
-            <div className="space-y-1.5">
-              <h3 className="text-xl font-medium tracking-headline text-ink">
-                Pill Buttons & Eyebrow Badges
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 font-normal">
-                Extreme radii (20px, 24px, 40px, 999px) create a soft, high-trust sovereign magazine feel.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Button variant="primary" size="sm">
-                Primary Ink Pill
-              </Button>
-              <Button variant="secondary" size="sm">
-                Outlined Pill
-              </Button>
-              <Button variant="signal" size="sm">
-                Signal Consent
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 pt-1">
-              <Badge variant="success">Rule 6 Pass</Badge>
-              <Badge variant="danger">Rule Deficit</Badge>
-              <Badge variant="warning">Manual Review</Badge>
-              <Badge variant="info">Rule 26 Exemption</Badge>
-              <Badge variant="outline">Uncalibrated</Badge>
-            </div>
-
-            <div className="pt-2 flex items-center gap-3 text-xs text-slate-500">
-              <Skeleton className="w-12 h-12 rounded-full" />
-              <div className="space-y-1.5 flex-1">
-                <Skeleton className="h-3.5 w-3/4 rounded-pill" />
-                <Skeleton className="h-3.5 w-1/2 rounded-pill" />
-              </div>
-            </div>
-          </Card>
+      <section id="scope" className="space-y-5 pt-8 border-t border-black/10">
+        <h2 className="text-2xl font-medium">Scope and limitations</h2>
+        <p className="text-sm text-slate-700">This MVP assesses one JPEG, PNG, or WebP packaging image at a time. Live images must be at least 800 × 600 pixels, no larger than 8000 pixels per side or 40 megapixels, and under 15 MiB. English and Hindi OCR can make mistakes. Missing text on one panel is not proof that the complete package omits it.</p>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <Card className="p-5 space-y-2" id="regulatory-framework"><h3 className="font-semibold">Human review and legal context</h3><p className="text-sm text-slate-600">Results identify possible discrepancies for review. Exemptions, effective legal amendments, package geometry, and physical measurements need independent verification. There is no live eMaap integration or government endorsement.</p></Card>
+          <Card className="p-5 space-y-2" id="privacy"><h3 className="font-semibold">Image handling</h3><p className="text-sm text-slate-600">Demo examples stay in the browser. Live uploads are sent to temporary storage on the inspection backend. Assessment records expire after one hour or earlier on restart; image cleanup runs periodically while the service is active. Original photos can contain location metadata. Avoid uploading personal or confidential information.</p></Card>
+          <Card className="p-5 space-y-2" id="evidence"><h3 className="font-semibold">Evidence and reports</h3><p className="text-sm text-slate-600">A SHA-256 digest checks whether retained image bytes changed. It is not a digital signature or proof of legal admissibility. Reports describe stored assessment results and require human verification.</p></Card>
+          <Card className="p-5 space-y-2" id="terms"><h3 className="font-semibold">Prototype use</h3><p className="text-sm text-slate-600">MetroLens is a project prototype for inspection assistance. It does not make enforcement decisions, issue statutory notices, authenticate government officers, or certify products.</p></Card>
         </div>
       </section>
 
@@ -754,7 +724,7 @@ export default function OfficerWorkstationPage() {
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
         title="MetroLens Inspection Protocol"
-        description="Standard Operating Procedure for Legal Metrology Officers under LMPC Rules, 2011"
+        description="How to capture and review a packaging image"
       >
         <div className="space-y-5 text-sm text-slate-700 leading-relaxed font-normal">
           <p>
@@ -766,9 +736,9 @@ export default function OfficerWorkstationPage() {
             <h5 className="font-medium text-ink">Four Pillars of Automated Verification:</h5>
             <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-600 font-normal">
               <li><strong className="text-ink">Laplacian Quality Gate:</strong> Filters blurred or glare-occluded frames before legal evaluation.</li>
-              <li><strong className="text-ink">Metric Scale Recovery:</strong> Homography calculation using 27.0mm ₹10 coin anchor or manual caliper.</li>
+              <li><strong className="text-ink">Metric Scale Recovery:</strong> Reference scale estimation; on-screen calipers show pixel distances only.</li>
               <li><strong className="text-ink">Multilingual Scene OCR:</strong> PP-OCRv3 on CPU extracts English and Devanagari text.</li>
-              <li><strong className="text-ink">Deterministic State Machine:</strong> Zero cloud AI. Gazette clauses evaluated mathematically with SHA-256 evidence chain.</li>
+              <li><strong className="text-ink">Deterministic State Machine:</strong> Deterministic checks assist human review; a digest records image integrity.</li>
             </ul>
           </div>
           <div className="flex justify-end pt-2">
@@ -794,7 +764,7 @@ export default function OfficerWorkstationPage() {
         }}
         onSubmitReview={handleSubmitReview}
         isSubmitting={isSubmittingReview}
-        isMock={defaultInspectionClient.isMock}
+        isMock={inspectionClient.isMock}
         onToggleCaliperMode={() => setIsCaliperMode((prev) => !prev)}
         isCaliperActive={isCaliperMode}
         caliperPoints={caliperPoints}

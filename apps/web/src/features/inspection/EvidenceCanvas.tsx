@@ -162,19 +162,6 @@ export function EvidenceCanvas({
     setTransform(newT);
   }, [imageWidth, imageHeight]);
 
-  // Handle Container Resizing
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      // Re-render canvas on dimension resize
-      renderCanvas();
-    });
-
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, []);
-
   // Filtered tokens for rendering
   const displayedTokens = useMemo(() => {
     if (!showOnlyReview) return tokens;
@@ -395,6 +382,19 @@ export function EvidenceCanvas({
   ]);
 
   // Request render when transform or selection changes
+  // Handle Container Resizing
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Re-render canvas on dimension resize
+      renderCanvas();
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [renderCanvas]);
+
   useEffect(() => {
     let animId: number;
     const scheduleRender = () => {
@@ -854,7 +854,7 @@ export function EvidenceCanvas({
                     [{hoverTooltip.token.id}]
                   </span>
                   <span className="text-[11px] text-slate-300 font-mono">
-                    {(hoverTooltip.token.confidence * 100).toFixed(1)}% conf
+                    {hoverTooltip.token.confidence == null ? "Confidence not supplied" : `${(hoverTooltip.token.confidence * 100).toFixed(1)}% conf`}
                   </span>
                 </div>
                 <div className="font-mono text-slate-200 truncate max-w-[240px]">
@@ -996,7 +996,7 @@ export function EvidenceCanvas({
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="font-mono text-[11px] font-semibold text-slate-600 bg-canvas px-2 py-0.5 rounded-md border border-black/[0.04]">
-                        {(t.confidence * 100).toFixed(1)}%
+                        {t.confidence == null ? "Not supplied" : `${(t.confidence * 100).toFixed(1)}%`}
                       </span>
                       {isSelected && (
                         <Check className="w-4 h-4 text-signal-orange" />

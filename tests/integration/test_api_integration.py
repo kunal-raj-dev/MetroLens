@@ -15,22 +15,11 @@ import random
 import time
 import pytest
 from PIL import Image, ImageDraw
-from fastapi.testclient import TestClient
-
-from apps.api.main import app
-from apps.api.schemas import InspectionResponse
-from apps.api.services.spool_service import spool_service
 
 
 @pytest.fixture
-def client():
-    """Provides FastAPI test client with reset rate limiter and bypass header."""
-    from apps.api.middleware.rate_limit import rate_limiter
-    rate_limiter.reset_all()
-    with TestClient(app) as test_client:
-        test_client.headers.update({"X-Bypass-Rate-Limit": "true"})
-        yield test_client
-    rate_limiter.reset_all()
+def client(guarded_api):
+    return guarded_api.client
 
 
 def make_valid_packaging_image(width: int = 1000, height: int = 1200) -> bytes:
@@ -83,12 +72,13 @@ def test_100_consecutive_requests_stability(client):
     assert avg_ms < 2500.0, f"Average latency too high: {avg_ms:.2f}ms (target < 2500ms)"
 
 
-def test_zero_orphaned_spool_leak_after_inspections(client):
+def test_zero_orphaned_spool_leak_after_inspections(client, guarded_api):
     """
     Verifies that ephemeral sessions clean up gracefully and total spool usage
     remains strictly bounded within quota limits.
     """
-    # Active spool sessions can be purged explicitly
+    spool_service = guarded_api.spool
+    # Only this test's isolated session can be purged explicitly.
     spool_service.purge_expired_sessions()
     initial_bytes = spool_service.get_total_spool_size_bytes()
 
@@ -106,6 +96,7 @@ def test_zero_orphaned_spool_leak_after_inspections(client):
 
     # Quota remains well bounded
     final_bytes = spool_service.get_total_spool_size_bytes()
+    assert final_bytes == initial_bytes
     assert final_bytes <= spool_service.max_quota_bytes
 
 

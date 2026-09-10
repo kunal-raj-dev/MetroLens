@@ -1,19 +1,7 @@
-﻿"""
-Statutory Rule 29 Seizure Memo & Panchnama Inventory Generator
-=============================================================
-Renders formal Search & Seizure Memos under Section 15 of the Legal Metrology
-Act, 2009 and Rule 29 of the Legal Metrology (Packaged Commodities) Rules, 2011,
-in strict compliance with Section 105 of the Bharatiya Nagarik Suraksha Sanhita, 2023.
+"""Render an unsigned draft inventory and search-record summary.
 
-Statutory Mandates:
--------------------
-- Section 15(1)(c) of LM Act: Power of Legal Metrology Officer to seize any non-conforming
-  packaged commodities, weights, measures, or relevant documents.
-- Section 105 BNSS 2023 / Section 100 CrPC: Search and seizure must be conducted in the
-  presence of two independent respectable witnesses of the locality.
-- Mandatory Panchnama narrative: Detailed recording of locus, search procedure, voluntary
-  witness attestations, serial numbers of security seal tags, and delivery of receipt.
-"""
+Supplied statements, identity, authority, witnesses, seals and custody require
+independent verification; this renderer performs no seizure or custody transfer."""
 
 from __future__ import annotations
 
@@ -22,6 +10,8 @@ import io
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+from .text_safety import DRAFT_NOTICE, join_markup, markup, text
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -57,7 +47,7 @@ class SeizedStockItem:
 
 @dataclass
 class SeizureMemoPayload:
-    """Complete data structure required to compile a court-admissible Seizure Memo."""
+    """Complete data structure required to compile a assistive draft Seizure Memo."""
     seizure_memo_number: str
     inspection_id: str
     date_of_seizure: datetime.date
@@ -172,15 +162,13 @@ class SeizureMemoCompiler:
             bottomMargin=35,
         )
 
-        story: List[Any] = []
+        story: List[Any] = [Paragraph(text(DRAFT_NOTICE), self.styles["MemoText"]), Spacer(1, 8)]
 
         # 1. State Emblem & Government Header
         header_text = (
-            f"GOVERNMENT OF {payload.state.upper()}<br/>"
-            f"DEPARTMENT OF LEGAL METROLOGY (WEIGHTS & MEASURES WING)<br/>"
-            f"DISTRICT: {payload.district.upper()}"
+            markup('METROLENS ASSISTIVE DRAFT — REGION: {0}<br/>DEPARTMENT OF LEGAL METROLOGY (WEIGHTS & MEASURES WING)<br/>DISTRICT: {1}', payload.state.upper(), payload.district.upper())
         )
-        story.append(Paragraph(header_text, self.styles["HeaderTitle"]))
+        story.append(Paragraph(text(header_text), self.styles["HeaderTitle"]))
         story.append(Spacer(1, 4))
         story.append(
             Paragraph(
@@ -195,20 +183,20 @@ class SeizureMemoCompiler:
         # 2. Key Procedural Data Block
         proc_data = [
             [
-                Paragraph(f"<b>Seizure Memo No:</b> {payload.seizure_memo_number}", self.styles["GridCell"]),
-                Paragraph(f"<b>Date of Seizure:</b> {payload.date_of_seizure.strftime('%d-%b-%Y')}", self.styles["GridCellBold"]),
+                Paragraph(text(markup('<b>Seizure Memo No:</b> {0}', payload.seizure_memo_number)), self.styles["GridCell"]),
+                Paragraph(text(markup('<b>Date of Seizure:</b> {0}', payload.date_of_seizure.strftime('%d-%b-%Y'))), self.styles["GridCellBold"]),
             ],
             [
-                Paragraph(f"<b>Inspection Ref:</b> {payload.inspection_id}", self.styles["GridCell"]),
-                Paragraph(f"<b>Time:</b> {payload.time_commenced} to {payload.time_concluded}", self.styles["GridCell"]),
+                Paragraph(text(markup('<b>Inspection Ref:</b> {0}', payload.inspection_id)), self.styles["GridCell"]),
+                Paragraph(text(markup('<b>Time:</b> {0} to {1}', payload.time_commenced, payload.time_concluded)), self.styles["GridCell"]),
             ],
             [
-                Paragraph(f"<b>Police Station:</b> {payload.police_station_jurisdiction}", self.styles["GridCell"]),
-                Paragraph(f"<b>Working Standard Box ID:</b> {payload.working_standard_weight_box_id}", self.styles["GridCell"]),
+                Paragraph(text(markup('<b>Police Station:</b> {0}', payload.police_station_jurisdiction)), self.styles["GridCell"]),
+                Paragraph(text(markup('<b>Working Standard Box ID:</b> {0}', payload.working_standard_weight_box_id)), self.styles["GridCell"]),
             ],
             [
-                Paragraph(f"<b>Place of Search:</b> {payload.place_of_search_address}", self.styles["GridCell"]),
-                Paragraph(f"<b>Occupier:</b> {payload.occupier_name} ({payload.occupier_firm_name})", self.styles["GridCell"]),
+                Paragraph(text(markup('<b>Place of Search:</b> {0}', payload.place_of_search_address)), self.styles["GridCell"]),
+                Paragraph(text(markup('<b>Occupier:</b> {0} ({1})', payload.occupier_name, payload.occupier_firm_name)), self.styles["GridCell"]),
             ],
         ]
         proc_table = Table(proc_data, colWidths=[260, 265])
@@ -226,17 +214,9 @@ class SeizureMemoCompiler:
 
         # 3. Panchnama Opening Narrative
         narrative = (
-            f"We, the undersigned Panch witnesses, having been called upon by <b>{payload.officer_name}</b>, "
-            f"{payload.officer_designation}, hereby state that today on <b>{payload.date_of_seizure.strftime('%d-%m-%Y')}</b>, "
-            f"we accompanied the said Legal Metrology Officer to the premises of <b>M/s {payload.occupier_firm_name}</b> "
-            f"situated at <i>{payload.place_of_search_address}</i>. In our presence and in the presence of the person in-charge, "
-            f"<b>Shri/Smt. {payload.occupier_name}</b>, an inspection of packaged commodities stocked and offered for sale "
-            f"was conducted. On verifying the sample packages using duly certified Working Standard Weights "
-            f"(verified on {payload.working_standard_last_verified.strftime('%d-%m-%Y')}), the packages detailed below were found to "
-            f"contravene the mandatory provisions of the Legal Metrology Act, 2009 and Packaged Commodities Rules, 2011, "
-            f"and were consequently seized into official custody."
+            markup('<b>SUPPLIED INSPECTION ACCOUNT — UNVERIFIED:</b><br/>Officer: {0}, {1}; date: {2}; premises: {3}, {4}; occupier: {5}; working-standard verification date supplied: {6}. This compiler does not establish that a search, measurement, seizure, or witness attestation occurred.', payload.officer_name, payload.officer_designation, payload.date_of_seizure.strftime('%d-%m-%Y'), payload.occupier_firm_name, payload.place_of_search_address, payload.occupier_name, payload.working_standard_last_verified.strftime('%d-%m-%Y'))
         )
-        story.append(Paragraph(narrative, self.styles["MemoText"]))
+        story.append(Paragraph(text(narrative), self.styles["MemoText"]))
         story.append(Spacer(1, 10))
 
         # 4. Seized Goods Inventory Grid
@@ -258,15 +238,15 @@ class SeizureMemoCompiler:
 
         for item in payload.seized_items:
             inv_rows.append([
-                Paragraph(str(item.item_sno), self.styles["GridCell"]),
-                Paragraph(f"{item.commodity_description}<br/>({item.brand_name})", self.styles["GridCell"]),
-                Paragraph(item.batch_or_lot_no, self.styles["GridCell"]),
-                Paragraph(item.declared_net_quantity, self.styles["GridCell"]),
-                Paragraph(item.test_measured_quantity, self.styles["GridCellBold"]),
-                Paragraph(f"₹{item.declared_mrp_inr:.2f}", self.styles["GridCell"]),
-                Paragraph(str(item.units_seized_count), self.styles["GridCellBold"]),
-                Paragraph(item.security_seal_number, self.styles["GridCellBold"]),
-                Paragraph(item.contravention_alleged, self.styles["GridCell"]),
+                Paragraph(text(str(item.item_sno)), self.styles["GridCell"]),
+                Paragraph(text(markup('{0}<br/>({1})', item.commodity_description, item.brand_name)), self.styles["GridCell"]),
+                Paragraph(text(item.batch_or_lot_no), self.styles["GridCell"]),
+                Paragraph(text(item.declared_net_quantity), self.styles["GridCell"]),
+                Paragraph(text(item.test_measured_quantity), self.styles["GridCellBold"]),
+                Paragraph(text(markup('₹{0:.2f}', item.declared_mrp_inr)), self.styles["GridCell"]),
+                Paragraph(text(str(item.units_seized_count)), self.styles["GridCellBold"]),
+                Paragraph(text(item.security_seal_number), self.styles["GridCellBold"]),
+                Paragraph(text(item.contravention_alleged), self.styles["GridCell"]),
             ])
 
         inv_table = Table(inv_rows, colWidths=[25, 80, 50, 45, 45, 40, 35, 75, 130])
@@ -285,52 +265,30 @@ class SeizureMemoCompiler:
 
         # 5. Custody & Sealing Recital
         closing_narrative = (
-            f"The aforesaid seized articles have been duly packed and secured under official lead seal / security seal "
-            f"tags bearing the numbers indicated above, in our presence. The sealed packages have been taken into official "
-            f"custody and dispatched to <b>{payload.custodial_malkhana_destination}</b> for production before the Court "
-            f"of the Judicial Magistrate First Class or authorized testing laboratory. A true copy of this Seizure Memo "
-            f"was handed over on the spot to the occupier, who acknowledged receipt thereof."
+            markup('<b>PROPOSED CUSTODY DESTINATION:</b> {0}. Sealing, custody transfers, and receipt must be documented and verified by authorized people; no transfer or service is performed by this draft.', payload.custodial_malkhana_destination)
         )
-        story.append(Paragraph(closing_narrative, self.styles["MemoText"]))
+        story.append(Paragraph(text(closing_narrative), self.styles["MemoText"]))
         story.append(Spacer(1, 12))
 
         # 6. Attestation & Signature Blocks (Panch Witnesses + Occupier + Officer)
         attest_data = [
             [
                 Paragraph(
-                    f"<b>PANCH WITNESS 1:</b><br/>"
-                    f"Name: {payload.witness_1_name} (Age: {payload.witness_1_age})<br/>"
-                    f"S/o / D/o: {payload.witness_1_father}<br/>"
-                    f"Address: {payload.witness_1_address}<br/>"
-                    f"ID Proof: {payload.witness_1_id}<br/><br/>"
-                    f"Signature: ______________________",
+                    text(markup('<b>PANCH WITNESS 1:</b><br/>Name: {0} (Age: {1})<br/>S/o / D/o: {2}<br/>Address: {3}<br/>ID Proof: {4}<br/><br/>Signature: ______________________', payload.witness_1_name, payload.witness_1_age, payload.witness_1_father, payload.witness_1_address, payload.witness_1_id)),
                     self.styles["GridCell"],
                 ),
                 Paragraph(
-                    f"<b>PANCH WITNESS 2:</b><br/>"
-                    f"Name: {payload.witness_2_name} (Age: {payload.witness_2_age})<br/>"
-                    f"S/o / D/o: {payload.witness_2_father}<br/>"
-                    f"Address: {payload.witness_2_address}<br/>"
-                    f"ID Proof: {payload.witness_2_id}<br/><br/>"
-                    f"Signature: ______________________",
+                    text(markup('<b>PANCH WITNESS 2:</b><br/>Name: {0} (Age: {1})<br/>S/o / D/o: {2}<br/>Address: {3}<br/>ID Proof: {4}<br/><br/>Signature: ______________________', payload.witness_2_name, payload.witness_2_age, payload.witness_2_father, payload.witness_2_address, payload.witness_2_id)),
                     self.styles["GridCell"],
                 ),
             ],
             [
                 Paragraph(
-                    f"<b>OCCUPIER / PERSON IN-CHARGE:</b><br/>"
-                    f"Received copy of this Seizure Memo.<br/>"
-                    f"Name: {payload.occupier_name}<br/>"
-                    f"Firm: {payload.occupier_firm_name}<br/><br/>"
-                    f"Signature / Thumb: _______________",
+                    text(markup('<b>OCCUPIER / PERSON IN-CHARGE:</b><br/>Receipt requires human acknowledgement.<br/>Name: {0}<br/>Firm: {1}<br/><br/>Signature / Thumb: _______________', payload.occupier_name, payload.occupier_firm_name)),
                     self.styles["GridCell"],
                 ),
                 Paragraph(
-                    f"<b>SEIZING OFFICER:</b><br/>"
-                    f"Name: <b>{payload.officer_name}</b><br/>"
-                    f"Designation: {payload.officer_designation}<br/>"
-                    f"ID / Gazette: {payload.officer_id_number}<br/><br/>"
-                    f"Official Seal & Signature: ________",
+                    text(markup('<b>SEIZING OFFICER:</b><br/>Name: <b>{0}</b><br/>Designation: {1}<br/>ID / Gazette: {2}<br/><br/>Official Seal & Signature: ________', payload.officer_name, payload.officer_designation, payload.officer_id_number)),
                     self.styles["GridCellBold"],
                 ),
             ],

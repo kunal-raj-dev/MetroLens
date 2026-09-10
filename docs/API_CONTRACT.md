@@ -1,15 +1,17 @@
 # REST API CONTRACT & SCHEMA SPECIFICATION (V1.0)
 # MetroLens AI™ — Web Inspection API Specification
-### Document Status: Authoritative Interface Contract | Protocol: HTTP/REST (OpenAPI 3.1)
+### Document Status: Historical design draft — superseded for launch behavior
+
+The [current launch contract](audit/API_LAUNCH_CONTRACT.md) and the running API's generated OpenAPI schema supersede this draft. Examples below include former synthetic behavior and unsupported certification language; they are not evidence of working features. Operational routes now require service access, reports require a genuine retained inspection, and officer authentication, affidavit certification, structured synthetic submissions, and portal synchronization are unavailable. Health reports reachability only.
 **Base URL:** `/api/v1` | **Content-Type:** `multipart/form-data` (Uploads) / `application/json` (Responses)
 
 ---
 
 ## 1. Executive Purpose & Contract Stability
 
-This document defines the authoritative, frozen HTTP API contract connecting the **React Web Frontend (`apps/web`)** and the **FastAPI Backend Gateway (`apps/api`)**. 
+This document preserves the original API design connecting the web frontend (`apps/web`) and FastAPI gateway (`apps/api`).
 
-To allow the frontend lead (M4) and backend leads (M1, M2, M3, M6) to build concurrently without interface churn, all endpoints, request parameters, JSON response schemas, and failure status codes defined here are binding.
+Use the current contract above for implementation and integration tests; the older examples are retained for design history.
 
 ---
 

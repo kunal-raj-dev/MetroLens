@@ -33,6 +33,10 @@ import {
 } from "@/types/frontend";
 import { InspectionClientError } from "../inspectionClient";
 
+function observedConfidence(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
+}
+
 export type UISeverity = "RED" | "GREEN" | "AMBER" | "BLUE" | "GRAY";
 
 export interface UIPresentationConfig {
@@ -148,9 +152,9 @@ export function getUiPresentationForState(
         label: "Potential Statutory Non-Compliance Detected",
         eyebrow: "POTENTIAL NON-COMPLIANCE",
         defaultExplanation:
-          "Potential statutory discrepancy detected requiring verification. Section 36(1) improvement notice recommended.",
+          "A possible discrepancy needs human verification against the original photograph, other panels, and applicable rules.",
         isCompliant: false,
-        requiresReview: false,
+        requiresReview: true,
       };
 
     case "COMPLIANT":
@@ -379,7 +383,7 @@ export function resolveVerdictSummary(
     case "NON_COMPLIANT":
       return "One or more statutory deficits detected by the deterministic rule engine.";
     case "POTENTIAL_NON_COMPLIANCE":
-      return "Potential statutory discrepancy detected requiring verification. Section 36(1) improvement notice recommended.";
+      return "A possible discrepancy needs human verification against the original photograph, other panels, and applicable rules.";
     case "FLAGGED_FOR_REVIEW":
       return "Automated analysis flagged conditions requiring mandatory officer review.";
     case "MANUAL_REVIEW_REQUIRED":
@@ -487,24 +491,8 @@ export function normalizeInspectionResponse(
           id: `ev-${crop.field_name || "crop"}-${index}`,
           fieldName: formatFieldLabel(crop.field_name || "PDP"),
           boundingBox: bbox,
-          observedValue: crop.label || null,
-          confidence: typeof crop.confidence === "number" ? crop.confidence : 1.0,
-        });
-
-        ocrTokens.push({
-          id: `tok_${crop.field_name || index}`,
-          text: crop.label || formatFieldLabel(crop.field_name),
-          confidence: typeof crop.confidence === "number" ? crop.confidence : 1.0,
-          boundingBox: bbox,
-          polygon: [
-            [bbox.xMin, bbox.yMin],
-            [bbox.xMax, bbox.yMin],
-            [bbox.xMax, bbox.yMax],
-            [bbox.xMin, bbox.yMax],
-          ],
-          script: "latin",
-          fieldName: crop.field_name,
-          requiresReview: (crop.confidence ?? 1.0) < 0.85,
+          observedValue: null,
+          confidence: observedConfidence(crop.confidence),
         });
       }
     });
@@ -562,7 +550,7 @@ export function normalizeInspectionResponse(
         label: formatFieldLabel(key),
         rawText: decl.raw_text || "",
         normalizedValue: decl.normalized_value ?? null,
-        confidence: typeof decl.confidence === "number" ? decl.confidence : 1.0,
+        confidence: observedConfidence(decl.confidence),
         isMandatory: decl.is_mandatory ?? true,
         isPresent: decl.is_present ?? Boolean(decl.raw_text),
         boundingBox: normalizeBoundingBox(decl.bounding_box),
@@ -575,7 +563,7 @@ export function normalizeInspectionResponse(
         reviewStatus:
           matchingRule?.verdict === "REVIEW"
             ? "IN_REVIEW"
-            : (decl.confidence ?? 1.0) < 0.85
+            : (decl.confidence ?? 0) < 0.85
             ? "IN_REVIEW"
             : "NOT_REVIEWED",
         operatorNotes: null,
@@ -589,12 +577,13 @@ export function normalizeInspectionResponse(
     const uspAudit = raw.rule_evaluations?.usp_audit;
     const fontAudit = raw.rule_evaluations?.font_height_audit;
 
-    const getFieldVerdict = (fieldKey: string, isPresent: boolean): RuleVerdict => {
+    const getFieldVerdict = (fieldKey: string, _isPresent: boolean): RuleVerdict => {
       const detailVal = details[fieldKey];
       if (detailVal === "PASS") return "PASS";
       if (detailVal === "FAIL") return "FAIL";
       if (detailVal === "REVIEW") return "REVIEW";
-      return isPresent ? "PASS" : "FAIL";
+      if (detailVal === "NOT_APPLICABLE") return "NOT_APPLICABLE";
+      return "REVIEW";
     };
 
     // Define standard statutory field mapping
@@ -620,7 +609,7 @@ export function normalizeInspectionResponse(
         isPresent: Boolean(rawDecls.commodity_name),
         statutoryRef: "Rule 6(1)(b)",
         verdict: getFieldVerdict("commodity_name", Boolean(rawDecls.commodity_name)),
-        notes: rawDecls.commodity_name ? "Generic commodity identity declared." : "Commodity name missing.",
+        notes: rawDecls.commodity_name ? "Commodity text extracted; verify against the photograph." : "Commodity name not detected on this panel.",
       },
       {
         key: "mrp",
@@ -633,7 +622,7 @@ export function normalizeInspectionResponse(
         isPresent: rawDecls.mrp_inr != null,
         statutoryRef: "Rule 6(1)(e)",
         verdict: getFieldVerdict("mrp", rawDecls.mrp_inr != null),
-        notes: rawDecls.mrp_inr != null ? "MRP declared with statutory tax qualifier." : "MRP declaration missing.",
+        notes: rawDecls.mrp_inr != null ? (rawDecls.tax_qualifier_present ? "MRP and tax qualifier detected; verify the text." : "MRP detected; tax qualifier not detected on this panel.") : "MRP not detected on this panel.",
       },
       {
         key: "net_quantity",
@@ -647,7 +636,7 @@ export function normalizeInspectionResponse(
           : null,
         isPresent: rawDecls.net_quantity_value != null,
         statutoryRef: "Rule 6(1)(f) & Rule 7 Table-I",
-        verdict: fontAudit?.is_compliant === false ? "FAIL" : getFieldVerdict("net_quantity", rawDecls.net_quantity_value != null),
+        verdict: ["PASS", "FAIL", "REVIEW", "NOT_APPLICABLE"].includes(fontAudit?.status) ? fontAudit.status : (fontAudit?.is_compliant === false ? "FAIL" : getFieldVerdict("net_quantity", rawDecls.net_quantity_value != null)),
         notes: fontAudit
           ? `Net qty font height: ${fontAudit.measured_net_qty_height_mm != null ? fontAudit.measured_net_qty_height_mm.toFixed(2) + "mm" : "N/A"} (min ${fontAudit.statutory_min_height_mm != null ? fontAudit.statutory_min_height_mm.toFixed(2) + "mm" : "N/A"})`
           : null,
@@ -664,7 +653,7 @@ export function normalizeInspectionResponse(
         normalizedValue: rawDecls.declared_usp_value ?? null,
         isPresent: rawDecls.declared_usp_value != null,
         statutoryRef: "Rule 6(11)",
-        verdict: uspAudit?.is_compliant === true ? "PASS" : (rawDecls.declared_usp_value == null ? "FAIL" : "FAIL"),
+        verdict: ["PASS", "FAIL", "REVIEW", "NOT_APPLICABLE"].includes(uspAudit?.status) ? uspAudit.status : (uspAudit?.is_compliant === true ? "PASS" : "REVIEW"),
         notes: uspAudit?.notes || (rawDecls.declared_usp_value == null ? "Unit Sale Price missing." : null),
       },
       {
@@ -680,7 +669,7 @@ export function normalizeInspectionResponse(
         isPresent: Boolean(rawDecls.mfg_month && rawDecls.mfg_year),
         statutoryRef: "Rule 6(1)(d)",
         verdict: getFieldVerdict("mfg_date", Boolean(rawDecls.mfg_month && rawDecls.mfg_year)),
-        notes: rawDecls.mfg_month ? "Month and year of manufacture verified." : "Date of manufacture missing.",
+        notes: rawDecls.mfg_month ? "Date text extracted; verify against the photograph." : "Date of manufacture not detected on this panel.",
       },
       {
         key: "manufacturer",
@@ -693,7 +682,7 @@ export function normalizeInspectionResponse(
         isPresent: Boolean(rawDecls.manufacturer_name),
         statutoryRef: "Rule 6(1)(a)",
         verdict: getFieldVerdict("manufacturer_details", Boolean(rawDecls.manufacturer_name)),
-        notes: rawDecls.manufacturer_name ? "Manufacturer name and address verified." : "Manufacturer details missing.",
+        notes: rawDecls.manufacturer_name ? "Manufacturer text extracted; verify the complete address." : "Manufacturer details not detected on this panel.",
       },
       {
         key: "consumer_care",
@@ -704,7 +693,7 @@ export function normalizeInspectionResponse(
         isPresent: Boolean(rawDecls.consumer_care_phone || rawDecls.consumer_care_email),
         statutoryRef: "Rule 6(1)(g)",
         verdict: getFieldVerdict("consumer_care", Boolean(rawDecls.consumer_care_phone || rawDecls.consumer_care_email)),
-        notes: (rawDecls.consumer_care_phone || rawDecls.consumer_care_email) ? "Consumer care contact verified." : "Consumer care contact missing.",
+        notes: (rawDecls.consumer_care_phone || rawDecls.consumer_care_email) ? "Contact text extracted; verify against the photograph." : "Consumer care contact not detected on this panel.",
       },
       {
         key: "country_of_origin",
@@ -714,7 +703,7 @@ export function normalizeInspectionResponse(
         normalizedValue: rawDecls.country_of_origin ?? null,
         isPresent: Boolean(rawDecls.country_of_origin),
         statutoryRef: "Rule 6(10)",
-        verdict: rawDecls.country_of_origin ? "PASS" : "REVIEW",
+        verdict: getFieldVerdict("country_of_origin", Boolean(rawDecls.country_of_origin)),
         notes: rawDecls.country_of_origin ? "Country of origin declared." : "Origin declaration not detected.",
       },
     ];
@@ -740,7 +729,7 @@ export function normalizeInspectionResponse(
         label: def.label,
         rawText: def.rawText,
         normalizedValue: def.normalizedValue,
-        confidence: typeof crop?.confidence === "number" ? crop.confidence : (def.isPresent ? 0.95 : 0.0),
+        confidence: observedConfidence(crop?.confidence),
         isMandatory: true,
         isPresent: def.isPresent,
         boundingBox: bbox,
@@ -754,11 +743,11 @@ export function normalizeInspectionResponse(
         reviewStatus:
           def.verdict === "REVIEW" || def.verdict === "FAIL"
             ? "IN_REVIEW"
-            : (crop?.confidence ?? 1.0) < 0.85
+            : (crop?.confidence ?? 0) < 0.85
             ? "IN_REVIEW"
             : "NOT_REVIEWED",
         operatorNotes: null,
-        sourceTokenIds: crop ? [`tok_${crop.field_name || def.key}`] : [],
+        sourceTokenIds: crop?.source_token_id ? [crop.source_token_id] : [],
       };
     }
   }
@@ -802,13 +791,13 @@ export function normalizeInspectionResponse(
       ocrTokens.push({
         id: t.token_id,
         text: t.text,
-        confidence: typeof t.confidence === "number" ? t.confidence : 1.0,
+        confidence: observedConfidence(t.confidence),
         boundingBox: bbox,
         polygon,
         language: t.language || null,
         script,
         fieldName,
-        requiresReview: t.confidence < 0.85,
+        requiresReview: (observedConfidence(t.confidence) ?? 0) < 0.85,
       });
     }
   }

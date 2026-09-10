@@ -130,15 +130,22 @@ export function SamplePackageSelector({
   className = "",
 }: SamplePackageSelectorProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const requestRef = React.useRef<AbortController | null>(null);
+  React.useEffect(() => () => { requestRef.current?.abort(); }, []);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const handleSelect = async (sample: SamplePackageItem) => {
     if (disabled || loadingId) return;
     setLoadingId(sample.id);
+    setLoadError(null);
+    const controller = new AbortController();
+    requestRef.current?.abort();
+    requestRef.current = controller;
 
     try {
       // Fetch the actual verified static asset from public/fixtures/
-      const response = await fetch(sample.imageSrc);
+      const response = await fetch(sample.imageSrc, { signal: controller.signal });
       if (!response.ok) {
         throw new Error(`Failed to load fixture asset: HTTP ${response.status}`);
       }
@@ -149,11 +156,11 @@ export function SamplePackageSelector({
         lastModified: Date.now(),
       });
 
-      onSelectSample(file, sample.imageSrc, sample);
+      if (!controller.signal.aborted) onSelectSample(file, sample.imageSrc, sample);
     } catch (err) {
-      console.error("[SamplePackageSelector] Failed to load sample fixture:", err);
+      if (!controller.signal.aborted) setLoadError("The example could not be loaded. Please try again.");
     } finally {
-      setLoadingId(null);
+      if (!controller.signal.aborted) setLoadingId(null);
     }
   };
 
@@ -166,6 +173,7 @@ export function SamplePackageSelector({
 
   return (
     <div className={`space-y-3.5 ${className}`}>
+      {loadError && <p role="alert" className="text-sm text-signal-red">{loadError}</p>}
       {/* Header Bar with Synthetic Disclosure */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5">

@@ -5,10 +5,11 @@ Exposes operational telemetry at GET /metrics for scraping by Prometheus,
 Grafana Agent, or Datadog.
 """
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
+from apps.api.auth.dependencies import require_api_access
 from apps.api.telemetry.prometheus import metrics
 
-router = APIRouter(tags=["Telemetry & Metrics"])
+router = APIRouter(tags=["Telemetry & Metrics"], dependencies=[Depends(require_api_access)])
 
 
 @router.get(

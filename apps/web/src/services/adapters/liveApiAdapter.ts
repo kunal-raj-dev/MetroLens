@@ -1,5 +1,6 @@
+import { resolveApiBaseUrl, apiHeaders } from "../apiConfig";
 /**
- * MetroLens AI™ - Live API Inspection Adapter
+ * MetroLens AIâ„¢ - Live API Inspection Adapter
  * Subsystem: Member 5 (Web Frontend)
  * 
  * Implements IInspectionClient targeting Member 4's FastAPI backend:
@@ -27,16 +28,15 @@ export class LiveApiAdapter implements IInspectionClient {
   private readonly baseUrl: string;
 
   constructor(baseUrl?: string) {
-    this.baseUrl =
-      baseUrl ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:8000";
+    this.baseUrl = resolveApiBaseUrl(baseUrl);
   }
 
   async inspect(
     file: File,
     options?: InspectionOptions
   ): Promise<FrontendInspectionModel> {
+    if (!this.baseUrl) throw new InspectionClientError("Live inspection is not configured for this deployment.", "NETWORK_ERROR");
+    if (options?.signal?.aborted) throw new InspectionClientError("Inspection canceled.", "TIMEOUT");
     // 1. Client-side validation check
     const validation = await validateInspectionImage(file);
     if (!validation.valid && validation.error) {
@@ -46,11 +46,15 @@ export class LiveApiAdapter implements IInspectionClient {
         { remediationHint: validation.error.details }
       );
     }
+    if (options?.signal?.aborted) throw new InspectionClientError("Inspection canceled.", "TIMEOUT");
+    const dims = validation.dimensions;
+    if (dims && dims.width > 0 && (dims.width < 800 || dims.height < 600 || Math.max(dims.width, dims.height) > 8000 || dims.width * dims.height > 40_000_000)) {
+      throw new InspectionClientError("Use an image at least 800 × 600 pixels, at most 8000 pixels per side and 40 megapixels.", "HTTP_422");
+    }
 
     // 2. Prepare multipart request body (FastAPI expects 'file', legacy expects 'image')
     const formData = new FormData();
     formData.append("file", file, file.name);
-    formData.append("image", file, file.name);
 
     if (options?.officerId) {
       formData.append("officer_id", options.officerId);
@@ -75,16 +79,16 @@ export class LiveApiAdapter implements IInspectionClient {
     try {
       const response = await fetch(`${this.baseUrl}/api/v1/inspect`, {
         method: "POST",
+        headers: apiHeaders(),
         body: formData,
         signal: controller.signal,
       });
-
-      clearTimeout(timer);
 
       if (!response.ok) {
         let errorDetail = `Server returned HTTP ${response.status} ${response.statusText}`;
         try {
           const errJson = await response.json();
+          if (errJson?.error?.message) errorDetail = errJson.error.message;
           if (errJson?.detail) {
             errorDetail =
               typeof errJson.detail === "string"
@@ -95,6 +99,8 @@ export class LiveApiAdapter implements IInspectionClient {
           // Fall back to HTTP status message if JSON body cannot be parsed
         }
 
+        if ([401, 403].includes(response.status)) throw new InspectionClientError("Service access was rejected. Check the access key supplied by the deployment owner.", "HTTP_400", {statusCode: response.status});
+        if (response.status === 429) throw new InspectionClientError("The service is busy or the request limit was reached. Please wait and try again.", "HTTP_400", {statusCode: 429});
         if (response.status === 400) {
           throw new InspectionClientError(
             `Inspection rejected by server: ${errorDetail}`,
@@ -140,6 +146,14 @@ export class LiveApiAdapter implements IInspectionClient {
         );
       }
 
+      if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
+      if (!payload || typeof payload.inspection_id !== "string" ||
+          !/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(payload.inspection_id) ||
+          typeof payload.state !== "string" || !payload.state.trim() ||
+          !/^[a-f0-9]{64}$/i.test(payload.image_metadata?.sha256_hash || "") ||
+          !Number.isFinite(Date.parse(payload.timestamp))) {
+        throw new InspectionClientError("The service returned an incomplete inspection. No result was accepted.", "INVALID_SERVER_RESPONSE");
+      }
       return normalizeInspectionResponse(payload, { isSynthetic: false });
     } catch (err: any) {
       clearTimeout(timer);
@@ -162,10 +176,11 @@ export class LiveApiAdapter implements IInspectionClient {
         "NETWORK_ERROR",
         {
           remediationHint:
-            "Member 4 backend is not running or network connection failed. You may switch to Mock Synthetic Mode for demonstration.",
+            "The inspection service is unreachable. Try again later or explore the clearly labeled demonstration examples.",
         }
       );
     } finally {
+      clearTimeout(timer);
       if (options?.signal) {
         options.signal.removeEventListener("abort", onCallerAbort);
       }
@@ -173,24 +188,25 @@ export class LiveApiAdapter implements IInspectionClient {
   }
 
   async getHealth(): Promise<HealthCheckResult> {
+    if (!this.baseUrl) return {status: "UNAVAILABLE", service: "MetroLens", version: "unknown", isLive: false, message: "Live inspection is not configured for this deployment."};
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
+    const timer = setTimeout(() => controller.abort(), 5000);
 
     try {
       const response = await fetch(`${this.baseUrl}/health`, {
         method: "GET",
+        headers: apiHeaders(),
         signal: controller.signal,
       });
-      clearTimeout(timer);
-
       if (response.ok) {
-        const data = await response.json().catch(() => ({}));
+        const data = await response.json();
+        if (data.status !== "ok" || data.service !== "metrolens-api") throw new Error("Unexpected health response");
         return {
           status: "OK",
           service: data.service || "MetroLens Backend API",
           version: data.version || "0.1.0",
           isLive: true,
-          message: "Connected to live FastAPI backend.",
+          message: "Inspection service is reachable. Access is checked when an image is submitted.",
         };
       }
 
@@ -202,7 +218,6 @@ export class LiveApiAdapter implements IInspectionClient {
         message: `HTTP ${response.status} from backend health check.`,
       };
     } catch (err: any) {
-      clearTimeout(timer);
       return {
         status: "UNAVAILABLE",
         service: "MetroLens Backend API",
@@ -210,67 +225,18 @@ export class LiveApiAdapter implements IInspectionClient {
         isLive: false,
         message: `Backend unreachable at ${this.baseUrl} (${err.message})`,
       };
+    } finally {
+      clearTimeout(timer);
     }
   }
 
   async submitReview(
     input: ReviewSubmissionInput
   ): Promise<ReviewSubmissionResult> {
-    // Check if backend review route exists or is pending Member 4
-    try {
-      const response = await fetch(
-        `${this.baseUrl}/api/v1/inspections/${encodeURIComponent(input.inspectionId)}/review`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(input),
-        }
-      );
-
-      if (response.status === 404 || response.status === 405) {
-        throw new InspectionClientError(
-          "Review API pending Member 4 backend deployment. The review submission route is not yet hosted.",
-          "REVIEW_API_NOT_IMPLEMENTED",
-          {
-            statusCode: response.status,
-            remediationHint:
-              "Backend Member 4 has not yet exposed /api/v1/inspections/{id}/review. Switch to Mock Synthetic Mode to test the review workflow.",
-          }
-        );
-      }
-
-      if (!response.ok) {
-        throw new InspectionClientError(
-          `Review submission rejected: HTTP ${response.status}`,
-          "HTTP_500",
-          { statusCode: response.status }
-        );
-      }
-
-      const resJson = await response.json();
-      return {
-        success: true,
-        isMock: false,
-        fieldName: input.fieldName,
-        updatedReviewStatus: input.decision,
-        operatorNotes: input.notes || null,
-        statusMessage:
-          resJson.message ||
-          `Review decision submitted successfully to backend.`,
-        timestamp: resJson.timestamp || new Date().toISOString(),
-      };
-    } catch (err: any) {
-      if (err instanceof InspectionClientError) throw err;
-
-      // Unreachable or connection refused
-      throw new InspectionClientError(
-        "Live Review API unreachable or pending Member 4 backend deployment.",
-        "REVIEW_API_NOT_IMPLEMENTED",
-        {
-          remediationHint:
-            "Member 4 backend does not support review endpoints yet. Use Mock Synthetic Mode for demonstration.",
-        }
-      );
-    }
+    throw new InspectionClientError(
+      "Live officer review is not implemented. No review decision has been saved.",
+      "REVIEW_API_NOT_IMPLEMENTED",
+      { remediationHint: "Record your review through your approved inspection process." }
+    );
   }
 }

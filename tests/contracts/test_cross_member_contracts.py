@@ -18,9 +18,6 @@ import json
 import time
 import numpy as np
 import pytest
-from fastapi.testclient import TestClient
-
-from apps.api.main import app
 from apps.api.schemas import InspectionResponse, ReportPdfRequest
 from apps.api.services.pipeline_orchestrator import pipeline_orchestrator
 from nirikshak_ocr import OCRService
@@ -49,7 +46,9 @@ from nirikshak_shared.models.contracts import (
     PanelName,
 )
 
-client = TestClient(app, headers={"X-Bypass-Rate-Limit": "true"})
+@pytest.fixture
+def client(guarded_api):
+    return guarded_api.client
 
 
 # =========================================================================
@@ -328,7 +327,7 @@ def test_contract_m3_m5_declarations_to_frontend_model():
 # 10. M4 -> M5: Full API Gateway HTTP Contract & PDF Generation
 # =========================================================================
 
-def test_contract_m4_m5_api_request_response_flow():
+def test_contract_m4_m5_api_request_response_flow(client):
     """
     M4 -> M5 Contract:
     Verifies that POST /api/v1/inspect returns an authoritative InspectionResponse
@@ -343,7 +342,6 @@ def test_contract_m4_m5_api_request_response_flow():
         files={"file": ("contract_test.jpg", img_encoded.tobytes(), "image/jpeg")},
         data={
             "anchor_type": "INR_10_COIN",
-            "mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS",
         },
     )
     assert resp.status_code == 200
@@ -353,23 +351,27 @@ def test_contract_m4_m5_api_request_response_flow():
     assert "declarations" in data
     assert "calibration" in data
     assert "telemetry" in data
+    parsed = InspectionResponse.model_validate(data)
+    assert parsed.ocr_observations[0].text == "Premium Roasted Cashews"
+    assert parsed.ocr_observations[0].confidence == 0.99
 
 
-def test_contract_m4_m5_report_pdf_binary_stream():
+def test_contract_m4_m5_report_pdf_binary_stream(client, guarded_api):
     """
     M4 -> M5 Contract:
     Verifies that POST /api/v1/report/pdf returns application/pdf with %PDF- header.
     """
+    inspection = guarded_api.upload()
     resp = client.post(
         "/api/v1/report/pdf",
-        json={"inspection_id": "INSP-CONTRACT-PDF-001"},
+        json={"inspection_id": inspection["inspection_id"]},
     )
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/pdf"
     assert resp.content.startswith(b"%PDF-")
 
 
-def test_contract_m4_m5_review_api_status():
+def test_contract_m4_m5_review_api_status(client):
     """
     M4 -> M5 Contract:
     Verifies that the review submission endpoint returns 404/405 or 200 honestly

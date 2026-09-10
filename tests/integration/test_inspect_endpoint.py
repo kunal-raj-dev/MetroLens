@@ -16,9 +16,6 @@ import io
 import time
 import pytest
 from PIL import Image, ImageDraw
-from fastapi.testclient import TestClient
-
-from apps.api.main import app
 from apps.api.schemas import InspectionResponse
 
 
@@ -56,14 +53,8 @@ def make_test_packaging_image(
 
 
 @pytest.fixture
-def client():
-    """Provides FastAPI test client with reset rate limiter."""
-    from apps.api.middleware.rate_limit import rate_limiter
-    rate_limiter.reset_all()
-    with TestClient(app) as test_client:
-        test_client.headers.update({"X-Bypass-Rate-Limit": "true"})
-        yield test_client
-    rate_limiter.reset_all()
+def client(guarded_api):
+    return guarded_api.client
 
 
 # =========================================================================
@@ -84,8 +75,6 @@ def test_inspect_successful_compliant_upload(client):
         data={
             "anchor_type": "INR_10_COIN",
             "panel_type": "FRONT_PDP",
-            "officer_id": "OFFICER-007",
-            "mock_fixture_key": "PKG-01-COMPLIANT-FMCG-CASHEWS",
         },
     )
     elapsed_ms = (time.perf_counter() - start_time) * 1000
@@ -96,17 +85,16 @@ def test_inspect_successful_compliant_upload(client):
     # Validate against authoritative Pydantic contract
     parsed = InspectionResponse.model_validate(data)
     assert parsed.inspection_id.startswith("INSP-")
-    assert parsed.state in ("COMPLIANT", "POTENTIAL_NON_COMPLIANCE", "NON_COMPLIANT")
+    assert parsed.state == "UNCERTAIN"
     assert parsed.image_metadata.width_px == 1200
     assert parsed.image_metadata.height_px == 1600
     assert len(parsed.image_metadata.sha256_hash) == 64
     assert parsed.image_metadata.is_quality_valid is True
 
     # Calibration verification
-    assert parsed.calibration.is_calibrated is True
     assert parsed.calibration.anchor_type == "INR_10_COIN"
-    assert parsed.calibration.scale_mm_per_px is not None
-    assert parsed.calibration.scale_mm_per_px > 0
+    assert parsed.calibration.pdp_area_cm2 is None
+    assert parsed.rule_evaluations.font_height_audit.status == "REVIEW"
 
     # Declarations verification
     assert parsed.declarations.commodity_name is not None
@@ -127,71 +115,66 @@ def test_inspect_successful_compliant_upload(client):
     assert elapsed_ms < 2500.0
 
 
-def test_inspect_non_compliant_generates_improvement_notice(client):
+def test_inspect_observed_missing_tax_qualifier_requires_review(client, guarded_api):
     """
-    Verifies that non-compliant packaging (missing mandatory tax qualifier)
-    generates a Section 36(1) Jan Vishwas Improvement Notice with a 15-day cure window.
+    A photographed tax qualifier omission cannot issue an officer's notice.
     """
     img_bytes = make_test_packaging_image()
+    guarded_api.set_tokens("PKG-03-MISSING-TAX-QUALIFIER")
 
     response = client.post(
         "/api/v1/inspect",
         files={"file": ("chips_pkg.jpg", img_bytes, "image/jpeg")},
         data={
             "anchor_type": "INR_10_COIN",
-            "mock_fixture_key": "PKG-03-MISSING-TAX-QUALIFIER",
         },
     )
 
     assert response.status_code == 200
     data = response.json()
 
-    assert data["state"] == "NON_COMPLIANT"
-    assert data["improvement_notice"] is not None
-    notice = data["improvement_notice"]
-    assert notice["recommended"] is True
-    assert notice["cure_period_days"] == 15
-    assert "Section 36(1)" in notice["act_provision"] or "Jan Vishwas" in notice["act_provision"]
-    assert "Rule 6" in notice["statutory_grounds"]
+    assert data["state"] == "POTENTIAL_NON_COMPLIANCE"
+    assert data["declarations"]["tax_qualifier_present"] is False
+    assert data["improvement_notice"] is None
 
 
-def test_inspect_bilingual_hindi_specimen(client):
+def test_inspect_bilingual_hindi_specimen(client, guarded_api):
     """Verifies successful normalization and rule evaluation of bilingual Devanagari Hindi packaging."""
     img_bytes = make_test_packaging_image()
+    guarded_api.set_tokens("PKG-02-BILINGUAL-HINDI-ATTA")
 
     response = client.post(
         "/api/v1/inspect",
         files={"file": ("hindi_atta.jpg", img_bytes, "image/jpeg")},
         data={
             "anchor_type": "INR_10_COIN",
-            "mock_fixture_key": "PKG-02-BILINGUAL-HINDI-ATTA",
         },
     )
 
     assert response.status_code == 200
     data = response.json()
-    assert data["state"] == "COMPLIANT"
+    assert data["state"] == "UNCERTAIN"
     assert data["declarations"]["mrp_inr"] == 45.0
     assert data["declarations"]["tax_qualifier_present"] is True
 
 
-def test_inspect_prohibited_units_fixture(client):
+def test_inspect_prohibited_units_fixture(client, guarded_api):
     """Verifies that non-standard unit symbols ('Gms') trigger statutory non-compliance."""
     img_bytes = make_test_packaging_image()
+    guarded_api.set_tokens("PKG-04-PROHIBITED-UNITS-GMS")
 
     response = client.post(
         "/api/v1/inspect",
         files={"file": ("turmeric_powder.jpg", img_bytes, "image/jpeg")},
         data={
             "anchor_type": "INR_10_COIN",
-            "mock_fixture_key": "PKG-04-PROHIBITED-UNITS-GMS",
         },
     )
 
     assert response.status_code == 200
     data = response.json()
-    assert data["state"] == "NON_COMPLIANT"
-    assert data["improvement_notice"] is not None
+    assert data["state"] == "POTENTIAL_NON_COMPLIANCE"
+    assert data["improvement_notice"] is None
 
 
 def test_inspect_uncalibrated_mode(client):
